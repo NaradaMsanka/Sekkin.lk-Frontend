@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ProductDetail from "./pages/ProductDetail";
+import Cart from './pages/Cart';
 import './App.css'; // ඔයාගේ CSS ෆයිල් එක එහෙම්මම තියාගන්නවා
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/product/:id" element={<ProductDetail />} />
+       <Route path="/cart" element={<Cart />} />
       </Routes>
     </Router>
   );
