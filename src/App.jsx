@@ -5,6 +5,8 @@ import Login from "./pages/Login";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from './pages/Cart';
 import './App.css'; // ඔයාගේ CSS ෆයිල් එක එහෙම්මම තියාගන්නවා
+import Checkout from './pages/Checkout';
+import OrderHistory from './pages/OrderHistory';
 
 function App() {
   return (
@@ -22,7 +24,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/product/:id" element={<ProductDetail />} />
-       <Route path="/cart" element={<Cart />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/orders" element={<OrderHistory />} />
       </Routes>
     </Router>
   );
