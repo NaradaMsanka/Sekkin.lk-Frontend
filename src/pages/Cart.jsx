@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. අලුතින් එකතු කළා
 import { getCart, updateCartItem, removeCartItem } from '../services/cartService';
 
 function Cart() {
     const [cart, setCart] = useState(null);
+    const navigate = useNavigate(); // 2. අලුතින් එකතු කළා
 
     // Cart එක Load කරගැනීම
     const fetchCart = async () => {
@@ -62,7 +64,7 @@ function Cart() {
                             <p>Subtotal: Rs. {item.price}</p>
                             <button 
                                 onClick={() => handleRemoveItem(item.product.id)}
-                                style={{ backgroundColor: 'red', color: 'white', border: 'none', padding: '5px 10px' }}
+                                style={{ backgroundColor: 'red', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}
                             >
                                 Remove
                             </button>
@@ -70,7 +72,12 @@ function Cart() {
                     ))}
                     
                     <h3 style={{ marginTop: '20px' }}>Total Price: Rs. {cart.totalPrice}</h3>
-                    <button style={{ backgroundColor: 'green', color: 'white', padding: '10px', marginTop: '10px' }}>
+                    
+                    {/* 3. මෙතන බොත්තමට onClick එක එකතු කළා */}
+                    <button 
+                        onClick={() => navigate('/checkout')} 
+                        style={{ backgroundColor: 'green', color: 'white', padding: '10px', marginTop: '10px', cursor: 'pointer', border: 'none' }}
+                    >
                         Proceed to Checkout
                     </button>
                 </div>
