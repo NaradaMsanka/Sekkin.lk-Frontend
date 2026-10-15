@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // අපි අලුතින් හැදූ api.js එක ඉම්පෝට් කිරීම
 
 const OrderHistory = () => {
     const [orders, setOrders] = useState([]);
@@ -8,13 +8,8 @@ const OrderHistory = () => {
     useEffect(() => {
         const fetchOrders = async () => {
             try {
-                const token = localStorage.getItem('token');
-                // Backend එකෙන් Orders ටික ලබා ගැනීම (GET /api/orders)
-                const response = await axios.get('http://localhost:8080/api/orders', {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+                // දැන් වෙනම headers ලියන්න අවශ්‍ය නැත, api එක මඟින් token එක ඔටෝ යයි
+                const response = await api.get('/api/orders');
                 setOrders(response.data);
                 setLoading(false);
             } catch (error) {
@@ -26,10 +21,10 @@ const OrderHistory = () => {
         fetchOrders();
     }, []);
 
-    if (loading) return <p>Loading orders...</p>;
+    if (loading) return <p style={{ color: 'white', padding: '20px' }}>Loading orders...</p>;
 
     return (
-        <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto' }}>
+        <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto', color: 'white' }}>
             <h2>My Order History</h2>
             {orders.length === 0 ? (
                 <p>You haven't placed any orders yet.</p>
@@ -37,19 +32,19 @@ const OrderHistory = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
                     <thead>
                         <tr style={{ borderBottom: '2px solid #ccc', textAlign: 'left' }}>
-                            <th>Order ID</th>
-                            <th>Address</th>
-                            <th>Total Amount</th>
-                            <th>Status</th>
+                            <th style={{ padding: '10px' }}>Order ID</th>
+                            <th style={{ padding: '10px' }}>Address</th>
+                            <th style={{ padding: '10px' }}>Total Amount</th>
+                            <th style={{ padding: '10px' }}>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {orders.map(order => (
-                            <tr key={order.id} style={{ borderBottom: '1px solid #eee' }}>
-                                <td style={{ padding: '10px 0' }}>#{order.id}</td>
-                                <td>{order.shippingAddress}</td>
-                                <td>Rs. {order.totalAmount}</td>
-                                <td>
+                            <tr key={order.id} style={{ borderBottom: '1px solid #444' }}>
+                                <td style={{ padding: '10px' }}>#{order.id}</td>
+                                <td style={{ padding: '10px' }}>{order.shippingAddress}</td>
+                                <td style={{ padding: '10px' }}>Rs. {order.totalAmount}</td>
+                                <td style={{ padding: '10px' }}>
                                     <strong style={{ 
                                         color: order.status === 'PENDING' ? 'orange' : 
                                                order.status === 'SHIPPED' ? 'blue' : 'green' 
