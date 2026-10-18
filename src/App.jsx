@@ -7,6 +7,7 @@ import Cart from './pages/Cart';
 import './App.css'; // ඔයාගේ CSS ෆයිල් එක එහෙම්මම තියාගන්නවා
 import Checkout from './pages/Checkout';
 import OrderHistory from './pages/OrderHistory';
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/orders" element={<OrderHistory />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
