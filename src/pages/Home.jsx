@@ -139,27 +139,6 @@ export default function Home() {
             >
               Shop Collection
             </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              component="a"
-              href="https://wa.me/94770000000?text=Hello%20Sekkin.lk!%20I%20would%20like%20to%20get%20skincare%20consultation."
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                borderColor: '#25D366',
-                color: '#25D366',
-                bgcolor: 'rgba(37,211,102,0.1)',
-                '&:hover': { borderColor: '#20BA5A', bgcolor: 'rgba(37,211,102,0.2)' },
-                px: 4,
-                py: 1.5,
-                fontWeight: 700,
-                fontSize: '1rem',
-                borderRadius: 4,
-              }}
-            >
-              💬 WhatsApp Help
-            </Button>
           </Stack>
         </Container>
       </Box>
