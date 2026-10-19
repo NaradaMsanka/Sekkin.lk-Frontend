@@ -1,89 +1,181 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // 1. අලුතින් එකතු කළා
-import { getCart, updateCartItem, removeCartItem } from '../services/cartService';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import {
+  Container, Box, Typography, Button, IconButton, Divider,
+  Card, CardContent, Grid, Stack, Chip, Alert, Skeleton, Tooltip, Avatar
+} from '@mui/material';
+import { Delete, Add, Remove, ShoppingBag, ArrowBack, Spa } from '@mui/icons-material';
 
-function Cart() {
-    const [cart, setCart] = useState(null);
-    const navigate = useNavigate(); // 2. අලුතින් එකතු කළා
+const API = 'http://localhost:8080/api/cart';
 
-    // Cart එක Load කරගැනීම
-    const fetchCart = async () => {
-        try {
-            const data = await getCart();
-            setCart(data);
-        } catch (error) {
-            console.error("Error fetching cart", error);
-        }
-    };
-
-    useEffect(() => {
-        fetchCart();
-    }, []);
-
-    // Quantity එක වෙනස් කිරීම
-    const handleUpdateQuantity = async (productId, newQuantity) => {
-        if (newQuantity < 1) return;
-        try {
-            await updateCartItem(productId, newQuantity);
-            fetchCart(); // Update වුණාට පස්සේ ආයෙත් Cart එක Load කරනවා
-        } catch (error) {
-            alert(error.response?.data?.message || "Failed to update quantity");
-        }
-    };
-
-    // භාණ්ඩයක් අයින් කිරීම
-    const handleRemoveItem = async (productId) => {
-        try {
-            await removeCartItem(productId);
-            fetchCart();
-        } catch (error) {
-            alert("Failed to remove item");
-        }
-    };
-
-    if (!cart) return <div className="p-5">Loading Cart...</div>;
-
-    return (
-        <div className="p-5">
-            <h2>My Shopping Cart</h2>
-            
-            {cart.items.length === 0 ? (
-                <p>Your cart is empty.</p>
-            ) : (
-                <div>
-                    {cart.items.map(item => (
-                        <div key={item.id} style={{ border: '1px solid #ccc', margin: '10px 0', padding: '10px' }}>
-                            <h4>{item.product.name}</h4>
-                            <p>Price: Rs. {item.product.price}</p>
-                            
-                            <label>Quantity: </label>
-                            <button onClick={() => handleUpdateQuantity(item.product.id, item.quantity - 1)}>-</button>
-                            <span style={{ margin: '0 10px' }}>{item.quantity}</span>
-                            <button onClick={() => handleUpdateQuantity(item.product.id, item.quantity + 1)}>+</button>
-                            
-                            <p>Subtotal: Rs. {item.price}</p>
-                            <button 
-                                onClick={() => handleRemoveItem(item.product.id)}
-                                style={{ backgroundColor: 'red', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}
-                            >
-                                Remove
-                            </button>
-                        </div>
-                    ))}
-                    
-                    <h3 style={{ marginTop: '20px' }}>Total Price: Rs. {cart.totalPrice}</h3>
-                    
-                    {/* 3. මෙතන බොත්තමට onClick එක එකතු කළා */}
-                    <button 
-                        onClick={() => navigate('/checkout')} 
-                        style={{ backgroundColor: 'green', color: 'white', padding: '10px', marginTop: '10px', cursor: 'pointer', border: 'none' }}
-                    >
-                        Proceed to Checkout
-                    </button>
-                </div>
-            )}
-        </div>
-    );
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return { headers: { Authorization: `Bearer ${token}` } };
 }
 
-export default Cart;
+export default function Cart() {
+  const navigate = useNavigate();
+  const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) { navigate('/login'); return; }
+    try {
+      const res = await axios.get(API, getAuthHeaders());
+      setCart(res.data);
+    } catch (err) {
+      setError(err.response?.data || 'Failed to load cart.');
+    } finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchCart(); }, []);
+
+  const handleQty = async (productId, newQty) => {
+    if (newQty < 1) return;
+    try {
+      await axios.put(`${API}/items/${productId}?quantity=${newQty}`, {}, getAuthHeaders());
+      fetchCart();
+    } catch (err) { setError(err.response?.data || 'Update failed.'); }
+  };
+
+  const handleRemove = async (productId) => {
+    try {
+      await axios.delete(`${API}/items/${productId}`, getAuthHeaders());
+      fetchCart();
+    } catch { setError('Remove failed.'); }
+  };
+
+  if (loading) return (
+    <Container maxWidth="md" sx={{ py: 5 }}>
+      {[1,2,3].map(i => <Skeleton key={i} variant="rectangular" height={100} sx={{ mb: 2, borderRadius: 2 }} />)}
+    </Container>
+  );
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Button startIcon={<ArrowBack />} onClick={() => navigate('/')} sx={{ mb: 3 }} color="inherit">
+        Continue Shopping
+      </Button>
+
+      <Typography variant="h4" fontWeight={700} mb={3}>
+        My Cart {cart?.items?.length > 0 && <Chip label={`${cart.items.length} items`} color="primary" sx={{ ml: 1, verticalAlign: 'middle' }} />}
+      </Typography>
+
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      {!cart || cart.items?.length === 0 ? (
+        <Box textAlign="center" py={10}>
+          <ShoppingBag sx={{ fontSize: 80, color: 'divider', mb: 2 }} />
+          <Typography variant="h5" fontWeight={600} gutterBottom>Your cart is empty</Typography>
+          <Typography color="text.secondary" mb={4}>Discover our premium cosmetics and add items to your cart</Typography>
+          <Button variant="contained" size="large" onClick={() => navigate('/')}>Shop Now</Button>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {/* Cart Items */}
+          <Grid item xs={12} md={8}>
+            <Stack spacing={2}>
+              {cart.items.map(item => (
+                <Card key={item.id} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+                  <CardContent>
+                    <Grid container alignItems="center" spacing={2}>
+                      {/* Product Image */}
+                      <Grid item>
+                        <Box sx={{
+                          width: 80, height: 80, borderRadius: 2,
+                          bgcolor: 'primary.50', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          <Spa sx={{ color: 'primary.light', fontSize: 36 }} />
+                        </Box>
+                      </Grid>
+
+                      {/* Product Info */}
+                      <Grid item xs>
+                        <Typography variant="subtitle1" fontWeight={600}>{item.product.name}</Typography>
+                        <Typography variant="body2" color="text.secondary">{item.product.brand}</Typography>
+                        <Typography variant="body1" color="primary" fontWeight={700}>
+                          Rs. {item.product.price}
+                        </Typography>
+                      </Grid>
+
+                      {/* Quantity Controls */}
+                      <Grid item>
+                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 20 }}>
+                          <IconButton size="small" onClick={() => handleQty(item.product.id, item.quantity - 1)} sx={{ p: 0.5 }}>
+                            <Remove fontSize="small" />
+                          </IconButton>
+                          <Typography sx={{ px: 1.5, fontWeight: 700, minWidth: 28, textAlign: 'center' }}>
+                            {item.quantity}
+                          </Typography>
+                          <IconButton size="small" onClick={() => handleQty(item.product.id, item.quantity + 1)} sx={{ p: 0.5 }}>
+                            <Add fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </Grid>
+
+                      {/* Subtotal */}
+                      <Grid item sx={{ minWidth: 90, textAlign: 'right' }}>
+                        <Typography variant="subtitle1" fontWeight={700}>Rs. {item.price?.toFixed(2)}</Typography>
+                        <Tooltip title="Remove item">
+                          <IconButton size="small" onClick={() => handleRemove(item.product.id)} color="error">
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+          </Grid>
+
+          {/* Order Summary */}
+          <Grid item xs={12} md={4}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', position: 'sticky', top: 80 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" fontWeight={700} mb={3}>Order Summary</Typography>
+
+                {cart.items.map(item => (
+                  <Stack key={item.id} direction="row" justifyContent="space-between" mb={1}>
+                    <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 160 }}>
+                      {item.product.name} ×{item.quantity}
+                    </Typography>
+                    <Typography variant="body2">Rs. {item.price?.toFixed(2)}</Typography>
+                  </Stack>
+                ))}
+
+                <Divider sx={{ my: 2 }} />
+
+                <Stack direction="row" justifyContent="space-between" mb={1}>
+                  <Typography color="text.secondary">Subtotal</Typography>
+                  <Typography>Rs. {cart.totalPrice?.toFixed(2)}</Typography>
+                </Stack>
+                <Stack direction="row" justifyContent="space-between" mb={1}>
+                  <Typography color="text.secondary">Delivery</Typography>
+                  <Chip label="FREE" color="success" size="small" />
+                </Stack>
+
+                <Divider sx={{ my: 2 }} />
+
+                <Stack direction="row" justifyContent="space-between" mb={3}>
+                  <Typography variant="h6" fontWeight={700}>Total</Typography>
+                  <Typography variant="h6" fontWeight={700} color="primary">
+                    Rs. {cart.totalPrice?.toFixed(2)}
+                  </Typography>
+                </Stack>
+
+                <Button fullWidth variant="contained" size="large"
+                  onClick={() => navigate('/checkout')} sx={{ py: 1.5 }}>
+                  Proceed to Checkout
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+    </Container>
+  );
+}

@@ -1,409 +1,329 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import {
+  Container, Grid, Card, CardContent, Typography, Box, Stack,
+  Chip, Table, TableBody, TableCell, TableContainer, TableHead,
+  TableRow, Paper, Button, TextField, Select, MenuItem, FormControl,
+  InputLabel, Alert, Skeleton, Avatar, Divider, IconButton, Tabs, Tab,
+  Dialog, DialogTitle, DialogContent, DialogActions, Snackbar
+} from "@mui/material";
+import {
+  Dashboard, Inventory, Receipt, People, TrendingUp,
+  Warning, Add, Delete, Refresh, AdminPanelSettings
+} from "@mui/icons-material";
 
-const API_BASE_URL = "http://localhost:8080/api";
+const API = "http://localhost:8080/api";
 
-const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+function getAuthHeaders() {
+  const token = localStorage.getItem("token");
+  return { headers: { Authorization: `Bearer ${token}` } };
+}
+
+const STATUS_COLORS = { PENDING: 'warning', PROCESSING: 'info', SHIPPED: 'primary', DELIVERED: 'success', CANCELLED: 'error' };
+
+export default function AdminDashboard() {
+  const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // Data States
-  const [dashboardStats, setDashboardStats] = useState({
-    totalRevenue: 0,
-    totalOrders: 0,
-    totalProducts: 0,
-    totalUsers: 0,
-    lowStockProducts: [],
-    recentOrders: [],
-  });
+  const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
+  const [stats, setStats] = useState({ totalRevenue: 0, totalOrders: 0, totalProducts: 0, totalUsers: 0, lowStockProducts: [], recentOrders: [] });
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [newProduct, setNewProduct] = useState({ name: '', brand: '', price: '', stockQuantity: '', skinType: '', description: '', discountPrice: '' });
 
-  // New Product Form State
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    brand: "",
-    price: "",
-    stockQuantity: "",
-    skinType: "",
-    description: "",
-  });
-
-  // Token එක localStorage එකෙන් ලබා ගැනීම
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-  };
-
-  useEffect(() => {
-    fetchAllAdminData();
-  }, []);
-
-  const fetchAllAdminData = async () => {
+  const fetchAll = async () => {
     setLoading(true);
-    setError("");
     try {
       const headers = getAuthHeaders();
-
-      // 1. Dashboard Summary ලබා ගැනීම
-      const statsRes = await axios.get(`${API_BASE_URL}/admin/dashboard`, headers);
-      setDashboardStats(statsRes.data);
-
-      // 2. සියලුම භාණ්ඩ (Products) ලබා ගැනීම
-      const productsRes = await axios.get(`${API_BASE_URL}/products`);
-      setProducts(productsRes.data);
-
-      // 3. ඇණවුම් (Orders) ලබා ගැනීම (සියලුම orders endpoint එකක් නැතිනම් recentOrders භාවිතා කරයි)
+      const [statsRes, prodsRes] = await Promise.all([
+        axios.get(`${API}/admin/dashboard`, headers),
+        axios.get(`${API}/products`),
+      ]);
+      setStats(statsRes.data);
+      setProducts(prodsRes.data);
       try {
-        const ordersRes = await axios.get(`${API_BASE_URL}/orders`, headers);
+        const ordersRes = await axios.get(`${API}/orders`, headers);
         setOrders(ordersRes.data);
-      } catch {
-        setOrders(statsRes.data.recentOrders || []);
-      }
-    } catch (err) {
-      console.error("Error loading admin data:", err);
-      setError("දත්ත ලබා ගැනීමට නොහැකි විය. ඔබ Admin ගිණුමකින් Login වී ඇත්දැයි පරීක්ෂා කරන්න.");
-    } finally {
-      setLoading(false);
-    }
+      } catch { setOrders(statsRes.data.recentOrders || []); }
+    } catch (e) {
+      setError(e.response?.status === 403 ? "Access denied. Admin role required." : "Failed to load dashboard data.");
+    } finally { setLoading(false); }
   };
 
-  // අලුත් භාණ්ඩයක් එකතු කිරීම
+  useEffect(() => { fetchAll(); }, []);
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
+      await axios.post(`${API}/products`, {
         ...newProduct,
         price: parseFloat(newProduct.price),
         stockQuantity: parseInt(newProduct.stockQuantity, 10),
+        discountPrice: newProduct.discountPrice ? parseFloat(newProduct.discountPrice) : null,
         status: "ACTIVE",
-      };
-      await axios.post(`${API_BASE_URL}/products`, payload, getAuthHeaders());
-      alert("භාණ්ඩය සාර්ථකව එකතු කරන ලදී!");
-      setNewProduct({ name: "", brand: "", price: "", stockQuantity: "", skinType: "", description: "" });
-      fetchAllAdminData();
-    } catch (err) {
-      alert("භාණ්ඩය එකතු කිරීමට නොහැකි විය.");
+      }, getAuthHeaders());
+      setSnack({ open: true, msg: 'Product added successfully! ✅', severity: 'success' });
+      setNewProduct({ name: '', brand: '', price: '', stockQuantity: '', skinType: '', description: '', discountPrice: '' });
+      fetchAll();
+    } catch (e) {
+      setSnack({ open: true, msg: e.response?.data || 'Failed to add product.', severity: 'error' });
     }
   };
 
-  // භාණ්ඩයක් මකා දැමීම (Delete Product)
-  const handleDeleteProduct = async (id) => {
-    if (!window.confirm("මෙම භාණ්ඩය ඉවත් කිරීමට ඔබට විශ්වාසද?")) return;
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this product?')) return;
     try {
-      await axios.delete(`${API_BASE_URL}/products/${id}`, getAuthHeaders());
-      setProducts(products.filter((p) => p.id !== id));
-      fetchAllAdminData();
-    } catch (err) {
-      alert("භාණ්ඩය ඉවත් කිරීමට නොහැකි විය.");
-    }
+      await axios.delete(`${API}/products/${id}`, getAuthHeaders());
+      setProducts(prev => prev.filter(p => p.id !== id));
+      setSnack({ open: true, msg: 'Product deleted.', severity: 'info' });
+    } catch { setSnack({ open: true, msg: 'Delete failed.', severity: 'error' }); }
   };
 
-  // Order Status එක වෙනස් කිරීම
-  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+  const handleStatusUpdate = async (orderId, status) => {
     try {
-      await axios.put(
-        `${API_BASE_URL}/orders/${orderId}/status`,
-        { status: newStatus },
-        getAuthHeaders()
-      );
-      setOrders(
-        orders.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
-        )
-      );
-      fetchAllAdminData();
-    } catch (err) {
-      alert("Order status යාවත්කාලීන කිරීමට නොහැකි විය.");
-    }
+      await axios.put(`${API}/orders/${orderId}/status`, { status }, getAuthHeaders());
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+      setSnack({ open: true, msg: 'Order status updated! ✅', severity: 'success' });
+    } catch { setSnack({ open: true, msg: 'Status update failed.', severity: 'error' }); }
   };
 
-  if (loading) {
-    return <div style={{ padding: "40px", textAlign: "center" }}>Loading Admin Dashboard...</div>;
-  }
+  const STAT_CARDS = [
+    { label: 'Total Revenue', value: `Rs. ${stats.totalRevenue?.toLocaleString() || 0}`, icon: <TrendingUp />, color: '#B5385C', bg: '#FDF0F4' },
+    { label: 'Total Orders', value: stats.totalOrders, icon: <Receipt />, color: '#7B1F3A', bg: '#F5E6EA' },
+    { label: 'Products', value: stats.totalProducts, icon: <Inventory />, color: '#C9956A', bg: '#FDF5EE' },
+    { label: 'Customers', value: stats.totalUsers, icon: <People />, color: '#5C6BC0', bg: '#EEF0F8' },
+  ];
+
+  if (loading) return (
+    <Container sx={{ py: 4 }}>
+      <Grid container spacing={3}>
+        {[1,2,3,4].map(i => <Grid item xs={12} sm={6} md={3} key={i}><Skeleton variant="rectangular" height={120} sx={{ borderRadius: 3 }} /></Grid>)}
+      </Grid>
+    </Container>
+  );
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h2>Admin Dashboard</h2>
-        <div style={styles.tabGroup}>
-          <button
-            style={activeTab === "overview" ? styles.activeTabBtn : styles.tabBtn}
-            onClick={() => setActiveTab("overview")}
-          >
-            Overview & Stats
-          </button>
-          <button
-            style={activeTab === "products" ? styles.activeTabBtn : styles.tabBtn}
-            onClick={() => setActiveTab("products")}
-          >
-            Product Management
-          </button>
-          <button
-            style={activeTab === "orders" ? styles.activeTabBtn : styles.tabBtn}
-            onClick={() => setActiveTab("orders")}
-          >
-            Order Management
-          </button>
-        </div>
-      </div>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Header */}
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <AdminPanelSettings sx={{ fontSize: 36, color: 'primary.main' }} />
+          <Box>
+            <Typography variant="h4" fontWeight={800}>Admin Dashboard</Typography>
+            <Typography variant="body2" color="text.secondary">SekkinLK Management Panel</Typography>
+          </Box>
+        </Stack>
+        <Button startIcon={<Refresh />} onClick={fetchAll} variant="outlined">Refresh</Button>
+      </Stack>
 
-      {error && <div style={styles.errorBox}>{error}</div>}
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-      {/* TAB 1: OVERVIEW & BASIC SALES STATS */}
-      {activeTab === "overview" && (
-        <div>
-          {/* Sales Stats Cards */}
-          <div style={styles.statsGrid}>
-            <div style={styles.statCard}>
-              <h4>Total Revenue</h4>
-              <p style={styles.statValue}>Rs. {dashboardStats.totalRevenue?.toLocaleString() || 0}</p>
-            </div>
-            <div style={styles.statCard}>
-              <h4>Total Orders</h4>
-              <p style={styles.statValue}>{dashboardStats.totalOrders}</p>
-            </div>
-            <div style={styles.statCard}>
-              <h4>Total Products</h4>
-              <p style={styles.statValue}>{dashboardStats.totalProducts}</p>
-            </div>
-            <div style={styles.statCard}>
-              <h4>Total Customers</h4>
-              <p style={styles.statValue}>{dashboardStats.totalUsers}</p>
-            </div>
-          </div>
+      {/* Stat Cards */}
+      <Grid container spacing={2.5} mb={4}>
+        {STAT_CARDS.map(card => (
+          <Grid item xs={12} sm={6} md={3} key={card.label}>
+            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
+              <Box sx={{ height: 4, bgcolor: card.color }} />
+              <CardContent>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>{card.label}</Typography>
+                    <Typography variant="h4" fontWeight={800} sx={{ color: card.color }}>{card.value}</Typography>
+                  </Box>
+                  <Avatar sx={{ bgcolor: card.bg, color: card.color, width: 48, height: 48 }}>{card.icon}</Avatar>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
-          <div style={styles.twoColGrid}>
-            {/* Low Stock Alerts */}
-            <div style={styles.card}>
-              <h3>⚠️ Low-Stock Alerts (≤ 10 items)</h3>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>ID</th>
-                    <th style={styles.th}>Product</th>
-                    <th style={styles.th}>Brand</th>
-                    <th style={styles.th}>Stock</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dashboardStats.lowStockProducts?.length > 0 ? (
-                    dashboardStats.lowStockProducts.map((item) => (
-                      <tr key={item.id}>
-                        <td style={styles.td}>#{item.id}</td>
-                        <td style={styles.td}>{item.name}</td>
-                        <td style={styles.td}>{item.brand}</td>
-                        <td style={{ ...styles.td, color: "#d9534f", fontWeight: "bold" }}>
-                          {item.stockQuantity}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" style={styles.td}>සියලුම භාණ්ඩ ප්‍රමාණවත් තොග ඇත.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+      {/* Tabs */}
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Tab icon={<Dashboard />} iconPosition="start" label="Overview" />
+        <Tab icon={<Inventory />} iconPosition="start" label="Products" />
+        <Tab icon={<Receipt />} iconPosition="start" label="Orders" />
+      </Tabs>
 
-            {/* Recent Orders */}
-            <div style={styles.card}>
-              <h3>🕒 Recent Orders</h3>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>Order ID</th>
-                    <th style={styles.th}>Customer</th>
-                    <th style={styles.th}>Total</th>
-                    <th style={styles.th}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dashboardStats.recentOrders?.length > 0 ? (
-                    dashboardStats.recentOrders.map((order) => (
-                      <tr key={order.id}>
-                        <td style={styles.td}>#{order.id}</td>
-                        <td style={styles.td}>{order.customerEmail}</td>
-                        <td style={styles.td}>Rs. {order.totalAmount}</td>
-                        <td style={styles.td}>
-                          <span style={styles.badge}>{order.status}</span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4" style={styles.td}>ඇණවුම් කිසිවක් නොමැත.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+      {/* TAB 0: OVERVIEW */}
+      {tab === 0 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
+              <CardContent>
+                <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                  <Warning color="warning" />
+                  <Typography variant="h6" fontWeight={700}>Low Stock Alerts</Typography>
+                  {stats.lowStockProducts?.length > 0 && <Chip label={stats.lowStockProducts.length} color="warning" size="small" />}
+                </Stack>
+                {stats.lowStockProducts?.length === 0 ? (
+                  <Alert severity="success" sx={{ borderRadius: 2 }}>All products have sufficient stock ✅</Alert>
+                ) : (
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          {['Product', 'Brand', 'Stock'].map(h => <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.75rem' }}>{h}</TableCell>)}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {stats.lowStockProducts.map(p => (
+                          <TableRow key={p.id}>
+                            <TableCell>{p.name}</TableCell>
+                            <TableCell>{p.brand}</TableCell>
+                            <TableCell><Chip label={p.stockQuantity} color={p.stockQuantity === 0 ? 'error' : 'warning'} size="small" /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
+              <CardContent>
+                <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+                  <Receipt color="primary" />
+                  <Typography variant="h6" fontWeight={700}>Recent Orders</Typography>
+                </Stack>
+                {stats.recentOrders?.length === 0 ? (
+                  <Typography color="text.secondary" textAlign="center" py={3}>No orders yet</Typography>
+                ) : (
+                  stats.recentOrders.map(o => (
+                    <Box key={o.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>#{o.id} — {o.customerEmail}</Typography>
+                        <Typography variant="caption" color="text.secondary">Rs. {o.totalAmount}</Typography>
+                      </Box>
+                      <Chip label={o.status} color={STATUS_COLORS[o.status] || 'default'} size="small" />
+                    </Box>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       )}
 
-      {/* TAB 2: PRODUCT MANAGEMENT TABLE */}
-      {activeTab === "products" && (
-        <div>
-          <div style={styles.card}>
-            <h3>Add New Product</h3>
-            <form onSubmit={handleAddProduct} style={styles.formGrid}>
-              <input
-                style={styles.input}
-                type="text"
-                placeholder="Product Name"
-                value={newProduct.name}
-                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                required
-              />
-              <input
-                style={styles.input}
-                type="text"
-                placeholder="Brand"
-                value={newProduct.brand}
-                onChange={(e) => setNewProduct({ ...newProduct, brand: e.target.value })}
-                required
-              />
-              <input
-                style={styles.input}
-                type="number"
-                placeholder="Price (Rs.)"
-                value={newProduct.price}
-                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                required
-              />
-              <input
-                style={styles.input}
-                type="number"
-                placeholder="Stock Quantity"
-                value={newProduct.stockQuantity}
-                onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: e.target.value })}
-                required
-              />
-              <input
-                style={styles.input}
-                type="text"
-                placeholder="Skin Type (e.g. Oily, All)"
-                value={newProduct.skinType}
-                onChange={(e) => setNewProduct({ ...newProduct, skinType: e.target.value })}
-              />
-              <button type="submit" style={styles.primaryBtn}>+ Add Product</button>
-            </form>
-          </div>
+      {/* TAB 1: PRODUCTS */}
+      {tab === 1 && (
+        <Box>
+          {/* Add Product Form */}
+          <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3, mb: 3 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Stack direction="row" alignItems="center" spacing={1} mb={3}>
+                <Add color="primary" />
+                <Typography variant="h6" fontWeight={700}>Add New Product</Typography>
+              </Stack>
+              <Box component="form" onSubmit={handleAddProduct}>
+                <Grid container spacing={2}>
+                  {[
+                    { label: 'Product Name*', key: 'name', required: true },
+                    { label: 'Brand*', key: 'brand', required: true },
+                    { label: 'Price (Rs.)*', key: 'price', type: 'number', required: true },
+                    { label: 'Discount Price (Rs.)', key: 'discountPrice', type: 'number' },
+                    { label: 'Stock Quantity*', key: 'stockQuantity', type: 'number', required: true },
+                    { label: 'Skin Type', key: 'skinType' },
+                  ].map(field => (
+                    <Grid item xs={12} sm={6} md={4} key={field.key}>
+                      <TextField fullWidth size="small" label={field.label} type={field.type || 'text'}
+                        required={field.required}
+                        value={newProduct[field.key]}
+                        onChange={e => setNewProduct(p => ({ ...p, [field.key]: e.target.value }))} />
+                    </Grid>
+                  ))}
+                  <Grid item xs={12}>
+                    <TextField fullWidth size="small" label="Description" multiline rows={2}
+                      value={newProduct.description}
+                      onChange={e => setNewProduct(p => ({ ...p, description: e.target.value }))} />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button type="submit" variant="contained" startIcon={<Add />}>Add Product</Button>
+                  </Grid>
+                </Grid>
+              </Box>
+            </CardContent>
+          </Card>
 
-          <div style={{ ...styles.card, marginTop: "20px" }}>
-            <h3>Product Management Table</h3>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>ID</th>
-                  <th style={styles.th}>Name</th>
-                  <th style={styles.th}>Brand</th>
-                  <th style={styles.th}>Price</th>
-                  <th style={styles.th}>Stock</th>
-                  <th style={styles.th}>Skin Type</th>
-                  <th style={styles.th}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id}>
-                    <td style={styles.td}>#{product.id}</td>
-                    <td style={styles.td}>{product.name}</td>
-                    <td style={styles.td}>{product.brand}</td>
-                    <td style={styles.td}>Rs. {product.price}</td>
-                    <td style={styles.td}>{product.stockQuantity}</td>
-                    <td style={styles.td}>{product.skinType || "All"}</td>
-                    <td style={styles.td}>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        style={styles.deleteBtn}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
+          {/* Products Table */}
+          <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'background.default' }}>
+                  {['ID', 'Name', 'Brand', 'Price', 'Discount', 'Stock', 'Skin Type', 'Actions'].map(h => (
+                    <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', color: 'text.secondary' }}>{h}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {products.map(p => (
+                  <TableRow key={p.id} hover>
+                    <TableCell><Typography variant="caption" fontWeight={700}>#{p.id}</Typography></TableCell>
+                    <TableCell><Typography variant="body2" fontWeight={600}>{p.name}</Typography></TableCell>
+                    <TableCell><Typography variant="body2">{p.brand}</Typography></TableCell>
+                    <TableCell><Typography variant="body2">Rs. {p.price}</Typography></TableCell>
+                    <TableCell>{p.discountPrice ? <Chip label={`Rs. ${p.discountPrice}`} color="success" size="small" /> : '—'}</TableCell>
+                    <TableCell>
+                      <Chip label={p.stockQuantity} size="small"
+                        color={p.stockQuantity === 0 ? 'error' : p.stockQuantity <= 10 ? 'warning' : 'default'} />
+                    </TableCell>
+                    <TableCell>{p.skinType || '—'}</TableCell>
+                    <TableCell>
+                      <IconButton size="small" color="error" onClick={() => handleDelete(p.id)}>
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
       )}
 
-      {/* TAB 3: ORDER MANAGEMENT */}
-      {activeTab === "orders" && (
-        <div style={styles.card}>
-          <h3>Order Management</h3>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>Order ID</th>
-                <th style={styles.th}>Customer</th>
-                <th style={styles.th}>Total Amount</th>
-                <th style={styles.th}>Current Status</th>
-                <th style={styles.th}>Update Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr key={order.id}>
-                  <td style={styles.td}>#{order.id}</td>
-                  <td style={styles.td}>{order.customerEmail || order.user?.email || "Customer"}</td>
-                  <td style={styles.td}>Rs. {order.totalAmount}</td>
-                  <td style={styles.td}>
-                    <span style={styles.badge}>{order.status}</span>
-                  </td>
-                  <td style={styles.td}>
-                    <select
-                      style={styles.select}
-                      value={order.status}
-                      onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                    >
-                      <option value="PENDING">PENDING</option>
-                      <option value="PROCESSING">PROCESSING</option>
-                      <option value="SHIPPED">SHIPPED</option>
-                      <option value="DELIVERED">DELIVERED</option>
-                      <option value="CANCELLED">CANCELLED</option>
-                    </select>
-                  </td>
-                </tr>
+      {/* TAB 2: ORDERS */}
+      {tab === 2 && (
+        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: 'background.default' }}>
+                {['Order ID', 'Customer', 'Total', 'Current Status', 'Update Status'].map(h => (
+                  <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', color: 'text.secondary' }}>{h}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {orders.map(order => (
+                <TableRow key={order.id} hover>
+                  <TableCell><Typography fontWeight={700} color="primary">#{order.id}</Typography></TableCell>
+                  <TableCell>{order.customerEmail || order.user?.email || '—'}</TableCell>
+                  <TableCell><Typography fontWeight={600}>Rs. {order.totalAmount}</Typography></TableCell>
+                  <TableCell>
+                    <Chip label={order.status} color={STATUS_COLORS[order.status] || 'default'} size="small" sx={{ fontWeight: 600 }} />
+                  </TableCell>
+                  <TableCell>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                      <Select value={order.status} onChange={e => handleStatusUpdate(order.id, e.target.value)}>
+                        {['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map(s => (
+                          <MenuItem key={s} value={s}>{s}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-    </div>
+
+      <Snackbar open={snack.open} autoHideDuration={3000} onClose={() => setSnack(s => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+        <Alert severity={snack.severity} sx={{ borderRadius: 2 }}>{snack.msg}</Alert>
+      </Snackbar>
+    </Container>
   );
-};
-
-// Simple Inline Styles (Tailwind නොමැති වුවත් පිරිසිදුව පෙනීම සඳහා)
-const styles = {
-  container: { maxWidth: "1200px", margin: "0 auto", padding: "24px", fontFamily: "sans-serif" },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "10px" },
-  tabGroup: { display: "flex", gap: "10px" },
-  tabBtn: { padding: "10px 16px", border: "1px solid #ddd", background: "#f8f9fa", borderRadius: "6px", cursor: "pointer" },
-  activeTabBtn: { padding: "10px 16px", border: "none", background: "#d63384", color: "#fff", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" },
-  errorBox: { background: "#ffe3e3", color: "#c92a2a", padding: "12px", borderRadius: "6px", marginBottom: "16px" },
-  statsGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "24px" },
-  statCard: { background: "#fff", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", borderLeft: "4px solid #d63384" },
-  statValue: { fontSize: "24px", fontWeight: "bold", margin: "8px 0 0 0", color: "#333" },
-  twoColGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(450px, 1fr))", gap: "20px" },
-  card: { background: "#fff", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", overflowX: "auto" },
-  table: { width: "100%", borderCollapse: "collapse", marginTop: "12px" },
-  th: { textAlign: "left", padding: "12px", borderBottom: "2px solid #eee", color: "#555" },
-  td: { padding: "12px", borderBottom: "1px solid #eee" },
-  badge: { padding: "4px 8px", borderRadius: "4px", background: "#f1f3f5", fontSize: "12px", fontWeight: "bold" },
-  formGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginTop: "12px" },
-  input: { padding: "10px", border: "1px solid #ccc", borderRadius: "6px" },
-  primaryBtn: { background: "#d63384", color: "#fff", border: "none", padding: "10px 16px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold" },
-  deleteBtn: { background: "#e03131", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" },
-  select: { padding: "6px", borderRadius: "4px", border: "1px solid #ccc" },
-};
-
-export default AdminDashboard;
+}
