@@ -13,8 +13,9 @@ import {
   Warning, Add, Delete, Refresh, AdminPanelSettings, Edit,
   CheckCircle, Search, LocalShipping,
   AttachMoney, ShoppingBag, ArrowUpward, ArrowDownward,
-  Close, Save
+  Close, Save, Spa, PhotoLibrary
 } from "@mui/icons-material";
+import ImageSequenceManager from "../components/ImageSequenceManager";
 
 const API = "http://localhost:8080/api";
 
@@ -56,14 +57,16 @@ export default function AdminDashboard() {
   // Add Product State
   const [newProduct, setNewProduct] = useState({
     name: '', brand: '', price: '', discountPrice: '', stockQuantity: '',
-    skinType: '', description: '', ingredients: '', status: 'ACTIVE'
+    skinType: '', description: '', ingredients: '', status: 'ACTIVE',
+    imageUrl: '', images: []
   });
 
   // Edit Product Modal State
   const [editingProduct, setEditingProduct] = useState(null);
   const [editForm, setEditForm] = useState({
     name: '', brand: '', price: '', discountPrice: '', stockQuantity: '',
-    skinType: '', description: '', ingredients: '', status: 'ACTIVE'
+    skinType: '', description: '', ingredients: '', status: 'ACTIVE',
+    imageUrl: '', images: []
   });
 
   const fetchAll = async () => {
@@ -101,18 +104,22 @@ export default function AdminDashboard() {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
+      const primaryImg = newProduct.images?.[0] || newProduct.imageUrl || '';
       await axios.post(`${API}/products`, {
         ...newProduct,
         price: parseFloat(newProduct.price),
         stockQuantity: parseInt(newProduct.stockQuantity, 10),
         discountPrice: newProduct.discountPrice ? parseFloat(newProduct.discountPrice) : null,
         status: newProduct.status || "ACTIVE",
+        imageUrl: primaryImg,
+        images: JSON.stringify(newProduct.images || (primaryImg ? [primaryImg] : []))
       }, getAuthHeaders());
 
       setSnack({ open: true, msg: `Product "${newProduct.name}" added successfully! ✅`, severity: 'success' });
       setNewProduct({
         name: '', brand: '', price: '', discountPrice: '', stockQuantity: '',
-        skinType: '', description: '', ingredients: '', status: 'ACTIVE'
+        skinType: '', description: '', ingredients: '', status: 'ACTIVE',
+        imageUrl: '', images: []
       });
       fetchAll();
     } catch (e) {
@@ -122,6 +129,17 @@ export default function AdminDashboard() {
 
   // 2. OPEN EDIT MODAL
   const handleOpenEdit = (product) => {
+    let parsedImages = [];
+    if (product.images) {
+      try {
+        parsedImages = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+      } catch {
+        parsedImages = product.images.split(',').filter(Boolean);
+      }
+    } else if (product.imageUrl) {
+      parsedImages = [product.imageUrl];
+    }
+
     setEditingProduct(product);
     setEditForm({
       name: product.name || '',
@@ -132,7 +150,9 @@ export default function AdminDashboard() {
       skinType: product.skinType || '',
       description: product.description || '',
       ingredients: product.ingredients || '',
-      status: product.status || 'ACTIVE'
+      status: product.status || 'ACTIVE',
+      imageUrl: product.imageUrl || (parsedImages[0] || ''),
+      images: parsedImages
     });
   };
 
@@ -141,6 +161,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     if (!editingProduct) return;
     try {
+      const primaryImg = editForm.images?.[0] || editForm.imageUrl || '';
       await axios.put(`${API}/products/${editingProduct.id}`, {
         name: editForm.name,
         brand: editForm.brand,
@@ -150,7 +171,9 @@ export default function AdminDashboard() {
         skinType: editForm.skinType,
         description: editForm.description,
         ingredients: editForm.ingredients,
-        status: editForm.status
+        status: editForm.status,
+        imageUrl: primaryImg,
+        images: JSON.stringify(editForm.images || (primaryImg ? [primaryImg] : []))
       }, getAuthHeaders());
 
       setSnack({ open: true, msg: `Product #${editingProduct.id} updated successfully! ✅`, severity: 'success' });
@@ -466,6 +489,15 @@ export default function AdminDashboard() {
 
               <Box component="form" onSubmit={handleAddProduct}>
                 <Grid container spacing={2.5}>
+                  <Grid item xs={12}>
+                    <ImageSequenceManager
+                      images={newProduct.images || []}
+                      onChange={(updatedImages, primaryUrl) => {
+                        setNewProduct(p => ({ ...p, images: updatedImages, imageUrl: primaryUrl }));
+                      }}
+                    />
+                  </Grid>
+
                   <Grid item xs={12} sm={6} md={4}>
                     <TextField fullWidth size="small" label="Product Name *" required
                       value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} />
@@ -546,8 +578,32 @@ export default function AdminDashboard() {
                     <TableRow key={p.id} hover>
                       <TableCell><Typography variant="caption" fontWeight={700}>#{p.id}</Typography></TableCell>
                       <TableCell>
-                        <Typography variant="body2" fontWeight={700}>{p.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">{p.brand || 'No Brand'}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          {p.imageUrl ? (
+                            <Box
+                              component="img"
+                              src={p.imageUrl}
+                              alt={p.name}
+                              sx={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 2,
+                                objectFit: 'contain',
+                                bgcolor: '#FFFFFF',
+                                border: '1px solid rgba(0,0,0,0.1)',
+                                p: 0.3
+                              }}
+                            />
+                          ) : (
+                            <Avatar variant="rounded" sx={{ width: 44, height: 44, bgcolor: 'rgba(201,149,106,0.12)', color: '#C9956A' }}>
+                              <Spa fontSize="small" />
+                            </Avatar>
+                          )}
+                          <Box>
+                            <Typography variant="body2" fontWeight={700}>{p.name}</Typography>
+                            <Typography variant="caption" color="text.secondary">{p.brand || 'No Brand'}</Typography>
+                          </Box>
+                        </Box>
                       </TableCell>
                       <TableCell>Rs. {p.price?.toLocaleString()}</TableCell>
                       <TableCell>
@@ -801,6 +857,15 @@ export default function AdminDashboard() {
         <Box component="form" onSubmit={handleSaveEdit}>
           <DialogContent dividers>
             <Grid container spacing={2.5}>
+              <Grid item xs={12}>
+                <ImageSequenceManager
+                  images={editForm.images || []}
+                  onChange={(updatedImages, primaryUrl) => {
+                    setEditForm(f => ({ ...f, images: updatedImages, imageUrl: primaryUrl }));
+                  }}
+                />
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth size="small" label="Product Name *" required
                   value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />

@@ -33,6 +33,8 @@ export default function ProductDetail() {
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
   const [reviewLoading, setReviewLoading] = useState(false);
 
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
   useEffect(() => {
     setLoading(true);
     fetch(`${API}/products/${id}`)
@@ -42,11 +44,13 @@ export default function ProductDetail() {
       })
       .then(prod => {
         setProduct(prod);
+        setSelectedImageIndex(0);
       })
       .catch(() => {
         const found = REAL_COSMETICS_PRODUCTS.find(p => String(p.id) === String(id));
         if (found) {
           setProduct(found);
+          setSelectedImageIndex(0);
         }
       })
       .finally(() => setLoading(false));
@@ -55,6 +59,26 @@ export default function ProductDetail() {
       .then(r => setReviews(r.data))
       .catch(() => setReviews([]));
   }, [id]);
+
+  // Gallery image sequence parsing
+  const galleryImages = (() => {
+    if (!product) return [];
+    let list = [];
+    if (product.images) {
+      try {
+        const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+        if (Array.isArray(parsed) && parsed.length > 0) list = parsed;
+      } catch (e) {
+        console.error('Failed to parse product.images', e);
+      }
+    }
+    if (list.length === 0 && product.imageUrl) {
+      list = [product.imageUrl];
+    }
+    return list;
+  })();
+
+  const currentDisplayImage = galleryImages[selectedImageIndex] || product?.imageUrl || null;
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem("token");
@@ -107,24 +131,78 @@ export default function ProductDetail() {
       </Button>
 
       <Grid container spacing={4}>
-        {/* Product Image */}
+        {/* Product Image & Sequence Gallery */}
         <Grid item xs={12} md={5}>
           <Box sx={{
-            height: 420, borderRadius: 4, overflow: 'hidden', position: 'relative',
+            height: 440, borderRadius: 4, overflow: 'hidden', position: 'relative',
             background: 'linear-gradient(135deg, #FDF0F4 0%, #F5E6EA 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '1px solid', borderColor: 'divider'
+            border: '1px solid', borderColor: 'divider',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.06)'
           }}>
-            <Spa sx={{ fontSize: 120, color: 'primary.light', opacity: 0.4 }} />
+            {currentDisplayImage ? (
+              <Box
+                component="img"
+                src={currentDisplayImage}
+                alt={product.name}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  transition: 'transform 0.3s ease',
+                  '&:hover': { transform: 'scale(1.04)' }
+                }}
+              />
+            ) : (
+              <Spa sx={{ fontSize: 120, color: 'primary.light', opacity: 0.4 }} />
+            )}
             {hasDiscount && (
               <Chip label={`${discountPct}% OFF`} color="error" size="small"
-                sx={{ position: 'absolute', top: 16, left: 16, fontWeight: 700, fontSize: '0.85rem' }} />
+                sx={{ position: 'absolute', top: 16, left: 16, fontWeight: 700, fontSize: '0.85rem', boxShadow: 1 }} />
             )}
             <IconButton onClick={() => setWishlisted(v => !v)}
-              sx={{ position: 'absolute', top: 12, right: 12, bgcolor: 'white', boxShadow: 1 }}>
+              sx={{ position: 'absolute', top: 12, right: 12, bgcolor: 'white', boxShadow: 1, '&:hover': { bgcolor: 'white', transform: 'scale(1.1)' } }}>
               {wishlisted ? <Favorite color="error" /> : <FavoriteBorder />}
             </IconButton>
           </Box>
+
+          {/* Sequence Thumbnails Row */}
+          {galleryImages.length > 1 && (
+            <Stack direction="row" spacing={1.5} sx={{ mt: 2, overflowX: 'auto', py: 0.5, alignItems: 'center' }}>
+              {galleryImages.map((img, idx) => (
+                <Box
+                  key={idx}
+                  onClick={() => setSelectedImageIndex(idx)}
+                  sx={{
+                    width: 76,
+                    height: 76,
+                    borderRadius: 2.5,
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    border: '2px solid',
+                    borderColor: selectedImageIndex === idx ? 'primary.main' : 'transparent',
+                    boxShadow: selectedImageIndex === idx ? '0 4px 12px rgba(224, 75, 124, 0.35)' : 'none',
+                    opacity: selectedImageIndex === idx ? 1 : 0.65,
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                    '&:hover': { opacity: 1, transform: 'translateY(-2px)' }
+                  }}
+                >
+                  <Box component="img" src={img} alt={`View ${idx + 1}`} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {idx === 0 && (
+                    <Box sx={{
+                      position: 'absolute', bottom: 2, left: 2, right: 2,
+                      bgcolor: 'rgba(0,0,0,0.6)', color: 'white',
+                      fontSize: '0.6rem', textAlign: 'center', py: 0.2, borderRadius: 0.5, fontWeight: 700
+                    }}>
+                      MAIN
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Stack>
+          )}
         </Grid>
 
         {/* Product Info */}
