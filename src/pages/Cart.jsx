@@ -85,10 +85,15 @@ export default function Cart() {
                       {/* Product Image */}
                       <Grid item>
                         <Box sx={{
-                          width: 80, height: 80, borderRadius: 2,
+                          width: 80, height: 80, borderRadius: 2, overflow: 'hidden',
                           bgcolor: 'primary.50', display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}>
-                          <Spa sx={{ color: 'primary.light', fontSize: 36 }} />
+                          {item.product?.imageUrl ? (
+                            <Box component="img" src={item.product.imageUrl} alt={item.product.name}
+                              sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <Spa sx={{ color: 'primary.light', fontSize: 36 }} />
+                          )}
                         </Box>
                       </Grid>
 

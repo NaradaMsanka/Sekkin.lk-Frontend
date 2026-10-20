@@ -85,6 +85,8 @@ export default function Home() {
             description: p.description || 'Gentle and nourishing formulation enriched with natural botanical extracts.',
             ingredients: p.ingredients || 'Natural Botanical Extracts, Aqua, Glycerin, Essential Vitamins.',
             status: p.status || 'IN_STOCK',
+            imageUrl: p.imageUrl || '',
+            images: p.images || '[]',
             isSale: Boolean(p.discountPrice && p.discountPrice < p.price)
           }));
 
@@ -574,8 +576,24 @@ export default function Home() {
                           </IconButton>
                         </Tooltip>
 
-                        {/* Product Decorative Icon / Emblem */}
-                        <Spa sx={{ fontSize: 75, color: '#C9956A', opacity: 0.65 }} />
+                        {/* Product Image or Decorative Icon */}
+                        {product.imageUrl ? (
+                          <Box
+                            component="img"
+                            src={product.imageUrl}
+                            alt={product.name}
+                            sx={{
+                              width: '100%',
+                              height: 220,
+                              objectFit: 'contain',
+                              p: 1.5,
+                              transition: 'transform 0.3s ease',
+                              '&:hover': { transform: 'scale(1.05)' }
+                            }}
+                          />
+                        ) : (
+                          <Spa sx={{ fontSize: 75, color: '#C9956A', opacity: 0.65 }} />
+                        )}
 
                         {/* Quick View Hover Button (Exact RealCosmetics.lk style) */}
                         <Box
@@ -790,7 +808,16 @@ export default function Home() {
                     {hasDiscount && (
                       <Chip label="Sale!" size="small" sx={{ position: 'absolute', top: 8, left: 8, bgcolor: '#CC2689', color: 'white', fontWeight: 800 }} />
                     )}
-                    <Spa sx={{ fontSize: 60, color: '#C9956A', opacity: 0.7 }} />
+                    {product.imageUrl ? (
+                      <Box
+                        component="img"
+                        src={product.imageUrl}
+                        alt={product.name}
+                        sx={{ width: '100%', height: '100%', objectFit: 'contain', p: 1 }}
+                      />
+                    ) : (
+                      <Spa sx={{ fontSize: 60, color: '#C9956A', opacity: 0.7 }} />
+                    )}
                   </Box>
 
                   {/* Middle Info */}
@@ -919,7 +946,16 @@ export default function Home() {
                       Sale!
                     </Box>
                   )}
-                  <Spa sx={{ fontSize: 100, color: '#C9956A', opacity: 0.7 }} />
+                  {quickViewProduct.imageUrl ? (
+                    <Box
+                      component="img"
+                      src={quickViewProduct.imageUrl}
+                      alt={quickViewProduct.name}
+                      sx={{ width: '100%', height: '100%', objectFit: 'contain', p: 2 }}
+                    />
+                  ) : (
+                    <Spa sx={{ fontSize: 100, color: '#C9956A', opacity: 0.7 }} />
+                  )}
                 </Box>
               </Grid>
 
