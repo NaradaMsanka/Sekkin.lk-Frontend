@@ -11,6 +11,8 @@ import {
   LocalOffer, Inventory, Star, Send, ArrowBack
 } from "@mui/icons-material";
 
+import { REAL_COSMETICS_PRODUCTS } from "../data/realCosmeticsCatalog";
+
 const API = "http://localhost:8080/api";
 
 function getAuthHeaders() {
@@ -32,13 +34,26 @@ export default function ProductDetail() {
   const [reviewLoading, setReviewLoading] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API}/products/${id}`).then(r => r.json()),
-      axios.get(`${API}/products/${id}/reviews`).then(r => r.data).catch(() => [])
-    ]).then(([prod, revs]) => {
-      setProduct(prod);
-      setReviews(revs);
-    }).finally(() => setLoading(false));
+    setLoading(true);
+    fetch(`${API}/products/${id}`)
+      .then(r => {
+        if (!r.ok) throw new Error('Not found in backend');
+        return r.json();
+      })
+      .then(prod => {
+        setProduct(prod);
+      })
+      .catch(() => {
+        const found = REAL_COSMETICS_PRODUCTS.find(p => String(p.id) === String(id));
+        if (found) {
+          setProduct(found);
+        }
+      })
+      .finally(() => setLoading(false));
+
+    axios.get(`${API}/products/${id}/reviews`)
+      .then(r => setReviews(r.data))
+      .catch(() => setReviews([]));
   }, [id]);
 
   const handleAddToCart = async () => {
