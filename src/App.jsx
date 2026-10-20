@@ -1,12 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import {
   AppBar, Toolbar, Typography, Button, IconButton, Badge,
-  Box, Drawer, List, ListItem, ListItemButton, ListItemText,
+  Box, Drawer, List, ListItem, ListItemButton, ListItemText, ListItemIcon,
   Avatar, Menu, MenuItem, Divider, Container, useScrollTrigger,
   Slide, Tooltip, Fab, Grid, Stack, SvgIcon, Chip
 } from "@mui/material";
 import {
-  ShoppingCart, Favorite, Person, Menu as MenuIcon,
+  ShoppingCart, Favorite, Person, Menu as MenuIcon, Close,
   AutoAwesome, AdminPanelSettings, Logout, History,
   Store, WhatsApp, Instagram, Facebook, Phone, Email,
   LocationOn, Verified, LocalShipping, SupportAgent
@@ -73,8 +73,9 @@ function Navbar() {
   };
 
   return (
-    <HideOnScroll>
-      <AppBar
+    <>
+      <HideOnScroll>
+        <AppBar
         position="sticky"
         elevation={0}
         sx={{
@@ -85,22 +86,25 @@ function Navbar() {
         }}
       >
         <Container maxWidth="xl">
-          <Toolbar sx={{ py: 0.8, gap: 1 }}>
+          <Toolbar sx={{ py: 0.8, px: { xs: 0.5, sm: 2 }, gap: { xs: 0.5, sm: 1 }, justifyContent: 'space-between' }}>
             {/* Mobile menu trigger */}
-            <IconButton sx={{ display: { md: 'none' }, color: 'primary.main' }}
-              onClick={() => setDrawerOpen(true)}>
+            <IconButton
+              sx={{ display: { md: 'none' }, color: 'primary.main', p: { xs: 0.7, sm: 1 } }}
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open mobile menu"
+            >
               <MenuIcon />
             </IconButton>
 
             {/* Logo & Brand Name */}
-            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none', flexGrow: { xs: 1, md: 0 }, mr: { md: 4 } }}>
+            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.2, textDecoration: 'none', flexGrow: { xs: 1, md: 0 }, mr: { md: 4 } }}>
               <Box
                 component="img"
                 src="/logo.png"
                 alt="Sekkin.lk Logo"
                 sx={{
-                  height: 44,
-                  width: 44,
+                  height: { xs: 38, sm: 44 },
+                  width: { xs: 38, sm: 44 },
                   borderRadius: '50%',
                   objectFit: 'cover',
                   border: '2px solid #C9956A',
@@ -109,10 +113,10 @@ function Navbar() {
                 }}
               />
               <Box>
-                <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 800, letterSpacing: '-0.3px', lineHeight: 1.1 }}>
+                <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 800, letterSpacing: '-0.3px', lineHeight: 1.1, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
                   Sekkin<span style={{ color: '#C9956A' }}>.lk</span>
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#8c7568', fontSize: '0.62rem', letterSpacing: '1.2px', textTransform: 'uppercase', display: { xs: 'none', sm: 'block' } }}>
+                <Typography variant="caption" sx={{ color: '#8c7568', fontSize: '0.58rem', letterSpacing: '1px', textTransform: 'uppercase', display: { xs: 'none', sm: 'block' } }}>
                   Beauty • Elegance • Confidence
                 </Typography>
               </Box>
@@ -135,7 +139,7 @@ function Navbar() {
             </Box>
 
             {/* Action Icons */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
               <Tooltip title="Help on WhatsApp">
                 <IconButton
                   component="a"
@@ -145,24 +149,26 @@ function Navbar() {
                   sx={{
                     color: '#25D366',
                     bgcolor: 'rgba(37,211,102,0.1)',
+                    p: { xs: 0.8, sm: 1 },
                     '&:hover': { bgcolor: 'rgba(37,211,102,0.2)' },
                   }}
+                  aria-label="WhatsApp Support"
                 >
-                  <WhatsApp fontSize="small" />
+                  <WhatsApp sx={{ fontSize: { xs: 20, sm: 22 } }} />
                 </IconButton>
               </Tooltip>
 
               <Tooltip title="Cart">
-                <IconButton component={Link} to="/cart" sx={{ color: 'primary.main' }}>
-                  <ShoppingCart />
+                <IconButton component={Link} to="/cart" sx={{ color: 'primary.main', p: { xs: 0.8, sm: 1 } }} aria-label="Cart">
+                  <ShoppingCart sx={{ fontSize: { xs: 20, sm: 24 } }} />
                 </IconButton>
               </Tooltip>
 
               {token ? (
                 <>
                   <Tooltip title="Account">
-                    <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                      <Avatar sx={{ width: 34, height: 34, bgcolor: 'primary.main', fontSize: 14 }}>
+                    <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0.5 }} aria-label="Account">
+                      <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13 }}>
                         {user?.sub?.[0]?.toUpperCase() || 'U'}
                       </Avatar>
                     </IconButton>
@@ -189,16 +195,164 @@ function Navbar() {
                   </Menu>
                 </>
               ) : (
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <Button component={Link} to="/login" variant="outlined" color="primary" size="small">Login</Button>
-                  <Button component={Link} to="/register" variant="contained" color="primary" size="small">Sign Up</Button>
-                </Box>
+                <>
+                  <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
+                    <Button component={Link} to="/login" variant="outlined" color="primary" size="small">Login</Button>
+                    <Button component={Link} to="/register" variant="contained" color="primary" size="small">Sign Up</Button>
+                  </Box>
+                  <Tooltip title="Login">
+                    <IconButton component={Link} to="/login" sx={{ display: { xs: 'flex', sm: 'none' }, color: 'primary.main', p: 0.8 }} aria-label="Login">
+                      <Person sx={{ fontSize: 22 }} />
+                    </IconButton>
+                  </Tooltip>
+                </>
               )}
             </Box>
           </Toolbar>
         </Container>
       </AppBar>
     </HideOnScroll>
+
+      {/* Mobile Drawer (iPhone & Android Responsive Menu) */}
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: 280, sm: 320 },
+            bgcolor: '#FFFFFF',
+            p: 2.5,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }
+        }}
+      >
+        <Box>
+          {/* Drawer Header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+              <Box
+                component="img"
+                src="/logo.png"
+                alt="Sekkin.lk"
+                sx={{
+                  height: 38,
+                  width: 38,
+                  borderRadius: '50%',
+                  border: '2px solid #C9956A',
+                }}
+              />
+              <Box>
+                <Typography variant="subtitle1" fontWeight={800} sx={{ color: 'primary.main', lineHeight: 1.1 }}>
+                  Sekkin<span style={{ color: '#C9956A' }}>.lk</span>
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#8c7568', fontSize: '0.62rem', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                  Beauty • Elegance
+                </Typography>
+              </Box>
+            </Box>
+            <IconButton onClick={() => setDrawerOpen(false)} size="small" aria-label="Close menu">
+              <Close />
+            </IconButton>
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+
+          {/* Navigation Links */}
+          <List sx={{ p: 0 }}>
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton component={Link} to="/" onClick={() => setDrawerOpen(false)} sx={{ borderRadius: 2 }}>
+                <ListItemIcon sx={{ minWidth: 38, color: 'primary.main' }}><Store fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Shop Catalog" primaryTypographyProps={{ fontWeight: 600 }} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton component={Link} to="/cart" onClick={() => setDrawerOpen(false)} sx={{ borderRadius: 2 }}>
+                <ListItemIcon sx={{ minWidth: 38, color: 'primary.main' }}><ShoppingCart fontSize="small" /></ListItemIcon>
+                <ListItemText primary="Shopping Cart" primaryTypographyProps={{ fontWeight: 600 }} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton component={Link} to="/orders" onClick={() => setDrawerOpen(false)} sx={{ borderRadius: 2 }}>
+                <ListItemIcon sx={{ minWidth: 38, color: 'primary.main' }}><History fontSize="small" /></ListItemIcon>
+                <ListItemText primary="My Orders" primaryTypographyProps={{ fontWeight: 600 }} />
+              </ListItemButton>
+            </ListItem>
+            {isAdmin && (
+              <ListItem disablePadding sx={{ mb: 0.5 }}>
+                <ListItemButton component={Link} to="/admin" onClick={() => setDrawerOpen(false)} sx={{ borderRadius: 2, bgcolor: 'rgba(181,56,92,0.06)' }}>
+                  <ListItemIcon sx={{ minWidth: 38, color: 'primary.main' }}><AdminPanelSettings fontSize="small" /></ListItemIcon>
+                  <ListItemText primary="Admin Panel" primaryTypographyProps={{ fontWeight: 700, color: 'primary.main' }} />
+                </ListItemButton>
+              </ListItem>
+            )}
+          </List>
+        </Box>
+
+        {/* Drawer Bottom Actions */}
+        <Box sx={{ pt: 2, borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+          {token ? (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="caption" color="text.secondary">Signed in as</Typography>
+              <Typography variant="body2" fontWeight={700} noWrap sx={{ mb: 1.5 }}>{user?.sub}</Typography>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<Logout />}
+                onClick={() => { setDrawerOpen(false); handleLogout(); }}
+              >
+                Logout
+              </Button>
+            </Box>
+          ) : (
+            <Stack spacing={1} sx={{ mb: 2 }}>
+              <Button
+                fullWidth
+                component={Link}
+                to="/login"
+                variant="outlined"
+                color="primary"
+                onClick={() => setDrawerOpen(false)}
+              >
+                Login
+              </Button>
+              <Button
+                fullWidth
+                component={Link}
+                to="/register"
+                variant="contained"
+                color="primary"
+                onClick={() => setDrawerOpen(false)}
+              >
+                Sign Up
+              </Button>
+            </Stack>
+          )}
+
+          <Button
+            fullWidth
+            component="a"
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            startIcon={<WhatsApp />}
+            sx={{
+              bgcolor: '#25D366',
+              color: 'white',
+              fontWeight: 700,
+              borderRadius: 2,
+              py: 1,
+              '&:hover': { bgcolor: '#20BA5A' }
+            }}
+          >
+            WhatsApp Support
+          </Button>
+        </Box>
+      </Drawer>
+    </>
   );
 }
 
@@ -227,74 +381,40 @@ function App() {
             rel="noopener noreferrer"
             sx={{
               position: 'fixed',
-              bottom: 28,
-              right: 28,
+              bottom: { xs: 20, sm: 28 },
+              right: { xs: 16, sm: 28 },
               bgcolor: '#25D366',
               color: '#FFFFFF',
-              zIndex: 9999,
-              boxShadow: '0 8px 24px rgba(37,211,102,0.4)',
+              zIndex: 1300,
+              width: { xs: 50, sm: 58 },
+              height: { xs: 50, sm: 58 },
+              boxShadow: '0 8px 24px rgba(37,211,102,0.45)',
               '&:hover': {
                 bgcolor: '#20BA5A',
-                transform: 'scale(1.06)',
+                transform: 'scale(1.08)',
               },
               transition: 'all 0.25s ease-in-out',
             }}
             aria-label="Chat on WhatsApp"
           >
-            <WhatsApp sx={{ fontSize: 32 }} />
+            <WhatsApp sx={{ fontSize: { xs: 26, sm: 32 } }} />
           </Fab>
         </Tooltip>
 
-        {/* Luxury Cosmetics Footer */}
-        <Box component="footer" sx={{ mt: 12, bgcolor: '#0B0709', color: 'white', borderTop: '1px solid rgba(201,149,106,0.2)' }}>
-          {/* Top Trust Highlights Banner */}
-          <Box sx={{ bgcolor: 'rgba(201,149,106,0.06)', py: 3, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-            <Container maxWidth="lg">
-              <Grid container spacing={3} justifyContent="space-between" alignItems="center">
-                <Grid item xs={12} sm={4}>
-                  <Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: 'center', sm: 'flex-start' }}>
-                    <LocalShipping sx={{ color: '#C9956A', fontSize: 28 }} />
-                    <Box textAlign="left">
-                      <Typography variant="subtitle2" fontWeight={700}>Islandwide Delivery</Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>Fast cash-on-delivery across Sri Lanka</Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: 'center', sm: 'center' }}>
-                    <Verified sx={{ color: '#C9956A', fontSize: 28 }} />
-                    <Box textAlign="left">
-                      <Typography variant="subtitle2" fontWeight={700}>100% Authentic</Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>Certified ingredients & genuine brands</Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: 'center', sm: 'flex-end' }}>
-                    <SupportAgent sx={{ color: '#25D366', fontSize: 28 }} />
-                    <Box textAlign="left">
-                      <Typography variant="subtitle2" fontWeight={700}>Direct WhatsApp Support</Typography>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>Expert skincare help: 078 815 3473</Typography>
-                    </Box>
-                  </Stack>
-                </Grid>
-              </Grid>
-            </Container>
-          </Box>
-
-          {/* Main Footer Content */}
-          <Container maxWidth="lg" sx={{ pt: 7, pb: 5 }}>
-            <Grid container spacing={{ xs: 4, md: 4 }} justifyContent="space-between">
+        {/* Luxury Cosmetics Footer - Upper Bar Removed & Justified Order */}
+        <Box component="footer" sx={{ mt: { xs: 8, md: 12 }, bgcolor: '#0B0709', color: 'white', borderTop: '1px solid rgba(201,149,106,0.25)' }}>
+          <Container maxWidth="lg" sx={{ pt: { xs: 5, md: 7 }, pb: { xs: 10, sm: 5 } }}>
+            <Grid container spacing={{ xs: 4, sm: 3, md: 4 }} justifyContent="space-between" alignItems="flex-start">
               {/* Column 1: Brand Info & Socials */}
-              <Grid item xs={12} md={3.8}>
+              <Grid item xs={12} sm={12} md={4}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                   <Box
                     component="img"
                     src="/logo.png"
                     alt="Sekkin.lk"
                     sx={{
-                      height: 56,
-                      width: 56,
+                      height: 52,
+                      width: 52,
                       borderRadius: '50%',
                       border: '2px solid #C9956A',
                       p: 0.3,
@@ -303,21 +423,21 @@ function App() {
                     }}
                   />
                   <Box>
-                    <Typography variant="h6" fontWeight={800} sx={{ letterSpacing: '0.5px' }}>
+                    <Typography variant="h6" fontWeight={800} sx={{ letterSpacing: '0.5px', lineHeight: 1.15 }}>
                       Sekkin<span style={{ color: '#C9956A' }}>.lk</span>
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#C9956A', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 600, display: 'block' }}>
+                    <Typography variant="caption" sx={{ color: '#C9956A', letterSpacing: '1.8px', textTransform: 'uppercase', fontWeight: 600, display: 'block', mt: 0.3 }}>
                       Beauty • Elegance • Confidence
                     </Typography>
                   </Box>
                 </Box>
 
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 3, maxWidth: 360, lineHeight: 1.75, textAlign: 'justify' }}>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 3, maxWidth: 380, lineHeight: 1.8, fontSize: '0.88rem', textAlign: 'left' }}>
                   Sri Lanka's premier online cosmetics destination. We bring you dermatologically tested beauty essentials crafted to elevate your natural glow with authentic care.
                 </Typography>
 
                 {/* Social Media Links */}
-                <Typography variant="subtitle2" sx={{ color: '#C9956A', fontWeight: 700, mb: 1.5, letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem' }}>
+                <Typography variant="caption" sx={{ color: '#C9956A', fontWeight: 700, mb: 1.5, letterSpacing: '1.5px', textTransform: 'uppercase', display: 'block' }}>
                   Connect With Us
                 </Typography>
                 <Stack direction="row" spacing={1.5}>
@@ -425,8 +545,8 @@ function App() {
               </Grid>
 
               {/* Column 2: Quick Links */}
-              <Grid item xs={6} sm={3} md={2}>
-                <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#C9956A', mb: 2.5, letterSpacing: '0.5px' }}>
+              <Grid item xs={6} sm={4} md={2}>
+                <Typography variant="subtitle2" sx={{ color: '#C9956A', fontWeight: 800, mb: 2.5, letterSpacing: '1px', textTransform: 'uppercase' }}>
                   Explore
                 </Typography>
                 <Stack spacing={1.5}>
@@ -445,8 +565,9 @@ function App() {
                       sx={{
                         color: 'rgba(255,255,255,0.7)',
                         textDecoration: 'none',
-                        transition: 'color 0.2s',
-                        '&:hover': { color: '#C9956A', textDecoration: 'underline' },
+                        display: 'inline-block',
+                        transition: 'all 0.2s ease',
+                        '&:hover': { color: '#C9956A', transform: 'translateX(3px)' },
                       }}
                     >
                       {item.label}
@@ -456,8 +577,8 @@ function App() {
               </Grid>
 
               {/* Column 3: Customer Care */}
-              <Grid item xs={6} sm={3} md={2.5}>
-                <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#C9956A', mb: 2.5, letterSpacing: '0.5px' }}>
+              <Grid item xs={6} sm={4} md={2.4}>
+                <Typography variant="subtitle2" sx={{ color: '#C9956A', fontWeight: 800, mb: 2.5, letterSpacing: '1px', textTransform: 'uppercase' }}>
                   Customer Care
                 </Typography>
                 <Stack spacing={1.5}>
@@ -476,8 +597,9 @@ function App() {
                       sx={{
                         color: 'rgba(255,255,255,0.7)',
                         textDecoration: 'none',
-                        transition: 'color 0.2s',
-                        '&:hover': { color: '#C9956A', textDecoration: 'underline' },
+                        display: 'inline-block',
+                        transition: 'all 0.2s ease',
+                        '&:hover': { color: '#C9956A', transform: 'translateX(3px)' },
                       }}
                     >
                       {item.label}
@@ -487,8 +609,8 @@ function App() {
               </Grid>
 
               {/* Column 4: Contact & WhatsApp */}
-              <Grid item xs={12} sm={6} md={3.2}>
-                <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#C9956A', mb: 2.5, letterSpacing: '0.5px' }}>
+              <Grid item xs={12} sm={4} md={3.4}>
+                <Typography variant="subtitle2" sx={{ color: '#C9956A', fontWeight: 800, mb: 2.5, letterSpacing: '1px', textTransform: 'uppercase' }}>
                   Get in Touch
                 </Typography>
                 <Stack spacing={2}>
@@ -525,7 +647,7 @@ function App() {
                       fontWeight: 700,
                       borderRadius: 3,
                       py: 1.2,
-                      mt: 1,
+                      mt: 0.5,
                       boxShadow: '0 4px 14px rgba(37,211,102,0.3)',
                       '&:hover': {
                         bgcolor: '#20BA5A',
@@ -545,7 +667,7 @@ function App() {
               <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', textAlign: { xs: 'center', sm: 'left' } }}>
                 © {new Date().getFullYear()} <strong>Sekkin.lk</strong>. All rights reserved. Sri Lanka.
               </Typography>
-              <Stack direction="row" spacing={3}>
+              <Stack direction="row" spacing={{ xs: 2, sm: 3 }} justifyContent="center">
                 <Typography component={Link} to="/" variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', '&:hover': { color: '#C9956A' } }}>
                   Privacy Policy
                 </Typography>
