@@ -13,13 +13,14 @@ import {
   Search, ShoppingCart, Favorite, FavoriteBorder, FilterList,
   Star, Spa, ExpandMore, ExpandLess, AutoAwesome,
   GridView, ViewList, Visibility, Close, Add, Remove,
-  CheckCircle, WhatsApp, LocalShipping, Payment, Verified
+  CheckCircle, WhatsApp, LocalShipping, Payment, Verified, ElectricBolt
 } from '@mui/icons-material';
 import {
   REAL_COSMETICS_PRODUCTS,
   REAL_COSMETICS_CATEGORIES,
   REAL_COSMETICS_BRANDS
 } from '../data/realCosmeticsCatalog';
+import DirectCheckoutModal from '../components/DirectCheckoutModal';
 
 const API = 'http://localhost:8080/api';
 const WHATSAPP_NUMBER = "94788153473";
@@ -60,6 +61,10 @@ export default function Home() {
   // Quick View Dialog State
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [quickViewQty, setQuickViewQty] = useState(1);
+
+  // Direct Pay Checkout State
+  const [checkoutProduct, setCheckoutProduct] = useState(null);
+  const [checkoutQty, setCheckoutQty] = useState(1);
 
   // Snackbar Toast
   const [toastMsg, setToastMsg] = useState('');
@@ -511,29 +516,33 @@ export default function Home() {
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        borderRadius: 3.5,
+                        borderRadius: 4,
                         overflow: 'hidden',
-                        border: '1px solid rgba(0,0,0,0.07)',
-                        boxShadow: '0 4px 18px rgba(0,0,0,0.03)',
-                        transition: 'all 0.3s ease',
+                        border: '1px solid rgba(201, 149, 106, 0.22)',
+                        boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
+                        transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                         position: 'relative',
+                        bgcolor: '#FFFFFF',
                         '&:hover': {
                           transform: 'translateY(-6px)',
-                          boxShadow: '0 12px 28px rgba(181,56,92,0.15)',
-                          borderColor: 'rgba(181,56,92,0.3)',
-                          '& .quick-view-overlay': { opacity: 1, pointerEvents: 'auto' }
+                          boxShadow: '0 14px 30px rgba(181,56,92,0.18)',
+                          borderColor: 'rgba(181,56,92,0.4)',
+                          '& .quick-view-overlay': { opacity: 1, pointerEvents: 'auto', transform: 'translateY(0)' },
+                          '& .product-card-img': { transform: 'scale(1.06)' }
                         }
                       }}
                     >
                       {/* Card Media / Header with Badges */}
                       <Box sx={{
-                        height: 220,
-                        background: 'radial-gradient(circle at 50% 50%, #FFF5F7 0%, #F5EAEF 100%)',
+                        height: 260,
+                        width: '100%',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        bgcolor: '#FBF8F6',
+                        borderBottom: '1px solid rgba(0,0,0,0.06)',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative',
-                        overflow: 'hidden'
+                        justifyContent: 'center'
                       }}>
                         {/* RealCosmetics-Style Circular "Sale!" Badge */}
                         {hasDiscount && (
@@ -541,15 +550,15 @@ export default function Home() {
                             position: 'absolute',
                             top: 12,
                             left: 12,
-                            bgcolor: '#CC2689',
+                            background: 'linear-gradient(135deg, #CC2689 0%, #B5385C 100%)',
                             color: 'white',
                             fontSize: '0.72rem',
                             fontWeight: 800,
-                            letterSpacing: '0.5px',
-                            px: 1.2,
-                            py: 0.6,
-                            borderRadius: '16px',
-                            boxShadow: '0 3px 8px rgba(204,38,137,0.4)',
+                            letterSpacing: '0.6px',
+                            px: 1.4,
+                            py: 0.5,
+                            borderRadius: '20px',
+                            boxShadow: '0 3px 10px rgba(204,38,137,0.4)',
                             zIndex: 2,
                             textTransform: 'uppercase'
                           }}>
@@ -566,10 +575,17 @@ export default function Home() {
                               position: 'absolute',
                               top: 12,
                               right: 12,
-                              bgcolor: 'rgba(255,255,255,0.9)',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                              bgcolor: 'rgba(255,255,255,0.92)',
+                              boxShadow: '0 3px 10px rgba(0,0,0,0.12)',
+                              backdropFilter: 'blur(8px)',
+                              border: '1px solid rgba(255,255,255,0.6)',
                               zIndex: 2,
-                              '&:hover': { bgcolor: 'white' }
+                              transition: 'all 0.2s ease',
+                              '&:hover': {
+                                bgcolor: 'white',
+                                transform: 'scale(1.1)',
+                                boxShadow: '0 4px 14px rgba(181,56,92,0.25)'
+                              }
                             }}
                           >
                             {isWishlisted ? <Favorite color="error" fontSize="small" /> : <FavoriteBorder fontSize="small" />}
@@ -580,22 +596,25 @@ export default function Home() {
                         {product.imageUrl ? (
                           <Box
                             component="img"
+                            className="product-card-img"
                             src={product.imageUrl}
                             alt={product.name}
                             sx={{
                               width: '100%',
-                              height: 220,
-                              objectFit: 'contain',
-                              p: 1.5,
-                              transition: 'transform 0.3s ease',
-                              '&:hover': { transform: 'scale(1.05)' }
+                              height: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                              display: 'block',
+                              transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)'
                             }}
                           />
                         ) : (
-                          <Spa sx={{ fontSize: 75, color: '#C9956A', opacity: 0.65 }} />
+                          <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(201,149,106,0.06)' }}>
+                            <Spa sx={{ fontSize: 75, color: '#C9956A', opacity: 0.65 }} />
+                          </Box>
                         )}
 
-                        {/* Quick View Hover Button (Exact RealCosmetics.lk style) */}
+                        {/* Quick View Hover Button */}
                         <Box
                           className="quick-view-overlay"
                           sx={{
@@ -607,27 +626,36 @@ export default function Home() {
                             justifyContent: 'center',
                             opacity: 0,
                             pointerEvents: 'none',
-                            transition: 'opacity 0.25s ease',
+                            transform: 'translateY(6px)',
+                            transition: 'all 0.25s ease',
                             zIndex: 3
                           }}
                         >
                           <Button
                             variant="contained"
                             size="small"
-                            startIcon={<Visibility />}
+                            startIcon={<Visibility sx={{ fontSize: 16 }} />}
                             onClick={() => {
                               setQuickViewProduct(product);
                               setQuickViewQty(1);
                             }}
                             sx={{
-                              bgcolor: 'rgba(45,27,27,0.9)',
+                              bgcolor: 'rgba(26,26,26,0.85)',
                               color: 'white',
-                              borderRadius: 4,
+                              borderRadius: 5,
                               fontSize: '0.75rem',
                               fontWeight: 700,
-                              px: 2,
-                              backdropFilter: 'blur(8px)',
-                              '&:hover': { bgcolor: '#2D1B1B' }
+                              px: 2.2,
+                              py: 0.6,
+                              backdropFilter: 'blur(10px)',
+                              border: '1px solid rgba(255,255,255,0.25)',
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                              transition: 'all 0.2s ease',
+                              '&:hover': {
+                                bgcolor: '#B5385C',
+                                transform: 'scale(1.05)',
+                                boxShadow: '0 6px 20px rgba(181,56,92,0.45)'
+                              }
                             }}
                           >
                             Quick View
@@ -735,30 +763,50 @@ export default function Home() {
                       </CardContent>
 
                       {/* Card Actions */}
-                      <CardActions sx={{ px: 2.5, pb: 2.5, pt: 0.5 }}>
+                      <CardActions sx={{ px: 2, pb: 2.2, pt: 0.5, gap: 1 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => addToCart(product, 1)}
+                          sx={{
+                            minWidth: 44,
+                            px: 1.5,
+                            py: 0.9,
+                            borderRadius: 2.5,
+                            borderColor: '#FF71CB',
+                            color: '#B5385C',
+                            fontWeight: 700,
+                            '&:hover': { bgcolor: '#FFF0F7', borderColor: '#B5385C' }
+                          }}
+                          title="Add to Cart"
+                        >
+                          <ShoppingCart fontSize="small" />
+                        </Button>
+
                         <Button
                           fullWidth
                           variant="contained"
-                          startIcon={<ShoppingCart />}
-                          onClick={() => addToCart(product, 1)}
+                          startIcon={<ElectricBolt sx={{ fontSize: 18 }} />}
+                          onClick={() => {
+                            setCheckoutProduct(product);
+                            setCheckoutQty(1);
+                          }}
                           sx={{
-                            bgcolor: '#FF71CB',
-                            color: '#FFFFFF',
-                            borderRadius: 3,
-                            fontWeight: 700,
-                            py: 1,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.8px',
+                            bgcolor: '#1A1A1A',
+                            color: '#FFE082',
+                            borderRadius: 2.5,
+                            fontWeight: 800,
+                            py: 0.9,
                             fontSize: '0.82rem',
-                            boxShadow: '0 4px 14px rgba(255,113,203,0.3)',
+                            letterSpacing: '0.3px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                             '&:hover': {
-                              bgcolor: '#80D8F8',
-                              color: '#FFFFFF',
-                              boxShadow: '0 4px 14px rgba(128,216,248,0.4)',
+                              bgcolor: '#B5385C',
+                              color: 'white',
+                              boxShadow: '0 4px 14px rgba(181,56,92,0.35)'
                             }
                           }}
                         >
-                          Add to Cart
+                          ⚡ Pay Now
                         </Button>
                       </CardActions>
                     </Card>
@@ -795,25 +843,27 @@ export default function Home() {
                 >
                   {/* Left Thumbnail */}
                   <Box sx={{
-                    width: { xs: '100%', md: 160 },
-                    height: 160,
+                    width: { xs: '100%', md: 180 },
+                    height: { xs: 220, md: 180 },
                     borderRadius: 3,
-                    bgcolor: '#FAF0F4',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(201,149,106,0.2)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     position: 'relative',
+                    bgcolor: '#FAF6F4',
                     flexShrink: 0
                   }}>
                     {hasDiscount && (
-                      <Chip label="Sale!" size="small" sx={{ position: 'absolute', top: 8, left: 8, bgcolor: '#CC2689', color: 'white', fontWeight: 800 }} />
+                      <Chip label="Sale!" size="small" sx={{ position: 'absolute', top: 10, left: 10, background: 'linear-gradient(135deg, #CC2689 0%, #B5385C 100%)', color: 'white', fontWeight: 800, zIndex: 2, boxShadow: '0 2px 8px rgba(204,38,137,0.3)' }} />
                     )}
                     {product.imageUrl ? (
                       <Box
                         component="img"
                         src={product.imageUrl}
                         alt={product.name}
-                        sx={{ width: '100%', height: '100%', objectFit: 'contain', p: 1 }}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
                       />
                     ) : (
                       <Spa sx={{ fontSize: 60, color: '#C9956A', opacity: 0.7 }} />
@@ -891,13 +941,31 @@ export default function Home() {
                         Quick View
                       </Button>
                       <Button
-                        variant="contained"
+                        variant="outlined"
                         size="small"
                         startIcon={<ShoppingCart />}
                         onClick={() => addToCart(product, 1)}
-                        sx={{ bgcolor: '#FF71CB', '&:hover': { bgcolor: '#80D8F8' }, borderRadius: 2, fontWeight: 700 }}
+                        sx={{ borderColor: '#FF71CB', color: '#B5385C', borderRadius: 2, fontWeight: 700 }}
                       >
-                        Add to Cart
+                        Cart
+                      </Button>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        startIcon={<ElectricBolt />}
+                        onClick={() => {
+                          setCheckoutProduct(product);
+                          setCheckoutQty(1);
+                        }}
+                        sx={{
+                          bgcolor: '#1A1A1A',
+                          color: '#FFE082',
+                          borderRadius: 2,
+                          fontWeight: 800,
+                          '&:hover': { bgcolor: '#B5385C', color: 'white' }
+                        }}
+                      >
+                        ⚡ Pay Now
                       </Button>
                     </Stack>
                   </Box>
@@ -928,20 +996,24 @@ export default function Home() {
               {/* Product Visual Area */}
               <Grid item xs={12} md={5}>
                 <Box sx={{
-                  height: 320,
-                  bgcolor: '#FAF0F4',
-                  borderRadius: 3,
+                  height: 340,
+                  bgcolor: '#FAF6F4',
+                  borderRadius: 3.5,
+                  overflow: 'hidden',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   position: 'relative',
-                  border: '1px solid rgba(201,149,106,0.2)'
+                  border: '1px solid rgba(201,149,106,0.22)',
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.06)'
                 }}>
                   {quickViewProduct.discountPrice && quickViewProduct.discountPrice < quickViewProduct.price && (
                     <Box sx={{
                       position: 'absolute', top: 16, left: 16,
-                      bgcolor: '#CC2689', color: 'white', fontWeight: 800,
-                      px: 1.5, py: 0.6, borderRadius: '16px', fontSize: '0.75rem'
+                      background: 'linear-gradient(135deg, #CC2689 0%, #B5385C 100%)',
+                      color: 'white', fontWeight: 800,
+                      px: 1.5, py: 0.6, borderRadius: '16px', fontSize: '0.75rem',
+                      zIndex: 2, boxShadow: '0 3px 10px rgba(204,38,137,0.35)'
                     }}>
                       Sale!
                     </Box>
@@ -951,7 +1023,7 @@ export default function Home() {
                       component="img"
                       src={quickViewProduct.imageUrl}
                       alt={quickViewProduct.name}
-                      sx={{ width: '100%', height: '100%', objectFit: 'contain', p: 2 }}
+                      sx={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
                     />
                   ) : (
                     <Spa sx={{ fontSize: 100, color: '#C9956A', opacity: 0.7 }} />
@@ -1019,8 +1091,8 @@ export default function Home() {
 
                 <Divider sx={{ mb: 2.5 }} />
 
-                {/* Quantity & Add to Cart Controls */}
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+                {/* Quantity & Add to Cart & Pay Controls */}
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="center">
                   <Box sx={{
                     display: 'flex', alignItems: 'center',
                     border: '1px solid rgba(0,0,0,0.15)', borderRadius: 2.5, px: 1
@@ -1036,16 +1108,35 @@ export default function Home() {
 
                   <Button
                     fullWidth
-                    variant="contained"
+                    variant="outlined"
                     startIcon={<ShoppingCart />}
                     onClick={() => addToCart(quickViewProduct, quickViewQty)}
                     sx={{
-                      bgcolor: '#FF71CB', color: 'white', py: 1.2, borderRadius: 3, fontWeight: 700,
-                      boxShadow: '0 4px 14px rgba(255,113,203,0.3)',
-                      '&:hover': { bgcolor: '#80D8F8' }
+                      borderColor: '#FF71CB', color: '#B5385C', py: 1.2, borderRadius: 3, fontWeight: 700,
+                      '&:hover': { bgcolor: '#FFF0F7', borderColor: '#B5385C' }
                     }}
                   >
                     Add {quickViewQty > 1 ? `(${quickViewQty})` : ''} to Cart
+                  </Button>
+
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={<ElectricBolt />}
+                    onClick={() => {
+                      const p = quickViewProduct;
+                      const q = quickViewQty;
+                      setQuickViewProduct(null);
+                      setCheckoutProduct(p);
+                      setCheckoutQty(q);
+                    }}
+                    sx={{
+                      bgcolor: '#1A1A1A', color: '#FFE082', py: 1.2, borderRadius: 3, fontWeight: 800,
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+                      '&:hover': { bgcolor: '#B5385C', color: 'white' }
+                    }}
+                  >
+                    ⚡ Pay Now
                   </Button>
                 </Stack>
 
@@ -1076,6 +1167,14 @@ export default function Home() {
         onClose={() => setToastMsg('')}
         message={toastMsg}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+
+      {/* Direct Instant Checkout Modal */}
+      <DirectCheckoutModal
+        open={Boolean(checkoutProduct)}
+        onClose={() => setCheckoutProduct(null)}
+        product={checkoutProduct}
+        initialQty={checkoutQty}
       />
     </Box>
   );
