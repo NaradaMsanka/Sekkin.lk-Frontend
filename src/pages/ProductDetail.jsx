@@ -8,10 +8,11 @@ import {
 } from "@mui/material";
 import {
   ShoppingCart, Favorite, FavoriteBorder, Spa,
-  LocalOffer, Inventory, Star, Send, ArrowBack
+  LocalOffer, Inventory, Star, Send, ArrowBack, ElectricBolt
 } from "@mui/icons-material";
 
 import { REAL_COSMETICS_PRODUCTS } from "../data/realCosmeticsCatalog";
+import DirectCheckoutModal from "../components/DirectCheckoutModal";
 
 const API = "http://localhost:8080/api";
 
@@ -28,6 +29,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState(0);
   const [qty, setQty] = useState(1);
+  const [directCheckoutOpen, setDirectCheckoutOpen] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
@@ -134,10 +136,10 @@ export default function ProductDetail() {
         {/* Product Image & Sequence Gallery */}
         <Grid item xs={12} md={5}>
           <Box sx={{
-            height: 440, borderRadius: 4, overflow: 'hidden', position: 'relative',
-            background: 'linear-gradient(135deg, #FDF0F4 0%, #F5E6EA 100%)',
+            height: 460, borderRadius: 4, overflow: 'hidden', position: 'relative',
+            bgcolor: '#FAF6F4',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '1px solid', borderColor: 'divider',
+            border: '1px solid rgba(201,149,106,0.22)',
             boxShadow: '0 8px 30px rgba(0,0,0,0.06)'
           }}>
             {currentDisplayImage ? (
@@ -262,9 +264,31 @@ export default function ProductDetail() {
             </Button>
           </Stack>
 
-          <Button fullWidth variant="outlined" color="primary" size="large"
-            onClick={() => { handleAddToCart(); setTimeout(() => navigate('/cart'), 500); }}>
-            Buy Now
+          <Button
+            fullWidth
+            variant="contained"
+            size="large"
+            startIcon={<ElectricBolt />}
+            disabled={product.stockQuantity === 0}
+            onClick={() => setDirectCheckoutOpen(true)}
+            sx={{
+              bgcolor: '#1A1A1A',
+              color: '#FFE082',
+              fontWeight: 800,
+              fontSize: '1rem',
+              py: 1.5,
+              borderRadius: 3,
+              boxShadow: '0 4px 18px rgba(0,0,0,0.2)',
+              '&:hover': {
+                bgcolor: '#B5385C',
+                color: 'white',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 22px rgba(181,56,92,0.4)'
+              },
+              transition: 'all 0.25s ease'
+            }}
+          >
+            ⚡ Pay Now (Card, Koko or COD)
           </Button>
         </Grid>
       </Grid>
@@ -348,6 +372,14 @@ export default function ProductDetail() {
           {snack.msg}
         </Alert>
       </Snackbar>
+
+      {/* Direct Instant Checkout Modal */}
+      <DirectCheckoutModal
+        open={directCheckoutOpen}
+        onClose={() => setDirectCheckoutOpen(false)}
+        product={product}
+        initialQty={qty}
+      />
     </Container>
   );
 }

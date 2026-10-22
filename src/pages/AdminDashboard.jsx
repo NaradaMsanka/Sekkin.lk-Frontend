@@ -6,7 +6,7 @@ import {
   TableRow, Paper, Button, TextField, Select, MenuItem, FormControl,
   InputLabel, Alert, Skeleton, Avatar, Divider, IconButton, Tabs, Tab,
   Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Tooltip,
-  InputAdornment
+  InputAdornment, CircularProgress
 } from "@mui/material";
 import {
   Dashboard, Inventory, Receipt, People, TrendingUp,
@@ -63,14 +63,16 @@ export default function AdminDashboard() {
 
   // Edit Product Modal State
   const [editingProduct, setEditingProduct] = useState(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [addingProduct, setAddingProduct] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '', brand: '', price: '', discountPrice: '', stockQuantity: '',
     skinType: '', description: '', ingredients: '', status: 'ACTIVE',
     imageUrl: '', images: []
   });
 
-  const fetchAll = async () => {
-    setLoading(true);
+  const fetchAll = async (showSkeleton = true) => {
+    if (showSkeleton) setLoading(true);
     setError("");
     try {
       const headers = getAuthHeaders();
@@ -92,20 +94,21 @@ export default function AdminDashboard() {
         ? "Access denied. You need an active ADMIN account to access this panel."
         : "Failed to connect to the backend server. Make sure Spring Boot is running.");
     } finally {
-      setLoading(false);
+      if (showSkeleton) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAll();
+    fetchAll(true);
   }, []);
 
   // 1. ADD NEW PRODUCT
   const handleAddProduct = async (e) => {
     e.preventDefault();
+    setAddingProduct(true);
     try {
       const primaryImg = newProduct.images?.[0] || newProduct.imageUrl || '';
-      await axios.post(`${API}/products`, {
+      const payload = {
         ...newProduct,
         price: parseFloat(newProduct.price),
         stockQuantity: parseInt(newProduct.stockQuantity, 10),
@@ -113,7 +116,9 @@ export default function AdminDashboard() {
         status: newProduct.status || "ACTIVE",
         imageUrl: primaryImg,
         images: JSON.stringify(newProduct.images || (primaryImg ? [primaryImg] : []))
-      }, getAuthHeaders());
+      };
+
+      const res = await axios.post(`${API}/products`, payload, getAuthHeaders());
 
       setSnack({ open: true, msg: `Product "${newProduct.name}" added successfully! ✅`, severity: 'success' });
       setNewProduct({
@@ -121,9 +126,15 @@ export default function AdminDashboard() {
         skinType: '', description: '', ingredients: '', status: 'ACTIVE',
         imageUrl: '', images: []
       });
-      fetchAll();
+
+      if (res.data) {
+        setProducts(prev => [res.data, ...prev]);
+      }
+      fetchAll(false);
     } catch (e) {
       setSnack({ open: true, msg: e.response?.data?.message || e.response?.data || 'Failed to add product.', severity: 'error' });
+    } finally {
+      setAddingProduct(false);
     }
   };
 
@@ -160,9 +171,10 @@ export default function AdminDashboard() {
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!editingProduct) return;
+    setSavingEdit(true);
     try {
       const primaryImg = editForm.images?.[0] || editForm.imageUrl || '';
-      await axios.put(`${API}/products/${editingProduct.id}`, {
+      const payload = {
         name: editForm.name,
         brand: editForm.brand,
         price: parseFloat(editForm.price),
@@ -174,13 +186,21 @@ export default function AdminDashboard() {
         status: editForm.status,
         imageUrl: primaryImg,
         images: JSON.stringify(editForm.images || (primaryImg ? [primaryImg] : []))
-      }, getAuthHeaders());
+      };
+
+      const res = await axios.put(`${API}/products/${editingProduct.id}`, payload, getAuthHeaders());
+
+      // Optimistic update: show new product values and image immediately without freezing UI
+      const updatedProduct = res.data || { ...editingProduct, ...payload, id: editingProduct.id };
+      setProducts(prev => prev.map(p => p.id === editingProduct.id ? updatedProduct : p));
 
       setSnack({ open: true, msg: `Product #${editingProduct.id} updated successfully! ✅`, severity: 'success' });
       setEditingProduct(null);
-      fetchAll();
+      fetchAll(false);
     } catch (err) {
       setSnack({ open: true, msg: err.response?.data?.message || 'Failed to update product details.', severity: 'error' });
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -197,7 +217,9 @@ export default function AdminDashboard() {
         skinType: product.skinType,
         description: product.description,
         ingredients: product.ingredients,
-        status: product.status || 'ACTIVE'
+        status: product.status || 'ACTIVE',
+        imageUrl: product.imageUrl,
+        images: product.images
       }, getAuthHeaders());
 
       setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stockQuantity: newQty } : p));
@@ -535,8 +557,15 @@ export default function AdminDashboard() {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Button type="submit" variant="contained" color="primary" startIcon={<Add />} sx={{ px: 4, py: 1.2, borderRadius: 2.5, fontWeight: 700 }}>
-                      Publish Product to Catalog
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      disabled={addingProduct}
+                      startIcon={addingProduct ? <CircularProgress size={18} color="inherit" /> : <Add />}
+                      sx={{ px: 4, py: 1.2, borderRadius: 2.5, fontWeight: 700 }}
+                    >
+                      {addingProduct ? "Publishing Product..." : "Publish Product to Catalog"}
                     </Button>
                   </Grid>
                 </Grid>
@@ -588,10 +617,9 @@ export default function AdminDashboard() {
                                 width: 44,
                                 height: 44,
                                 borderRadius: 2,
-                                objectFit: 'contain',
-                                bgcolor: '#FFFFFF',
-                                border: '1px solid rgba(0,0,0,0.1)',
-                                p: 0.3
+                                objectFit: 'cover',
+                                bgcolor: '#FAF6F4',
+                                border: '1px solid rgba(201,149,106,0.2)'
                               }}
                             />
                           ) : (
@@ -907,11 +935,18 @@ export default function AdminDashboard() {
           </DialogContent>
 
           <DialogActions sx={{ p: 2.5 }}>
-            <Button onClick={() => setEditingProduct(null)} color="inherit">
+            <Button onClick={() => setEditingProduct(null)} disabled={savingEdit} color="inherit">
               Cancel
             </Button>
-            <Button type="submit" variant="contained" color="primary" startIcon={<Save />} sx={{ borderRadius: 2 }}>
-              Save Changes
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={savingEdit}
+              startIcon={savingEdit ? <CircularProgress size={18} color="inherit" /> : <Save />}
+              sx={{ borderRadius: 2 }}
+            >
+              {savingEdit ? "Saving Changes..." : "Save Changes"}
             </Button>
           </DialogActions>
         </Box>
