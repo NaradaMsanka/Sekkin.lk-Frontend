@@ -22,7 +22,23 @@ import {
 } from '../data/realCosmeticsCatalog';
 import DirectCheckoutModal from '../components/DirectCheckoutModal';
 
-const API = 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sekkin-lk-backend.onrender.com';
+const API = `${API_BASE_URL}/api`;
+
+const resolveImageUrl = (imgUrl) => {
+  if (!imgUrl || typeof imgUrl !== 'string') return '';
+  if (imgUrl.startsWith('http://localhost:8080')) {
+    return imgUrl.replace('http://localhost:8080', API_BASE_URL);
+  }
+  if (imgUrl.startsWith('http://127.0.0.1:8080')) {
+    return imgUrl.replace('http://127.0.0.1:8080', API_BASE_URL);
+  }
+  if (imgUrl.startsWith('/uploads/')) {
+    return `${API_BASE_URL}${imgUrl}`;
+  }
+  return imgUrl;
+};
+
 const WHATSAPP_NUMBER = "94788153473";
 
 function ProductCardSkeleton() {
@@ -90,7 +106,7 @@ export default function Home() {
             description: p.description || 'Gentle and nourishing formulation enriched with natural botanical extracts.',
             ingredients: p.ingredients || 'Natural Botanical Extracts, Aqua, Glycerin, Essential Vitamins.',
             status: p.status || 'IN_STOCK',
-            imageUrl: p.imageUrl || '',
+            imageUrl: resolveImageUrl(p.imageUrl || ''),
             images: p.images || '[]',
             isSale: Boolean(p.discountPrice && p.discountPrice < p.price)
           }));
@@ -172,7 +188,8 @@ export default function Home() {
 
   const addToCart = async (product, qty = 1) => {
     const token = localStorage.getItem('token');
-    if (!token) {
+    if (!token || token === 'undefined' || token === 'null') {
+      localStorage.removeItem('token');
       navigate('/login');
       return;
     }
@@ -182,10 +199,16 @@ export default function Home() {
         { productId: product.id, quantity: qty },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setToastMsg(`"${product.name}" added to cart!`);
-    } catch {
-      // Local fall-through notification for smooth user feedback
-      setToastMsg(`"${product.name}" added to cart!`);
+      setToastMsg(`"${product.name}" added to cart! 🛒`);
+    } catch (err) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.removeItem('token');
+        setToastMsg("Session expired or not logged in. Please sign in to add items.");
+        setTimeout(() => navigate('/login'), 1200);
+        return;
+      }
+      const errMsg = err.response?.data?.message || err.response?.data || `Could not add "${product.name}" to cart`;
+      setToastMsg(typeof errMsg === 'string' ? errMsg : `Failed to add to cart`);
     }
     if (quickViewProduct) setQuickViewProduct(null);
   };

@@ -8,6 +8,8 @@ import {
   Email, Lock, Visibility, VisibilityOff, AutoAwesome, Login as LoginIcon
 } from "@mui/icons-material";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sekkin-lk-backend.onrender.com';
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +23,7 @@ export default function Login() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:8080/api/auth/login", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -76,8 +78,8 @@ export default function Login() {
               </Typography>
             </Box>
 
-            <Typography variant="h4" fontWeight={700} textAlign="center" mb={0.5}>Welcome Back</Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center" mb={4}>
+            <Typography variant="h4" fontWeight={700} align="center" mb={0.5}>Welcome Back</Typography>
+            <Typography variant="body2" color="text.secondary" align="center" mb={4}>
               Sign in to continue your beauty journey
             </Typography>
 
