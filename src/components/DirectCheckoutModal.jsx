@@ -12,6 +12,22 @@ import {
   Payment, Verified, Download
 } from '@mui/icons-material';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sekkin-lk-backend.onrender.com';
+
+const resolveImageUrl = (imgUrl) => {
+  if (!imgUrl || typeof imgUrl !== 'string') return '';
+  if (imgUrl.startsWith('http://localhost:8080')) {
+    return imgUrl.replace('http://localhost:8080', API_BASE_URL);
+  }
+  if (imgUrl.startsWith('http://127.0.0.1:8080')) {
+    return imgUrl.replace('http://127.0.0.1:8080', API_BASE_URL);
+  }
+  if (imgUrl.startsWith('/uploads/')) {
+    return `${API_BASE_URL}${imgUrl}`;
+  }
+  return imgUrl;
+};
+
 const VALID_COUPONS = {
   GLOW10: { desc: '10% OFF Storewide', rate: 0.10, flat: 0, min: 0 },
   WELCOME10: { desc: '10% Welcome Discount', rate: 0.10, flat: 0, min: 0 },
@@ -192,7 +208,7 @@ export default function DirectCheckoutModal({ open, onClose, product, initialQty
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await axios.post('http://localhost:8080/api/orders/direct', payload, { headers });
+      const res = await axios.post(`${API_BASE_URL}/api/orders/direct`, payload, { headers });
       setOrderReceipt(res.data);
       // Auto-download official payment receipt slip directly to customer's device
       generateAndDownloadSlip(res.data);
@@ -721,7 +737,7 @@ export default function DirectCheckoutModal({ open, onClose, product, initialQty
                       justifyContent: 'center'
                     }}>
                       {product.imageUrl ? (
-                        <Box component="img" src={product.imageUrl} alt={product.name} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <Box component="img" src={resolveImageUrl(product.imageUrl)} alt={product.name} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <ShoppingBag sx={{ color: '#C9956A', opacity: 0.5, fontSize: 32 }} />
                       )}

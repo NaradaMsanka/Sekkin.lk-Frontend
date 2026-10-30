@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import {
   Container, Box, Typography, Button, IconButton, Divider,
   Card, CardContent, Grid, Stack, Chip, Alert, Skeleton, Tooltip, Avatar
 } from '@mui/material';
 import { Delete, Add, Remove, ShoppingBag, ArrowBack, Spa } from '@mui/icons-material';
+import api, { API_BASE_URL, resolveImageUrl } from '../services/api';
 
-const API = 'http://localhost:8080/api/cart';
 
-function getAuthHeaders() {
-  const token = localStorage.getItem('token');
-  return { headers: { Authorization: `Bearer ${token}` } };
-}
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -24,7 +19,7 @@ export default function Cart() {
     const token = localStorage.getItem('token');
     if (!token) { navigate('/login'); return; }
     try {
-      const res = await axios.get(API, getAuthHeaders());
+      const res = await api.get('/api/cart');
       setCart(res.data);
     } catch (err) {
       setError(err.response?.data || 'Failed to load cart.');
@@ -36,14 +31,14 @@ export default function Cart() {
   const handleQty = async (productId, newQty) => {
     if (newQty < 1) return;
     try {
-      await axios.put(`${API}/items/${productId}?quantity=${newQty}`, {}, getAuthHeaders());
+      await api.put(`/api/cart/items/${productId}?quantity=${newQty}`, {});
       fetchCart();
     } catch (err) { setError(err.response?.data || 'Update failed.'); }
   };
 
   const handleRemove = async (productId) => {
     try {
-      await axios.delete(`${API}/items/${productId}`, getAuthHeaders());
+      await api.delete(`/api/cart/items/${productId}`);
       fetchCart();
     } catch { setError('Remove failed.'); }
   };
@@ -89,7 +84,7 @@ export default function Cart() {
                           bgcolor: 'primary.50', display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}>
                           {item.product?.imageUrl ? (
-                            <Box component="img" src={item.product.imageUrl} alt={item.product.name}
+                            <Box component="img" src={resolveImageUrl(item.product.imageUrl)} alt={item.product.name}
                               sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <Spa sx={{ color: 'primary.light', fontSize: 36 }} />

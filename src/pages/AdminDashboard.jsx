@@ -17,7 +17,22 @@ import {
 } from "@mui/icons-material";
 import ImageSequenceManager from "../components/ImageSequenceManager";
 
-const API = "http://localhost:8080/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sekkin-lk-backend.onrender.com";
+const API = `${API_BASE_URL}/api`;
+
+const resolveImageUrl = (imgUrl) => {
+  if (!imgUrl || typeof imgUrl !== 'string') return '';
+  if (imgUrl.startsWith('http://localhost:8080')) {
+    return imgUrl.replace('http://localhost:8080', API_BASE_URL);
+  }
+  if (imgUrl.startsWith('http://127.0.0.1:8080')) {
+    return imgUrl.replace('http://127.0.0.1:8080', API_BASE_URL);
+  }
+  if (imgUrl.startsWith('/uploads/')) {
+    return `${API_BASE_URL}${imgUrl}`;
+  }
+  return imgUrl;
+};
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
@@ -611,7 +626,7 @@ export default function AdminDashboard() {
                           {p.imageUrl ? (
                             <Box
                               component="img"
-                              src={p.imageUrl}
+                              src={resolveImageUrl(p.imageUrl)}
                               alt={p.name}
                               sx={{
                                 width: 44,

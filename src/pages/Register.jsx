@@ -6,6 +6,8 @@ import {
 } from "@mui/material";
 import { Email, Lock, Person, Visibility, VisibilityOff, AutoAwesome, PersonAdd } from "@mui/icons-material";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sekkin-lk-backend.onrender.com';
+
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,15 +26,30 @@ export default function Register() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:8080/api/auth/register", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
       const text = await res.text();
       if (res.ok) {
-        setSuccess("Account created! Redirecting to login...");
-        setTimeout(() => navigate("/login"), 1800);
+        setSuccess("Account created successfully! Logging you in...");
+        try {
+          const loginRes = await fetch(`${API_BASE_URL}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          if (loginRes.ok) {
+            const loginData = await loginRes.json();
+            localStorage.setItem("token", loginData.token);
+            setTimeout(() => navigate("/"), 1200);
+            return;
+          }
+        } catch (loginErr) {
+          console.warn("Auto-login error:", loginErr);
+        }
+        setTimeout(() => navigate("/login"), 1500);
       } else {
         setError(text || "Registration failed. Email may already be in use.");
       }
@@ -77,8 +94,8 @@ export default function Register() {
               </Typography>
             </Box>
 
-            <Typography variant="h4" fontWeight={700} textAlign="center" mb={0.5}>Create Account</Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center" mb={4}>
+            <Typography variant="h4" fontWeight={700} align="center" mb={0.5}>Create Account</Typography>
+            <Typography variant="body2" color="text.secondary" align="center" mb={4}>
               Join our beauty community today
             </Typography>
 

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import {
   Container, Grid, Card, CardContent, Typography, TextField,
   Button, Box, Stack, Divider, Alert, Chip, Stepper, Step, StepLabel,
@@ -9,6 +8,7 @@ import {
 import {
   LocationOn, LocalOffer, CheckCircle, ShoppingBag, ArrowBack, Payment
 } from '@mui/icons-material';
+import api from '../services/api';
 
 export default function Checkout() {
   const [address, setAddress] = useState('');
@@ -28,11 +28,9 @@ export default function Checkout() {
       const token = localStorage.getItem('token');
       if (!token) { navigate('/login'); return; }
 
-      await axios.post('http://localhost:8080/api/orders', {
+      await api.post('/api/orders', {
         shippingAddress: address,
         couponCode: coupon.trim().toUpperCase() || null
-      }, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
 
       setIsSuccess(true);

@@ -14,7 +14,22 @@ import {
 import { REAL_COSMETICS_PRODUCTS } from "../data/realCosmeticsCatalog";
 import DirectCheckoutModal from "../components/DirectCheckoutModal";
 
-const API = "http://localhost:8080/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sekkin-lk-backend.onrender.com";
+const API = `${API_BASE_URL}/api`;
+
+const resolveImageUrl = (imgUrl) => {
+  if (!imgUrl || typeof imgUrl !== 'string') return '';
+  if (imgUrl.startsWith('http://localhost:8080')) {
+    return imgUrl.replace('http://localhost:8080', API_BASE_URL);
+  }
+  if (imgUrl.startsWith('http://127.0.0.1:8080')) {
+    return imgUrl.replace('http://127.0.0.1:8080', API_BASE_URL);
+  }
+  if (imgUrl.startsWith('/uploads/')) {
+    return `${API_BASE_URL}${imgUrl}`;
+  }
+  return imgUrl;
+};
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
@@ -77,19 +92,29 @@ export default function ProductDetail() {
     if (list.length === 0 && product.imageUrl) {
       list = [product.imageUrl];
     }
-    return list;
+    return list.map(img => resolveImageUrl(img));
   })();
 
-  const currentDisplayImage = galleryImages[selectedImageIndex] || product?.imageUrl || null;
+  const currentDisplayImage = galleryImages[selectedImageIndex] || resolveImageUrl(product?.imageUrl) || null;
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem("token");
-    if (!token) { navigate("/login"); return; }
+    if (!token || token === 'undefined' || token === 'null') {
+      localStorage.removeItem('token');
+      navigate("/login");
+      return;
+    }
     try {
       await axios.post(`${API}/cart/items`, { productId: parseInt(id, 10), quantity: qty }, getAuthHeaders());
       setSnack({ open: true, msg: `${qty}x ${product.name} added to cart! 🛒`, severity: 'success' });
     } catch (err) {
-      setSnack({ open: true, msg: err.response?.data || 'Failed to add to cart', severity: 'error' });
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.removeItem('token');
+        setSnack({ open: true, msg: 'Session expired. Please log in again to add to cart.', severity: 'warning' });
+        setTimeout(() => navigate('/login'), 1200);
+        return;
+      }
+      setSnack({ open: true, msg: err.response?.data?.message || err.response?.data || 'Failed to add to cart', severity: 'error' });
     }
   };
 

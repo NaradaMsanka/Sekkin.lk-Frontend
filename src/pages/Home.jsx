@@ -21,25 +21,10 @@ import {
   REAL_COSMETICS_BRANDS
 } from '../data/realCosmeticsCatalog';
 import DirectCheckoutModal from '../components/DirectCheckoutModal';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sekkin-lk-backend.onrender.com';
-const API = `${API_BASE_URL}/api`;
-
-const resolveImageUrl = (imgUrl) => {
-  if (!imgUrl || typeof imgUrl !== 'string') return '';
-  if (imgUrl.startsWith('http://localhost:8080')) {
-    return imgUrl.replace('http://localhost:8080', API_BASE_URL);
-  }
-  if (imgUrl.startsWith('http://127.0.0.1:8080')) {
-    return imgUrl.replace('http://127.0.0.1:8080', API_BASE_URL);
-  }
-  if (imgUrl.startsWith('/uploads/')) {
-    return `${API_BASE_URL}${imgUrl}`;
-  }
-  return imgUrl;
-};
+import { API, resolveImageUrl } from '../services/api';
 
 const WHATSAPP_NUMBER = "94788153473";
+
 
 function ProductCardSkeleton() {
   return (
