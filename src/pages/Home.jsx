@@ -21,10 +21,9 @@ import {
   REAL_COSMETICS_BRANDS
 } from '../data/realCosmeticsCatalog';
 import DirectCheckoutModal from '../components/DirectCheckoutModal';
-import { API, resolveImageUrl } from '../services/api';
+import api, { API, resolveImageUrl } from '../services/api';
 
 const WHATSAPP_NUMBER = "94788153473";
-
 
 function ProductCardSkeleton() {
   return (
@@ -173,23 +172,23 @@ export default function Home() {
 
   const addToCart = async (product, qty = 1) => {
     const token = localStorage.getItem('token');
+    // Token නැත්නම් — redirect නොකර friendly message show කරනවා
     if (!token || token === 'undefined' || token === 'null') {
       localStorage.removeItem('token');
-      navigate('/login');
+      setToastMsg('🔐 Please login to add items to cart!');
       return;
     }
     try {
-      await axios.post(
-        `${API}/cart/items`,
-        { productId: product.id, quantity: qty },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.post(
+        '/api/cart/items',
+        { productId: product.id, quantity: qty }
       );
       setToastMsg(`"${product.name}" added to cart! 🛒`);
     } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
+      if (err.response?.status === 401) {
         localStorage.removeItem('token');
-        setToastMsg("Session expired or not logged in. Please sign in to add items.");
-        setTimeout(() => navigate('/login'), 1200);
+        setToastMsg('⚠️ Session expired. Please log in again.');
+        setTimeout(() => navigate('/login'), 2000);
         return;
       }
       const errMsg = err.response?.data?.message || err.response?.data || `Could not add "${product.name}" to cart`;

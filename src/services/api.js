@@ -41,16 +41,29 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// ➡ Response Interceptor: 401 (Unauthorized) → Login page redirect
+// ⬅ Response Interceptor: 401 errors globally handle කරනවා
+// CORS errors, token expired, unauthorized — සියල්ලම මෙතනින් handle වෙනවා
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
+        // Network error (CORS block වෙලා නම් error.response undefined වෙනවා)
+        if (!error.response) {
+            console.error('Network/CORS error:', error.message);
+            return Promise.reject(error);
         }
+
+        // 401 Unauthorized — token invalid හෝ expired
+        if (error.response.status === 401) {
+            const currentPath = window.location.pathname;
+            // Login page එකේ නම් redirect loop එකක් avoid කරනවා
+            if (currentPath !== '/login') {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            }
+        }
+
         return Promise.reject(error);
     }
 );
 
-export default api;
+export default api;

@@ -29,7 +29,7 @@ function parseJwt(token) {
 }
 
 // WhatsApp support phone number
-const WHATSAPP_NUMBER = "94788153473"; 
+const WHATSAPP_NUMBER = "94788153473";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hello Sekkin.lk! I need assistance with your beauty products.")}`;
 
 // Social Media Links - You can update these links with your exact account URLs
@@ -76,142 +76,142 @@ function Navbar() {
     <>
       <HideOnScroll>
         <AppBar
-        position="sticky"
-        elevation={0}
-        sx={{
-          background: 'rgba(255,255,255,0.95)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(201,149,106,0.25)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
-        }}
-      >
-        <Container maxWidth="xl">
-          <Toolbar sx={{ py: 0.8, px: { xs: 0.5, sm: 2 }, gap: { xs: 0.5, sm: 1 }, justifyContent: 'space-between' }}>
-            {/* Mobile menu trigger */}
-            <IconButton
-              sx={{ display: { md: 'none' }, color: 'primary.main', p: { xs: 0.7, sm: 1 } }}
-              onClick={() => setDrawerOpen(true)}
-              aria-label="Open mobile menu"
-            >
-              <MenuIcon />
-            </IconButton>
+          position="sticky"
+          elevation={0}
+          sx={{
+            background: 'rgba(255,255,255,0.95)',
+            backdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(201,149,106,0.25)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+          }}
+        >
+          <Container maxWidth="xl">
+            <Toolbar sx={{ py: 0.8, px: { xs: 0.5, sm: 2 }, gap: { xs: 0.5, sm: 1 }, justifyContent: 'space-between' }}>
+              {/* Mobile menu trigger */}
+              <IconButton
+                sx={{ display: { md: 'none' }, color: 'primary.main', p: { xs: 0.7, sm: 1 } }}
+                onClick={() => setDrawerOpen(true)}
+                aria-label="Open mobile menu"
+              >
+                <MenuIcon />
+              </IconButton>
 
-            {/* Logo & Brand Name */}
-            <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.2, textDecoration: 'none', flexGrow: { xs: 1, md: 0 }, mr: { md: 4 } }}>
-              <Box
-                component="img"
-                src="/logo.png"
-                alt="Sekkin.lk Logo"
-                sx={{
-                  height: { xs: 38, sm: 44 },
-                  width: { xs: 38, sm: 44 },
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                  border: '2px solid #C9956A',
-                  boxShadow: '0 2px 8px rgba(201,149,106,0.3)',
-                  bgcolor: '#0a0a0a',
-                }}
-              />
-              <Box>
-                <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 800, letterSpacing: '-0.3px', lineHeight: 1.1, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
-                  Sekkin<span style={{ color: '#C9956A' }}>.lk</span>
-                </Typography>
-                <Typography variant="caption" sx={{ color: '#8c7568', fontSize: '0.58rem', letterSpacing: '1px', textTransform: 'uppercase', display: { xs: 'none', sm: 'block' } }}>
-                  Beauty • Elegance • Confidence
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Desktop Nav Links */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, flexGrow: 1, alignItems: 'center' }}>
-              {[{ label: 'Shop', to: '/' }, { label: 'My Orders', to: '/orders' }].map(item => (
-                <Button key={item.to} component={Link} to={item.to}
-                  sx={{ color: 'text.secondary', fontWeight: 500, '&:hover': { color: 'primary.main', bgcolor: 'rgba(181,56,92,0.06)' } }}>
-                  {item.label}
-                </Button>
-              ))}
-              {isAdmin && (
-                <Button component={Link} to="/admin" startIcon={<AdminPanelSettings />}
-                  sx={{ color: 'primary.main', fontWeight: 700 }}>
-                  Admin
-                </Button>
-              )}
-            </Box>
-
-            {/* Action Icons */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
-              <Tooltip title="Help on WhatsApp">
-                <IconButton
-                  component="a"
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              {/* Logo & Brand Name */}
+              <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.2, textDecoration: 'none', flexGrow: { xs: 1, md: 0 }, mr: { md: 4 } }}>
+                <Box
+                  component="img"
+                  src="/logo.png"
+                  alt="Sekkin.lk Logo"
                   sx={{
-                    color: '#25D366',
-                    bgcolor: 'rgba(37,211,102,0.1)',
-                    p: { xs: 0.8, sm: 1 },
-                    '&:hover': { bgcolor: 'rgba(37,211,102,0.2)' },
+                    height: { xs: 38, sm: 44 },
+                    width: { xs: 38, sm: 44 },
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '2px solid #C9956A',
+                    boxShadow: '0 2px 8px rgba(201,149,106,0.3)',
+                    bgcolor: '#0a0a0a',
                   }}
-                  aria-label="WhatsApp Support"
-                >
-                  <WhatsApp sx={{ fontSize: { xs: 20, sm: 22 } }} />
-                </IconButton>
-              </Tooltip>
+                />
+                <Box>
+                  <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 800, letterSpacing: '-0.3px', lineHeight: 1.1, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
+                    Sekkin<span style={{ color: '#C9956A' }}>.lk</span>
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#8c7568', fontSize: '0.58rem', letterSpacing: '1px', textTransform: 'uppercase', display: { xs: 'none', sm: 'block' } }}>
+                    Beauty • Elegance • Confidence
+                  </Typography>
+                </Box>
+              </Box>
 
-              <Tooltip title="Cart">
-                <IconButton component={Link} to="/cart" sx={{ color: 'primary.main', p: { xs: 0.8, sm: 1 } }} aria-label="Cart">
-                  <ShoppingCart sx={{ fontSize: { xs: 20, sm: 24 } }} />
-                </IconButton>
-              </Tooltip>
+              {/* Desktop Nav Links */}
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, flexGrow: 1, alignItems: 'center' }}>
+                {[{ label: 'Shop', to: '/' }, { label: 'My Orders', to: '/orders' }].map(item => (
+                  <Button key={item.to} component={Link} to={item.to}
+                    sx={{ color: 'text.secondary', fontWeight: 500, '&:hover': { color: 'primary.main', bgcolor: 'rgba(181,56,92,0.06)' } }}>
+                    {item.label}
+                  </Button>
+                ))}
+                {isAdmin && (
+                  <Button component={Link} to="/admin" startIcon={<AdminPanelSettings />}
+                    sx={{ color: 'primary.main', fontWeight: 700 }}>
+                    Admin
+                  </Button>
+                )}
+              </Box>
 
-              {token ? (
-                <>
-                  <Tooltip title="Account">
-                    <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0.5 }} aria-label="Account">
-                      <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13 }}>
-                        {user?.sub?.[0]?.toUpperCase() || 'U'}
-                      </Avatar>
-                    </IconButton>
-                  </Tooltip>
-                  <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}
-                    PaperProps={{ sx: { borderRadius: 3, minWidth: 180, mt: 1 } }}>
-                    <Box sx={{ px: 2, py: 1 }}>
-                      <Typography variant="caption" color="text.secondary">Signed in as</Typography>
-                      <Typography variant="body2" fontWeight={600} noWrap>{user?.sub}</Typography>
-                    </Box>
-                    <Divider />
-                    <MenuItem component={Link} to="/orders" onClick={() => setAnchorEl(null)}>
-                      <History sx={{ mr: 1, fontSize: 18 }} /> My Orders
-                    </MenuItem>
-                    {isAdmin && (
-                      <MenuItem component={Link} to="/admin" onClick={() => setAnchorEl(null)}>
-                        <AdminPanelSettings sx={{ mr: 1, fontSize: 18 }} /> Admin Panel
+              {/* Action Icons */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
+                <Tooltip title="Help on WhatsApp">
+                  <IconButton
+                    component="a"
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: '#25D366',
+                      bgcolor: 'rgba(37,211,102,0.1)',
+                      p: { xs: 0.8, sm: 1 },
+                      '&:hover': { bgcolor: 'rgba(37,211,102,0.2)' },
+                    }}
+                    aria-label="WhatsApp Support"
+                  >
+                    <WhatsApp sx={{ fontSize: { xs: 20, sm: 22 } }} />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Cart">
+                  <IconButton component={Link} to="/cart" sx={{ color: 'primary.main', p: { xs: 0.8, sm: 1 } }} aria-label="Cart">
+                    <ShoppingCart sx={{ fontSize: { xs: 20, sm: 24 } }} />
+                  </IconButton>
+                </Tooltip>
+
+                {token ? (
+                  <>
+                    <Tooltip title="Account">
+                      <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0.5 }} aria-label="Account">
+                        <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13 }}>
+                          {user?.sub?.[0]?.toUpperCase() || 'U'}
+                        </Avatar>
+                      </IconButton>
+                    </Tooltip>
+                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}
+                      PaperProps={{ sx: { borderRadius: 3, minWidth: 180, mt: 1 } }}>
+                      <Box sx={{ px: 2, py: 1 }}>
+                        <Typography variant="caption" color="text.secondary">Signed in as</Typography>
+                        <Typography variant="body2" fontWeight={600} noWrap>{user?.sub}</Typography>
+                      </Box>
+                      <Divider />
+                      <MenuItem component={Link} to="/orders" onClick={() => setAnchorEl(null)}>
+                        <History sx={{ mr: 1, fontSize: 18 }} /> My Orders
                       </MenuItem>
-                    )}
-                    <Divider />
-                    <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-                      <Logout sx={{ mr: 1, fontSize: 18 }} /> Logout
-                    </MenuItem>
-                  </Menu>
-                </>
-              ) : (
-                <>
-                  <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
-                    <Button component={Link} to="/login" variant="outlined" color="primary" size="small">Login</Button>
-                    <Button component={Link} to="/register" variant="contained" color="primary" size="small">Sign Up</Button>
-                  </Box>
-                  <Tooltip title="Login">
-                    <IconButton component={Link} to="/login" sx={{ display: { xs: 'flex', sm: 'none' }, color: 'primary.main', p: 0.8 }} aria-label="Login">
-                      <Person sx={{ fontSize: 22 }} />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-            </Box>
-          </Toolbar>
-        </Container>
-      </AppBar>
-    </HideOnScroll>
+                      {isAdmin && (
+                        <MenuItem component={Link} to="/admin" onClick={() => setAnchorEl(null)}>
+                          <AdminPanelSettings sx={{ mr: 1, fontSize: 18 }} /> Admin Panel
+                        </MenuItem>
+                      )}
+                      <Divider />
+                      <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                        <Logout sx={{ mr: 1, fontSize: 18 }} /> Logout
+                      </MenuItem>
+                    </Menu>
+                  </>
+                ) : (
+                  <>
+                    <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
+                      <Button component={Link} to="/login" variant="outlined" color="primary" size="small">Login</Button>
+                      <Button component={Link} to="/register" variant="contained" color="primary" size="small">Sign Up</Button>
+                    </Box>
+                    <Tooltip title="Login">
+                      <IconButton component={Link} to="/login" sx={{ display: { xs: 'flex', sm: 'none' }, color: 'primary.main', p: 0.8 }} aria-label="Login">
+                        <Person sx={{ fontSize: 22 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )}
+              </Box>
+            </Toolbar>
+          </Container>
+        </AppBar>
+      </HideOnScroll>
 
       {/* Mobile Drawer (iPhone & Android Responsive Menu) */}
       <Drawer

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
 import {
   Container, Grid, Box, Typography, Button, Chip, Divider,
   Card, CardContent, Rating, TextField, Stack, Alert,
@@ -13,28 +12,7 @@ import {
 
 import { REAL_COSMETICS_PRODUCTS } from "../data/realCosmeticsCatalog";
 import DirectCheckoutModal from "../components/DirectCheckoutModal";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sekkin-lk-backend.onrender.com";
-const API = `${API_BASE_URL}/api`;
-
-const resolveImageUrl = (imgUrl) => {
-  if (!imgUrl || typeof imgUrl !== 'string') return '';
-  if (imgUrl.startsWith('http://localhost:8080')) {
-    return imgUrl.replace('http://localhost:8080', API_BASE_URL);
-  }
-  if (imgUrl.startsWith('http://127.0.0.1:8080')) {
-    return imgUrl.replace('http://127.0.0.1:8080', API_BASE_URL);
-  }
-  if (imgUrl.startsWith('/uploads/')) {
-    return `${API_BASE_URL}${imgUrl}`;
-  }
-  return imgUrl;
-};
-
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return { headers: { Authorization: `Bearer ${token}` } };
-}
+import api, { API_BASE_URL, API, resolveImageUrl } from "../services/api";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -72,7 +50,7 @@ export default function ProductDetail() {
       })
       .finally(() => setLoading(false));
 
-    axios.get(`${API}/products/${id}/reviews`)
+    api.get(`/api/products/${id}/reviews`)
       .then(r => setReviews(r.data))
       .catch(() => setReviews([]));
   }, [id]);
@@ -99,19 +77,20 @@ export default function ProductDetail() {
 
   const handleAddToCart = async () => {
     const token = localStorage.getItem("token");
+    // Token නැත්නම් — redirect නොකර friendly toast show කරනවා
     if (!token || token === 'undefined' || token === 'null') {
       localStorage.removeItem('token');
-      navigate("/login");
+      setSnack({ open: true, msg: '🔐 Please login to add items to cart!', severity: 'warning' });
       return;
     }
     try {
-      await axios.post(`${API}/cart/items`, { productId: parseInt(id, 10), quantity: qty }, getAuthHeaders());
+      await api.post('/api/cart/items', { productId: parseInt(id, 10), quantity: qty });
       setSnack({ open: true, msg: `${qty}x ${product.name} added to cart! 🛒`, severity: 'success' });
     } catch (err) {
-      if (err.response?.status === 401 || err.response?.status === 403) {
+      if (err.response?.status === 401) {
         localStorage.removeItem('token');
-        setSnack({ open: true, msg: 'Session expired. Please log in again to add to cart.', severity: 'warning' });
-        setTimeout(() => navigate('/login'), 1200);
+        setSnack({ open: true, msg: '⚠️ Session expired. Please log in again.', severity: 'warning' });
+        setTimeout(() => navigate('/login'), 2000);
         return;
       }
       setSnack({ open: true, msg: err.response?.data?.message || err.response?.data || 'Failed to add to cart', severity: 'error' });
@@ -121,10 +100,13 @@ export default function ProductDetail() {
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
-    if (!token) { navigate("/login"); return; }
+    if (!token) {
+      setSnack({ open: true, msg: '🔐 Please login to submit a review!', severity: 'warning' });
+      return;
+    }
     setReviewLoading(true);
     try {
-      const res = await axios.post(`${API}/products/${id}/reviews`, newReview, getAuthHeaders());
+      const res = await api.post(`/api/products/${id}/reviews`, newReview);
       setReviews(prev => [res.data, ...prev]);
       setNewReview({ rating: 5, comment: "" });
       setSnack({ open: true, msg: 'Review submitted! ✨', severity: 'success' });
