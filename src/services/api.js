@@ -33,35 +33,33 @@ const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        if (token && token !== 'undefined' && token !== 'null') {
+            const cleanToken = token.trim().replace(/^"|"$/g, '');
+            const bearer = `Bearer ${cleanToken}`;
+
+            if (config.headers && typeof config.headers.set === 'function') {
+                config.headers.set('Authorization', bearer);
+            }
+            if (!config.headers) {
+                config.headers = {};
+            }
+            config.headers.Authorization = bearer;
+            config.headers['Authorization'] = bearer;
         }
         return config;
     },
     (error) => Promise.reject(error)
 );
 
-// ⬅ Response Interceptor: 401 errors globally handle කරනවා
-// CORS errors, token expired, unauthorized — සියල්ලම මෙතනින් handle වෙනවා
+// ⬅ Response Interceptor: Network/CORS logging
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Network error (CORS block වෙලා නම් error.response undefined වෙනවා)
         if (!error.response) {
             console.error('Network/CORS error:', error.message);
-            return Promise.reject(error);
+        } else if (error.response.status === 401) {
+            console.warn('401 Unauthorized from backend on:', error.config?.url);
         }
-
-        // 401 Unauthorized — token invalid හෝ expired
-        if (error.response.status === 401) {
-            const currentPath = window.location.pathname;
-            // Login page එකේ නම් redirect loop එකක් avoid කරනවා
-            if (currentPath !== '/login') {
-                localStorage.removeItem('token');
-                window.location.href = '/login';
-            }
-        }
-
         return Promise.reject(error);
     }
 );
