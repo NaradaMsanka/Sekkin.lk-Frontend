@@ -9,29 +9,7 @@ import {
   Tune, RestartAlt, CheckCircle, Close, PhotoCamera,
   Brightness6, Contrast, AutoAwesome
 } from "@mui/icons-material";
-import axios from "axios";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sekkin-lk-backend.onrender.com";
-const API = `${API_BASE_URL}/api`;
-
-const resolveImageUrl = (imgUrl) => {
-  if (!imgUrl || typeof imgUrl !== 'string') return '';
-  if (imgUrl.startsWith('http://localhost:8080')) {
-    return imgUrl.replace('http://localhost:8080', API_BASE_URL);
-  }
-  if (imgUrl.startsWith('http://127.0.0.1:8080')) {
-    return imgUrl.replace('http://127.0.0.1:8080', API_BASE_URL);
-  }
-  if (imgUrl.startsWith('/uploads/')) {
-    return `${API_BASE_URL}${imgUrl}`;
-  }
-  return imgUrl;
-};
-
-function getAuthHeaders() {
-  const token = localStorage.getItem("token");
-  return { headers: { Authorization: `Bearer ${token}` } };
-}
+import api, { resolveImageUrl } from "../services/api";
 
 export default function ImageEditorModal({
   open,
@@ -57,10 +35,13 @@ export default function ImageEditorModal({
   const [saturation, setSaturation] = useState(100); // 100% is normal
   const [activePreset, setActivePreset] = useState("normal");
   const [uploading, setUploading] = useState(false);
+  const [imageReady, setImageReady] = useState(false);
 
   // Load image when imageSrc changes
   useEffect(() => {
     if (!imageSrc || !open) return;
+    setImageReady(false);
+    imageObjRef.current = null;
     const img = new Image();
     // Only set crossOrigin on remote http/https URLs; data URLs or blobs can fail or taint canvas
     if (typeof imageSrc === "string" && (imageSrc.startsWith("http://") || imageSrc.startsWith("https://"))) {
@@ -69,8 +50,11 @@ export default function ImageEditorModal({
     img.onload = () => {
       imageObjRef.current = img;
       handleReset();
+      setImageReady(true);
     };
-    img.src = imageSrc;
+    img.onerror = () => alert("This image could not be loaded. Please choose a local image to replace it.");
+    img.src = resolveImageUrl(imageSrc);
+    return () => { img.onload = null; img.onerror = null; };
   }, [imageSrc, open]);
 
   const handleReset = () => {
@@ -133,7 +117,7 @@ export default function ImageEditorModal({
 
   useEffect(() => {
     draw();
-  }, [draw]);
+  }, [draw, imageReady]);
 
   // Drag / Pan handlers
   const handleMouseDown = (e) => {
@@ -200,7 +184,7 @@ export default function ImageEditorModal({
   // Confirm and Export Image
   const handleApply = async () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !imageReady || !imageObjRef.current) return;
 
     setUploading(true);
 
@@ -239,48 +223,26 @@ export default function ImageEditorModal({
       expCtx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
       expCtx.restore();
 
-      const dataUrl = exportCanvas.toDataURL("image/webp", 0.92);
-
-      // 2. Upload to Spring Boot Backend /api/upload
-      try {
-        const blob = await new Promise((resolve) =>
-          exportCanvas.toBlob(resolve, "image/webp", 0.90)
-        );
-        const formData = new FormData();
-        formData.append("file", blob, `prod-${Date.now()}.webp`);
-
-        const token = localStorage.getItem("token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-        // Important: Do NOT set "Content-Type": "multipart/form-data" manually.
-        // Axios automatically sets the proper Content-Type with multipart boundary.
-        const res = await axios.post(`${API}/upload`, formData, {
-          headers,
-          timeout: 15000 // 15-second timeout to prevent infinite stuck state
-        });
-
-        if (res.data && res.data.url) {
-          const finalUrl = resolveImageUrl(res.data.url);
-          onApply(finalUrl, finalUrl);
-          onClose();
-          return;
-        }
-      } catch (uploadErr) {
-        console.warn("Backend upload failed, evaluating fallback:", uploadErr);
-        if (uploadErr.response?.status === 401 || uploadErr.response?.status === 403) {
-          alert("Image upload failed: Admin session expired or unauthorized. Please re-login as Admin.");
-          setUploading(false);
-          return;
-        }
-        // Fallback: use moderately compressed dataUrl only if backend is unreachable
-        const fallbackDataUrl = exportCanvas.toDataURL("image/webp", 0.7);
-        onApply(fallbackDataUrl, fallbackDataUrl);
-        onClose();
-        return;
+      const blob = await new Promise((resolve) => exportCanvas.toBlob(resolve, "image/webp", 0.90));
+      if (!blob) throw new Error("Could not prepare the image. Please try again.");
+      const formData = new FormData();
+      const extension = blob.type === "image/webp" ? "webp" : "png";
+      formData.append("file", blob, `prod-${Date.now()}.${extension}`);
+      const res = await api.post('/api/upload', formData, {
+        // Clear the shared JSON header so the browser supplies the multipart boundary.
+        headers: { 'Content-Type': undefined },
+        timeout: 120000
+      });
+      if (!res.data?.url?.startsWith('https://res.cloudinary.com/')) {
+        throw new Error("The server did not return a Cloudinary image URL. Please update the backend.");
       }
+      onApply(res.data.url);
+      onClose();
     } catch (err) {
-      console.error("Failed to process image canvas:", err);
-      alert("Failed to render and prepare image. Please try again with a different image.");
+      const unauthorized = err.response?.status === 401 || err.response?.status === 403;
+      alert(unauthorized
+        ? "Image upload requires an active Admin session. Please sign in again as Admin."
+        : err.response?.data?.error || err.message || "Image upload failed. Please try again.");
     } finally {
       setUploading(false);
     }
@@ -518,7 +480,7 @@ export default function ImageEditorModal({
         <Button
           variant="contained"
           onClick={handleApply}
-          disabled={uploading}
+          disabled={uploading || !imageReady}
           startIcon={uploading ? <CircularProgress size={18} color="inherit" /> : <CheckCircle />}
           sx={{
             background: "linear-gradient(45deg, #B5385C, #C9956A)",

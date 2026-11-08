@@ -8,6 +8,7 @@ import {
   Delete, Edit, PhotoLibrary, AddPhotoAlternate
 } from "@mui/icons-material";
 import ImageEditorModal from "./ImageEditorModal";
+import { resolveImageUrl } from "../services/api";
 
 export default function ImageSequenceManager({
   images = [],
@@ -25,6 +26,11 @@ export default function ImageSequenceManager({
   const handleSelectFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 15 * 1024 * 1024) {
+      alert('Choose a JPEG, PNG, WebP, or GIF image up to 15 MB.');
+      e.target.value = '';
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -118,6 +124,10 @@ export default function ImageSequenceManager({
         </Typography>
       </Box>
 
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        Save the product to apply image changes. Removing or replacing a saved image deletes it from Cloudinary after saving, unless another product uses it.
+      </Typography>
+
       {/* Sequence Gallery Grid */}
       <Stack direction="row" spacing={1.5} sx={{ overflowX: "auto", pb: 1.5, minHeight: 140, alignItems: "flex-start" }}>
         {images.map((imgUrl, idx) => {
@@ -169,7 +179,7 @@ export default function ImageSequenceManager({
               {/* Image Thumbnail */}
               <Box
                 component="img"
-                src={imgUrl}
+                src={resolveImageUrl(imgUrl)}
                 alt={`Product angle ${idx + 1}`}
                 sx={{
                   width: "100%",
