@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/check-merchant-readiness.mjs --build && vite build",
+    "build:merchant": "node scripts/check-merchant-readiness.mjs && vite build",
+    "check:merchant": "node scripts/check-merchant-readiness.mjs",
+    "test:readiness": "node --test scripts/readiness.test.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

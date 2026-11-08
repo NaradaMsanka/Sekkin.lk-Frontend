@@ -1,0 +1,40 @@
+{
+  "brand": "SEKKIN.LK",
+  "businessName": "sekkinLK",
+  "registeredName": null,
+  "category": "Cosmetics, skincare and beauty products",
+  "country": "Sri Lanka",
+  "siteUrl": "https://sekkin-lk-frontend.vercel.app",
+  "supportPhone": "+94 78 815 3473",
+  "whatsappNumber": "94788153473",
+  "supportEmail": null,
+  "postalAddress": null,
+  "businessHours": "Mon–Sat, 9 AM–7 PM",
+  "contactsConfirmed": false,
+  "socialLinks": [],
+  "policiesApproved": false,
+  "catalogReviewed": false,
+  "paymentSafetyReviewed": false,
+  "reviewDate": "2026-11-09",
+  "refund": {
+    "eligibility": null, "returnWindow": null, "damagedItems": null,
+    "condition": null, "requestProcedure": null, "returnShipping": null,
+    "refundMethod": null, "refundTimeline": null, "cancellations": null,
+    "exchanges": null, "hygieneRestrictions": null, "consumerRights": null
+  },
+  "shipping": {
+    "coverage": null, "processing": null, "deliveryEstimate": null,
+    "charges": null, "partners": null, "tracking": null,
+    "delays": null, "failedDelivery": null
+  },
+  "privacy": {
+    "controller": null, "processingLocations": null,
+    "retention": null, "rightsProcedure": null
+  },
+  "terms": {
+    "orderAcceptance": null, "pricesAndTaxes": null,
+    "paymentMethods": null, "intellectualProperty": null,
+    "liability": null, "complaints": null, "governingLaw": null,
+    "updates": null
+  }
+}

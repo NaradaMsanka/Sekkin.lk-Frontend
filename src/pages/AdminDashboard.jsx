@@ -599,9 +599,9 @@ export default function AdminDashboard() {
                 placeholder="Search products by name or brand..."
                 value={productSearch}
                 onChange={e => setProductSearch(e.target.value)}
-                InputProps={{
+                slotProps={{ input: {
                   startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>
-                }}
+                } }}
                 sx={{ width: { xs: '100%', sm: 300 } }}
               />
             </Box>

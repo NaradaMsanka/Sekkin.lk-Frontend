@@ -53,8 +53,18 @@ api.interceptors.request.use(
 
 // ⬅ Response Interceptor: Network/CORS logging
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // Reuse actual cart responses to keep navigation feedback current without polling.
+        const currentToken = localStorage.getItem('token')?.trim().replace(/^"|"$/g, '');
+        if (currentToken && response.config?.headers?.Authorization === `Bearer ${currentToken}` &&
+            /\/api\/cart(?:\/|\?|$)/.test(response.config?.url || '') && Array.isArray(response.data?.items)) {
+            window.dispatchEvent(new CustomEvent('sekkin:cart-updated', { detail: response.data }));
+        }
+        return response;
+    },
     (error) => {
+        // Unmount and StrictMode cleanup intentionally cancel requests.
+        if (axios.isCancel(error)) return Promise.reject(error);
         if (!error.response) {
             console.error('Network/CORS error:', error.message);
         } else if (error.response.status === 401) {

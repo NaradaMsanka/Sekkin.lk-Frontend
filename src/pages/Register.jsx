@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Box, Container, Card, CardContent, TextField, Button,
-  Typography, InputAdornment, IconButton, Alert, Divider, Stack
+  Typography, InputAdornment, IconButton, Alert, Divider
 } from "@mui/material";
-import { Email, Lock, Person, Visibility, VisibilityOff, AutoAwesome, PersonAdd } from "@mui/icons-material";
+import { Email, Lock, Person, Visibility, VisibilityOff, PersonAdd } from "@mui/icons-material";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sekkin-lk-backend.onrender.com';
 
@@ -86,7 +86,7 @@ export default function Register() {
                   mb: 1.5,
                 }}
               />
-              <Typography variant="h5" fontWeight={800} color="primary.main">
+              <Typography variant="h5" color="primary.main" sx={{ fontWeight: 800 }}>
                 Sekkin<span style={{ color: '#C9956A' }}>.lk</span>
               </Typography>
               <Typography variant="caption" sx={{ color: '#8c7568', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 600 }}>
@@ -94,8 +94,8 @@ export default function Register() {
               </Typography>
             </Box>
 
-            <Typography variant="h4" fontWeight={700} align="center" mb={0.5}>Create Account</Typography>
-            <Typography variant="body2" color="text.secondary" align="center" mb={4}>
+            <Typography variant="h4" align="center" sx={{ fontWeight: 700, mb: 0.5 }}>Create Account</Typography>
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 4 }}>
               Join our beauty community today
             </Typography>
 
@@ -105,34 +105,34 @@ export default function Register() {
             <Box component="form" onSubmit={handleRegister}>
               <TextField fullWidth label="Full Name" required
                 value={name} onChange={e => setName(e.target.value)}
-                InputProps={{ startAdornment: <InputAdornment position="start"><Person color="primary" /></InputAdornment> }}
+                slotProps={{ input: { startAdornment: <InputAdornment position="start"><Person color="primary" /></InputAdornment> } }}
                 sx={{ mb: 2.5 }} />
 
               <TextField fullWidth label="Email Address" type="email" required
                 value={email} onChange={e => setEmail(e.target.value)}
-                InputProps={{ startAdornment: <InputAdornment position="start"><Email color="primary" /></InputAdornment> }}
+                slotProps={{ input: { startAdornment: <InputAdornment position="start"><Email color="primary" /></InputAdornment> } }}
                 sx={{ mb: 2.5 }} />
 
               <TextField fullWidth label="Password" type={showPass ? 'text' : 'password'} required
                 value={password} onChange={e => setPassword(e.target.value)}
                 helperText="Minimum 6 characters"
-                InputProps={{
+                slotProps={{ input: {
                   startAdornment: <InputAdornment position="start"><Lock color="primary" /></InputAdornment>,
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPass(v => !v)} edge="end">
+                      <IconButton aria-label={showPass ? 'Hide password' : 'Show password'} onClick={() => setShowPass(v => !v)} edge="end">
                         {showPass ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   )
-                }}
+                } }}
                 sx={{ mb: 2.5 }} />
 
               <TextField fullWidth label="Confirm Password" type={showPass ? 'text' : 'password'} required
                 value={confirmPass} onChange={e => setConfirmPass(e.target.value)}
                 error={confirmPass.length > 0 && password !== confirmPass}
                 helperText={confirmPass.length > 0 && password !== confirmPass ? "Passwords don't match" : ""}
-                InputProps={{ startAdornment: <InputAdornment position="start"><Lock color="primary" /></InputAdornment> }}
+                slotProps={{ input: { startAdornment: <InputAdornment position="start"><Lock color="primary" /></InputAdornment> } }}
                 sx={{ mb: 3 }} />
 
               <Button fullWidth type="submit" variant="contained" size="large"

@@ -7,32 +7,33 @@ import '@fontsource/poppins/500.css'
 import '@fontsource/poppins/600.css'
 import '@fontsource/poppins/700.css'
 import App from './App.jsx'
+import './index.css'
 
 // SekkinLK Cosmetics — Elegant Theme
 const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#B5385C',       // Deep Rose
-      light: '#D4617F',
-      dark: '#8C1F3F',
+      main: '#8F344D',       // Muted rose
+      light: '#B7657A',
+      dark: '#6D2338',
       contrastText: '#fff',
     },
     secondary: {
-      main: '#C9956A',       // Warm Gold
+      main: '#B98B60',       // Warm Gold
       light: '#DEB896',
       dark: '#A0714A',
       contrastText: '#fff',
     },
     background: {
-      default: '#FDF6F0',    // Soft Cream
+      default: '#FCF8F5',    // Warm ivory
       paper: '#FFFFFF',
     },
     text: {
-      primary: '#2D1B1B',
-      secondary: '#7A5C5C',
+      primary: '#302326',
+      secondary: '#796B65',
     },
-    success: { main: '#4CAF50' },
+    success: { main: '#4F6958' },
     error:   { main: '#E53935' },
     warning: { main: '#FF9800' },
   },
@@ -51,10 +52,12 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 30,
-          padding: '10px 28px',
+          borderRadius: 10,
+          padding: '10px 22px',
+          minHeight: 42,
           boxShadow: 'none',
-          '&:hover': { boxShadow: '0 4px 15px rgba(181,56,92,0.3)' },
+          transition: 'background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+          '&:hover': { boxShadow: 'none' },
         },
       },
     },
@@ -62,12 +65,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 16,
-          boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
-          transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-          '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: '0 8px 30px rgba(181,56,92,0.15)',
-          },
+          boxShadow: '0 3px 16px rgba(48,35,38,0.035)',
         },
       },
     },
@@ -78,6 +76,18 @@ const theme = createTheme({
     },
     MuiChip: {
       styleOverrides: { root: { borderRadius: 8, fontWeight: 500 } },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: { fontSize: '0.85rem', backgroundColor: '#FFFFFF', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#DCCFC6' } },
+      },
+    },
+    MuiInputLabel: {
+      // Match the outlined input font so the floating label fits its notch.
+      styleOverrides: { root: { fontSize: '0.85rem' } },
+    },
+    MuiIconButton: {
+      styleOverrides: { root: { minWidth: 40, minHeight: 40 } },
     },
   },
 })

@@ -41,8 +41,8 @@ export default function OrderHistory() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={4}>
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
           <History sx={{ fontSize: 32, color: 'primary.main' }} />
           <Typography variant="h4" fontWeight={700}>My Orders</Typography>
         </Stack>
@@ -74,7 +74,7 @@ export default function OrderHistory() {
           {[1,2,3].map(i => <Skeleton key={i} variant="rectangular" height={60} sx={{ borderRadius: 2 }} />)}
         </Stack>
       ) : orders.length === 0 ? (
-        <Box textAlign="center" py={10}>
+        <Box sx={{ textAlign: 'center', py: 10 }}>
           <ReceiptLong sx={{ fontSize: 80, color: 'divider', mb: 2 }} />
           <Typography variant="h5" fontWeight={600} gutterBottom>No orders yet</Typography>
           <Typography color="text.secondary" mb={4}>Start shopping to see your orders here</Typography>
