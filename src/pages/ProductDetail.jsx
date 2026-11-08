@@ -10,7 +10,6 @@ import {
   LocalOffer, Inventory, Star, Send, ArrowBack, ElectricBolt
 } from "@mui/icons-material";
 
-import { REAL_COSMETICS_PRODUCTS } from "../data/realCosmeticsCatalog";
 import DirectCheckoutModal from "../components/DirectCheckoutModal";
 import api, { API_BASE_URL, API, resolveImageUrl } from "../services/api";
 
@@ -20,6 +19,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [tab, setTab] = useState(0);
   const [qty, setQty] = useState(1);
   const [directCheckoutOpen, setDirectCheckoutOpen] = useState(false);
@@ -31,28 +31,30 @@ export default function ProductDetail() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
-    fetch(`${API}/products/${id}`)
+    setProduct(null);
+    setReviews([]);
+    setError('');
+    fetch(`${API}/products/${id}`, { signal: controller.signal })
       .then(r => {
-        if (!r.ok) throw new Error('Not found in backend');
+        if (!r.ok) throw new Error(r.status === 404 ? 'Product not found.' : 'This product could not be loaded. Please try again.');
         return r.json();
       })
       .then(prod => {
         setProduct(prod);
         setSelectedImageIndex(0);
       })
-      .catch(() => {
-        const found = REAL_COSMETICS_PRODUCTS.find(p => String(p.id) === String(id));
-        if (found) {
-          setProduct(found);
-          setSelectedImageIndex(0);
-        }
+      .catch(err => {
+        if (controller.signal.aborted) return;
+        setError(err.message || 'This product could not be loaded. Please try again.');
       })
-      .finally(() => setLoading(false));
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
 
-    api.get(`/api/products/${id}/reviews`)
+    api.get(`/api/products/${id}/reviews`, { signal: controller.signal })
       .then(r => setReviews(r.data))
       .catch(() => setReviews([]));
+    return () => controller.abort();
   }, [id]);
 
   // Gallery image sequence parsing
@@ -128,7 +130,7 @@ export default function ProductDetail() {
     </Container>
   );
 
-  if (!product) return <Container sx={{ py: 5 }}><Alert severity="error">Product not found.</Alert></Container>;
+  if (!product) return <Container sx={{ py: 5 }}><Alert severity="error">{error || 'Product not found.'}</Alert><Button component="a" href="/" sx={{ mt: 2 }}>Back to Shop</Button></Container>;
 
   const hasDiscount = product.discountPrice && product.discountPrice < product.price;
   const discountPct = hasDiscount ? Math.round((1 - product.discountPrice / product.price) * 100) : 0;

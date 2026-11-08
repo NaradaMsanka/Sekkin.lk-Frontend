@@ -7,19 +7,14 @@ import {
   Select, MenuItem, FormControl, InputLabel, Skeleton,
   Alert, Fade, Divider, Stack, IconButton, Tooltip,
   Slider, Collapse, ToggleButtonGroup, ToggleButton,
-  Dialog, DialogContent, Rating, Snackbar
+  Dialog, DialogContent, Snackbar
 } from '@mui/material';
 import {
   Search, ShoppingCart, Favorite, FavoriteBorder, FilterList,
-  Star, Spa, ExpandMore, ExpandLess, AutoAwesome,
+  Spa, ExpandMore, ExpandLess, AutoAwesome,
   GridView, ViewList, Visibility, Close, Add, Remove,
-  CheckCircle, WhatsApp, LocalShipping, Payment, Verified, ElectricBolt
+  WhatsApp, LocalShipping, Payment, Verified, ElectricBolt
 } from '@mui/icons-material';
-import {
-  REAL_COSMETICS_PRODUCTS,
-  REAL_COSMETICS_CATEGORIES,
-  REAL_COSMETICS_BRANDS
-} from '../data/realCosmeticsCatalog';
 import DirectCheckoutModal from '../components/DirectCheckoutModal';
 import api, { API, resolveImageUrl } from '../services/api';
 
@@ -43,19 +38,20 @@ export default function Home() {
   const navigate = useNavigate();
 
   // Catalog State
-  const [products, setProducts] = useState(REAL_COSMETICS_PRODUCTS);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [catalogRequest, setCatalogRequest] = useState(0);
 
-  // Filtering & Sorting State (modeled on realcosmetics.lk)
+  // Filtering and sorting use only the store's saved products.
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Products');
   const [selectedBrand, setSelectedBrand] = useState('All Brands');
   const [skinType, setSkinType] = useState('');
-  const [sortBy, setSortBy] = useState('popularity');
+  const [sortBy, setSortBy] = useState('latest');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState([0, 10000]);
+  const [priceRange, setPriceRange] = useState([0, Infinity]);
   const [wishlist, setWishlist] = useState([]);
 
   // Quick View Dialog State
@@ -69,46 +65,43 @@ export default function Home() {
   // Snackbar Toast
   const [toastMsg, setToastMsg] = useState('');
 
-  // Fetch backend products and blend with real cosmetics catalog
+  // The backend is the only source of products. Never substitute sample inventory.
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
-    axios.get(`${API}/products`)
+    setError('');
+    axios.get(`${API}/products`, { signal: controller.signal, timeout: 120000 })
       .then(r => {
-        if (Array.isArray(r.data) && r.data.length > 0) {
-          // Merge backend products with authentic realcosmetics.lk catalog
-          const backendFormatted = r.data.map(p => ({
-            id: p.id,
-            name: p.name,
-            brand: p.brand || 'Sekkin Beauty',
-            category: p.category?.name || 'Skincare',
-            price: Number(p.price) || 2500,
-            discountPrice: p.discountPrice ? Number(p.discountPrice) : (p.price > 2000 ? Math.round(p.price * 0.85) : null),
-            rating: 5.0,
-            reviewCount: 24,
-            stockQuantity: p.stockQuantity ?? 20,
-            skinType: p.skinType || 'All Skin Types',
-            description: p.description || 'Gentle and nourishing formulation enriched with natural botanical extracts.',
-            ingredients: p.ingredients || 'Natural Botanical Extracts, Aqua, Glycerin, Essential Vitamins.',
-            status: p.status || 'IN_STOCK',
-            imageUrl: resolveImageUrl(p.imageUrl || ''),
-            images: p.images || '[]',
-            isSale: Boolean(p.discountPrice && p.discountPrice < p.price)
-          }));
-
-          // Avoid duplicate IDs
-          const existingIds = new Set(backendFormatted.map(b => b.id));
-          const uniqueCatalog = REAL_COSMETICS_PRODUCTS.filter(c => !existingIds.has(c.id));
-          setProducts([...backendFormatted, ...uniqueCatalog]);
-        } else {
-          setProducts(REAL_COSMETICS_PRODUCTS);
-        }
+        if (!Array.isArray(r.data)) throw new Error('Invalid product response');
+        setProducts(r.data.map(p => ({
+          ...p,
+          brand: p.brand || '',
+          category: typeof p.category === 'string' ? p.category : p.category?.name || '',
+          price: Number(p.price),
+          discountPrice: p.discountPrice != null ? Number(p.discountPrice) : null,
+          stockQuantity: p.stockQuantity ?? 0,
+          skinType: p.skinType || '',
+          description: p.description || '',
+          ingredients: p.ingredients || '',
+          imageUrl: resolveImageUrl(p.imageUrl || ''),
+          isSale: Boolean(p.discountPrice > 0 && Number(p.discountPrice) < Number(p.price))
+        })));
       })
       .catch(() => {
-        // Fallback gracefully to full RealCosmetics catalog if backend API is busy
-        setProducts(REAL_COSMETICS_PRODUCTS);
+        if (controller.signal.aborted) return;
+        setProducts([]);
+        setError('Products could not be loaded. Please try again.');
       })
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [catalogRequest]);
+
+  const categories = ['All Products', ...new Set(products.map(p => p.category).filter(Boolean)),
+    ...(products.some(p => p.isSale) ? ['Offers & Sale'] : [])];
+  const brands = ['All Brands', ...new Set(products.map(p => p.brand).filter(Boolean))];
+  const skinTypes = [...new Set(products.map(p => p.skinType).filter(Boolean))];
+  const priceLimit = Math.max(10000, ...products.map(p => Math.ceil(p.price / 200) * 200));
+  const priceFilterActive = priceRange[0] > 0 || priceRange[1] < priceLimit;
 
   // Filter & Sort Logic
   const filteredProducts = useMemo(() => {
@@ -129,10 +122,7 @@ export default function Home() {
       if (selectedCategory === 'Offers & Sale') {
         result = result.filter(p => p.discountPrice && p.discountPrice < p.price);
       } else {
-        result = result.filter(p =>
-          p.category?.toLowerCase() === selectedCategory.toLowerCase() ||
-          (selectedCategory === 'Korean Skincare' && (p.category === 'Korean Skincare' || ['AXIS-Y', 'SKIN 1004', 'Beauty of Joseon', 'COSRX', 'Anua'].includes(p.brand)))
-        );
+        result = result.filter(p => p.category?.toLowerCase() === selectedCategory.toLowerCase());
       }
     }
 
@@ -157,8 +147,6 @@ export default function Home() {
       result.sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
     } else if (sortBy === 'price-desc') {
       result.sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
-    } else if (sortBy === 'rating') {
-      result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === 'latest') {
       result.sort((a, b) => b.id - a.id);
     }
@@ -202,10 +190,9 @@ export default function Home() {
     setSelectedCategory('All Products');
     setSelectedBrand('All Brands');
     setSkinType('');
-    setPriceRange([0, 10000]);
+    setPriceRange([0, Infinity]);
   };
 
-  const skinTypes = ['All Skin Types', 'Oily / Acne-Prone', 'Sensitive', 'Normal to Dry', 'Hyperpigmentation'];
 
   return (
     <Box sx={{ bgcolor: '#FBF9F7', minHeight: '100vh', pb: 8 }}>
@@ -285,7 +272,7 @@ export default function Home() {
             '&::-webkit-scrollbar': { height: 4 },
             '&::-webkit-scrollbar-thumb': { bgcolor: '#C9956A', borderRadius: 4 }
           }}>
-            {REAL_COSMETICS_CATEGORIES.map(cat => {
+            {categories.map(cat => {
               const isActive = selectedCategory === cat;
               return (
                 <Chip
@@ -315,14 +302,14 @@ export default function Home() {
         {/* Brand Selector Bar */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="subtitle2" sx={{ color: '#8C7568', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700, mb: 1.5 }}>
-            Popular Brands
+            Brands
           </Typography>
           <Box sx={{
             display: 'flex', gap: 1, overflowX: 'auto', pb: 1,
             '&::-webkit-scrollbar': { height: 4 },
             '&::-webkit-scrollbar-thumb': { bgcolor: '#C9956A', borderRadius: 4 }
           }}>
-            {REAL_COSMETICS_BRANDS.map(brand => {
+            {brands.map(brand => {
               const isActive = selectedBrand === brand;
               return (
                 <Chip
@@ -412,10 +399,10 @@ export default function Home() {
                 onClick={() => setShowFilters(v => !v)}
                 sx={{ borderRadius: 2.5, px: 2 }}
               >
-                Filters {skinType || priceRange[1] < 10000 ? '•' : ''}
+                Filters {skinType || priceFilterActive ? '•' : ''}
               </Button>
 
-              {(search || selectedCategory !== 'All Products' || selectedBrand !== 'All Brands' || skinType || priceRange[1] < 10000) && (
+              {(search || selectedCategory !== 'All Products' || selectedBrand !== 'All Brands' || skinType || priceFilterActive) && (
                 <Button size="small" color="inherit" onClick={clearFilters} sx={{ color: 'error.main', fontSize: '0.8rem' }}>
                   Reset
                 </Button>
@@ -436,8 +423,6 @@ export default function Home() {
                   onChange={e => setSortBy(e.target.value)}
                   sx={{ borderRadius: 2.5, bgcolor: '#FAF7F5' }}
                 >
-                  <MenuItem value="popularity">Sort by popularity</MenuItem>
-                  <MenuItem value="rating">Sort by average rating</MenuItem>
                   <MenuItem value="latest">Sort by latest</MenuItem>
                   <MenuItem value="price-asc">Sort by price: low to high</MenuItem>
                   <MenuItem value="price-desc">Sort by price: high to low</MenuItem>
@@ -462,13 +447,13 @@ export default function Home() {
 
               <Grid item xs={12} sm={5}>
                 <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                  Price Range: Rs. {priceRange[0].toLocaleString()} – Rs. {priceRange[1].toLocaleString()}
+                  Price Range: Rs. {priceRange[0].toLocaleString()} – Rs. {Math.min(priceRange[1], priceLimit).toLocaleString()}
                 </Typography>
                 <Slider
-                  value={priceRange}
+                  value={[priceRange[0], Math.min(priceRange[1], priceLimit)]}
                   onChange={(_, val) => setPriceRange(val)}
                   min={0}
-                  max={10000}
+                  max={priceLimit}
                   step={200}
                   color="primary"
                   size="small"
@@ -493,14 +478,18 @@ export default function Home() {
               </Grid>
             ))}
           </Grid>
+        ) : error ? (
+          <Alert severity="error" action={<Button color="inherit" onClick={() => setCatalogRequest(value => value + 1)}>Retry</Button>}>
+            {error}
+          </Alert>
         ) : filteredProducts.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 10, bgcolor: 'white', borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)' }}>
             <Spa sx={{ fontSize: 70, color: 'text.disabled', mb: 2 }} />
             <Typography variant="h5" fontWeight={700} gutterBottom>
-              No matching products found
+              {products.length === 0 ? 'No products available yet' : 'No matching products found'}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Try adjusting your search keyword, category, or price range filter.
+              {products.length === 0 ? 'Products will appear here once they are added to the store.' : 'Try adjusting your search keyword, category, or price range filter.'}
             </Typography>
             <Button variant="contained" color="primary" onClick={clearFilters}>
               View All Products
@@ -710,13 +699,6 @@ export default function Home() {
                           {product.name}
                         </Typography>
 
-                        {/* Rating Stars */}
-                        <Stack direction="row" alignItems="center" spacing={0.5} mb={1}>
-                          <Rating value={product.rating || 5} precision={0.5} size="small" readOnly />
-                          <Typography variant="caption" color="text.secondary">
-                            ({product.reviewCount || 35})
-                          </Typography>
-                        </Stack>
 
                         {/* Pricing (Original + Sale Price) */}
                         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 1 }}>
@@ -893,12 +875,6 @@ export default function Home() {
                       {product.name}
                     </Typography>
 
-                    <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                      <Rating value={product.rating || 5} precision={0.5} size="small" readOnly />
-                      <Typography variant="caption" color="text.secondary">
-                        ({product.reviewCount || 20} customer reviews)
-                      </Typography>
-                    </Stack>
 
                     <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5, maxWidth: 600, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {product.description}
@@ -908,7 +884,7 @@ export default function Home() {
                       {product.skinType && (
                         <Chip label={product.skinType} size="small" variant="outlined" color="secondary" />
                       )}
-                      <Chip label="In Stock" size="small" color="success" variant="outlined" />
+                      <Chip label={product.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'} size="small" color={product.stockQuantity > 0 ? 'success' : 'error'} variant="outlined" />
                     </Stack>
                   </Box>
 
@@ -1048,12 +1024,6 @@ export default function Home() {
                   {quickViewProduct.name}
                 </Typography>
 
-                <Stack direction="row" spacing={1} alignItems="center" mb={2}>
-                  <Rating value={quickViewProduct.rating || 5} precision={0.5} size="small" readOnly />
-                  <Typography variant="caption" color="text.secondary">
-                    ({quickViewProduct.reviewCount || 40} verified reviews)
-                  </Typography>
-                </Stack>
 
                 {/* Price Display */}
                 <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 1.5 }}>
@@ -1093,7 +1063,7 @@ export default function Home() {
                   {quickViewProduct.skinType && (
                     <Chip label={`Skin: ${quickViewProduct.skinType}`} size="small" color="primary" variant="outlined" />
                   )}
-                  <Chip icon={<CheckCircle sx={{ fontSize: 16 }} />} label="Authentic & In Stock" size="small" color="success" />
+                  <Chip label={quickViewProduct.stockQuantity > 0 ? 'In Stock' : 'Out of Stock'} size="small" color={quickViewProduct.stockQuantity > 0 ? 'success' : 'error'} />
                 </Stack>
 
                 <Divider sx={{ mb: 2.5 }} />
