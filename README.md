@@ -1,4 +1,8 @@
-# React + Vite
+# SEKKIN.LK frontend
+
+See [Vercel deployment settings and Git commands](docs/VERCEL_DEPLOYMENT.md) for draft UI Previews and strict Production readiness checks.
+
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
