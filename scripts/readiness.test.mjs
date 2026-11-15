@@ -37,21 +37,61 @@ test('filling configuration alone cannot publish draft policy copy', () => {
   assert.ok(getDraftContentIssues(businessPages).length > 0);
   assert.deepEqual(getDraftContentIssues({ example: { intro: 'Confirmed information.', sections: [{ id: 'approved', body: ['Approved information.'] }] } }), []);
 });
-test('Vercel build preflight rejects current drafts before Vite runs', () => {
-  const result = spawnSync(process.execPath, [fileURLToPath(new URL('./check-merchant-readiness.mjs', import.meta.url)), '--build'], { encoding: 'utf8', env: { ...process.env, VERCEL: '1' } });
-  assert.equal(result.status, 1); assert.match(result.stderr, /NOT ready for merchant submission/);
-});
+function runPreflight(args, variables = {}) {
+  const env = { ...process.env };
+  delete env.VERCEL;
+  delete env.VERCEL_ENV;
+  return spawnSync(process.execPath, [fileURLToPath(new URL('./check-merchant-readiness.mjs', import.meta.url)), ...args], {
+    encoding: 'utf8', env: { ...env, ...variables },
+  });
+}
+
+for (const [name, variables, status] of [
+  ['Preview', { VERCEL: '1', VERCEL_ENV: 'preview' }, 0],
+  ['Preview without VERCEL', { VERCEL_ENV: 'preview' }, 0],
+  ['Production', { VERCEL: '1', VERCEL_ENV: 'production' }, 1],
+  ['Production without VERCEL', { VERCEL_ENV: 'production' }, 1],
+  ['missing deployment environment', { VERCEL: '1' }, 1],
+  ['all system variables missing', {}, 1],
+  ['unknown environment', { VERCEL: '1', VERCEL_ENV: 'custom' }, 1],
+  ['unknown environment without VERCEL', { VERCEL_ENV: 'custom' }, 1],
+  ['development environment', { VERCEL: '1', VERCEL_ENV: 'development' }, 1],
+]) {
+  test(`Vercel build preflight: ${name}`, () => {
+    const result = runPreflight(['--build', '--vercel'], variables);
+    assert.equal(result.status, status, result.error?.message || result.stderr);
+    assert.match(result.stderr, /NOT ready for merchant submission/);
+    if (status === 0) assert.match(result.stderr, /Preview draft build only/);
+    else assert.doesNotMatch(result.stderr, /draft build only/);
+  });
+}
+
 test('local build preflight permits explicitly labelled draft review', () => {
-  const env = { ...process.env }; delete env.VERCEL;
-  const result = spawnSync(process.execPath, [fileURLToPath(new URL('./check-merchant-readiness.mjs', import.meta.url)), '--build'], { encoding: 'utf8', env });
+  const result = runPreflight(['--build']);
   assert.equal(result.status, 0); assert.match(result.stderr, /Local draft build only/);
 });
-test('Vercel always uses the strict merchant command even without system environment variables', () => {
+
+for (const [name, variables] of [
+  ['local', {}],
+  ['Preview', { VERCEL: '1', VERCEL_ENV: 'preview' }],
+]) {
+  test(`explicit merchant validation remains strict in ${name}`, () => {
+    const result = runPreflight([], variables);
+    assert.equal(result.status, 1); assert.match(result.stderr, /NOT ready for merchant submission/);
+  });
+}
+
+test('normal build also blocks Production and unidentified Vercel environments', () => {
+  for (const variables of [{ VERCEL_ENV: 'production' }, { VERCEL: '1' }]) {
+    assert.equal(runPreflight(['--build'], variables).status, 1);
+  }
+});
+
+test('Vercel configuration uses a marked build that cannot fall back to local draft behavior', () => {
   const config = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-  assert.equal(config.buildCommand, 'npm run build:merchant');
+  assert.equal(config.buildCommand, 'npm run build:vercel');
+  assert.equal(pkg.scripts.build, 'node scripts/check-merchant-readiness.mjs --build && vite build');
+  assert.equal(pkg.scripts['build:vercel'], 'node scripts/check-merchant-readiness.mjs --build --vercel && vite build');
   assert.equal(pkg.scripts['build:merchant'], 'node scripts/check-merchant-readiness.mjs && vite build');
-  const env = { ...process.env }; delete env.VERCEL;
-  const result = spawnSync(process.execPath, [fileURLToPath(new URL('./check-merchant-readiness.mjs', import.meta.url))], { encoding: 'utf8', env });
-  assert.equal(result.status, 1);
 });
