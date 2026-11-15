@@ -2,6 +2,8 @@
 
 Reviewed 9 November 2026. **Not ready for merchant submission or production publication.** Local implementation is complete for the requested page scaffolding and the approved COD safety changes; owner decisions, legal review, catalog work, security remediation and deployment remain outstanding. Website changes do not guarantee PayHere approval.
 
+Deployment configuration updated 15 November 2026: explicit Vercel Preview builds may now render draft content for UI review. Production and explicit merchant commands remain strict, including when hosted system variables are unavailable. See [current Vercel settings and commands](VERCEL_DEPLOYMENT.md). The original audit results below remain a record of the earlier review.
+
 ## What changed
 
 - Created six public routes: `/refund-policy`, `/privacy-policy`, `/terms-and-conditions`, `/contact`, `/about`, `/shipping-policy`.
@@ -11,7 +13,7 @@ Reviewed 9 November 2026. **Not ready for merchant submission or production publ
 - The owner supplied the business name **sekkinLK**. Existing phone/WhatsApp and hours appear in Contact as unconfirmed; the registered name, address and email remain REVIEW REQUIRED. Unconfirmed external contacts and guessed social links are not activated.
 - At the owner's explicit request, removed simulated CARD/KOKO collection and retained COD. The backend rejects unsupported payment methods before product lookup/stock/order changes. Removed card fields are rejected if populated; older COD clients may still send those unused keys as null.
 - Direct checkout no longer collects or sends card/CVC/expiry values or fabricates PAID/KOKO approvals. Downloads are order confirmations, not proof of payment; customer text is HTML-escaped. The dummy receipt phone was removed. Product buttons now say Buy now rather than implying online payment.
-- Added local/merchant build checks. Vercel uses the strict merchant command, independent of whether its system environment variables are exposed. Configuration flags alone cannot approve copy that still contains draft/REVIEW REQUIRED markers.
+- Added local/merchant build checks. Vercel now uses `build:vercel`: only explicit Preview environments permit drafts; Production and hosted builds without system variables remain strict. Configuration flags alone cannot approve copy that still contains draft/REVIEW REQUIRED markers.
 - No database schema migration, production data editing, push, deployment, PayHere credentials or live payment processing was performed. Historical order/payment records were preserved.
 
 ## Website checklist
@@ -99,11 +101,11 @@ Complete the activation details; provide business registration or appropriate bu
 
 See [PAYHERE_SANDBOX_PLAN.md](PAYHERE_SANDBOX_PLAN.md) for hosted checkout, server-generated hashes, signature/amount/order/currency verification, duplicate notifications, safe transitions and customer states. No live integration was implemented.
 
-1. Review the diff against the existing uncommitted work and preview locally with `npm run dev`; start at `/about` or `/contact`. `npm run build` followed by `npm run preview` is for local draft review only.
+1. Review the diff against the existing uncommitted work and preview locally with `npm run dev`; start at `/about` or `/contact`. Local draft review and explicit Vercel Preview builds are supported; see [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md).
 2. Resolve the catalog/security findings and fill/approve the real business values and all final policy copy. Remove draft markers only after genuine approval, including effective dates and applicable legal provisions.
-3. Re-run tests, `npm run check:merchant` and `npm run build:merchant`. The latter two must pass before publication. The checker is an aid, not merchant approval.
+3. Re-run tests, `npm run check:merchant` and `npm run build:merchant`. The latter two must pass before Production publication. The checker is an aid, not merchant approval.
 4. **Obtain owner approval before any push or production deployment.** The local COD backend guard needs a reviewed Render release to protect the live endpoint. Older COD clients with null legacy fields remain compatible; unsupported online methods will be rejected intentionally.
-5. Vercel's root must be the directory containing `package.json` and `vercel.json` (`Frontend/frontend` in this workspace). Its configured build command is `npm run build:merchant`, output `dist`. Keep the existing public API URL and Cloudinary settings; no new payment secrets are needed in this task.
+5. Vercel's root must be the directory containing `package.json` and `vercel.json`: repository root (`./`) for the separate frontend Git repository, located at `Frontend/frontend` in this workspace. Its configured build command is `npm run build:vercel`, output `dist`. Enable access to system environment variables. Keep the existing public API URL and Cloudinary settings; no new payment secrets are needed in this task.
 6. After an approved release, manually verify all six public URLs, hard refresh, footer links, actual images, account/cart/checkout behaviour and Render logs. The SPA rewrite follows [Vercel's Vite guidance](https://vercel.com/docs/frameworks/frontend/vite); no actual Vercel deployment/refresh was performed here.
 
 ## File manifest — this task only
@@ -115,7 +117,7 @@ Pre-existing storefront, cart, checkout, theme and review changes remain in the 
 | `.gitignore` | Ignore local environment files, keep example template |
 | `index.html` | Default description metadata |
 | `package.json` | Local/strict merchant build and readiness test commands; no new dependencies |
-| `vercel.json` | Strict build command, output and SPA rewrite |
+| `vercel.json` | Environment-aware hosted build command, output and SPA rewrite |
 | `src/App.jsx` | Six public routes, fallback and route scroll helper |
 | `src/content/business.json` | Owner-editable facts, policy decisions and review flags |
 | `src/content/businessPages.js` | All six page contents and business links |
