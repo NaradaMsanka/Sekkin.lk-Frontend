@@ -1,5 +1,45 @@
 # SEKKIN.LK merchant readiness report
 
+**Current status, 16 November 2026: 10 unresolved messages; public Production remains NO-GO.** [FINAL_PRODUCTION_COMPLETION_REPORT.md](FINAL_PRODUCTION_COMPLETION_REPORT.md) is authoritative for the current facts, exact remaining requirements and verification results. The original 77 now has 67 resolved and 10 remaining. The owner approved the exact consolidated wording and the actual public-launch date as the effective-date basis; no further date question or invented publication date is required. `contactsConfirmed` and `catalogReviewed` are true; complete policy and payment-safety sign-offs remain false pending factual/operator requirements. Catalog approval expressly accepts temporary illustrative/dummy imagery for the initial release, with replacement planned after deployment; `actualProductPhotographyVerified` remains false. Full backend packaging passed 209 tests including 14 real isolated PostgreSQL cases; actual hosted settings are unverified. See [the current source/actions](PAYHERE_BLOCKER_INVENTORY.md), [the scoped catalog approval](FINAL_CATALOG_REVIEW.md) and [Render instructions](RENDER_SECURITY_RUNBOOK.md). **The 13/21/36/61-message phase reports and all earlier audit/test results below are historical; current browser/build/scan completion is reported only in the final report.**
+
+## Historical fixed delivery implementation — 16 November 2026
+
+Use the [fixed-delivery implementation report](FIXED_DELIVERY_IMPLEMENTATION.md) and [remaining requirements](PAYHERE_OWNER_RESPONSE_REPORT.md). LKR 350 per new order is implemented locally in the backend and frontend. The strict gate now has **61 messages**: 17 of the original 77 cleared, 60 original messages remain, plus one legal-identity disclosure. This task cleared only `shipping.charges` and `/shipping-policy#charges`; no approval flags changed. Production remains blocked. All sections below describe earlier audits and are historical where they differ from the linked current reports.
+
+## Historical production review — 16 November 2026
+
+**Production remains blocked. No owner approvals, final policies, backend remediation, Git commit/push/merge or deployment were performed.** The older sections below are retained as historical evidence; use this section and its linked documents for the current results.
+
+- [One consolidated owner questionnaire](PAYHERE_BUSINESS_QUESTIONNAIRE.md) records known details, avoids re-requesting the supplied trading name/COD decision, and groups the remaining owner/legal/catalog decisions. Final Refund, Privacy, Terms, Shipping, About and Contact copy awaits these answers and subsequent approval; no REVIEW REQUIRED placeholder was removed.
+- [Exact 77-item inventory](PAYHERE_BLOCKER_INVENTORY.md): 3 missing legal/contact values + 32 policy decisions + 4 false sign-offs + 38 rendered-copy messages. It names the source files/fields/routes and additional manual release conditions. The strict checker and deployment configuration are unchanged. Existing negative tests now use isolated drafts, so filling real approved content will not break the test suite.
+- [Backend payment/security review and proposed implementation plan](BACKEND_PAYMENT_SECURITY_REVIEW.md) documents hardcoded JWT material/default admin credentials, Cart/User password-hash serialization, guest ownership, invented cart products, quantity/concurrency issues, startup writes and other findings. No secret values are copied into the report; backend changes and production credential rotation remain outstanding. `paymentSafetyReviewed` stays false.
+- **Read-only live catalog:** three generic products, all described as “Cosmetics item”; two lack main images, all lack a category, and two lack brand/ingredients data. Prices are LKR 2,500, one discounted to LKR 2,000; recorded stock is 100/99/99. Both distinct configured gallery/main image URLs return HTTP 200, which does not establish relevance, rights or authenticity. No product was renamed, deleted, repriced or restocked.
+- **Live production:** homepage HTTP 200; all six information-page URLs and sampled shopping deep links HTTP 404. The production bundle still contains legacy card-data/status strings and lacks the new refund route. The deployed commit is unverified; do not assume local fixes protect the live service.
+- **Local source fix:** COD confirmation and downloaded HTML now label the backend's combined product/coupon discount as “Savings included” after the total, explaining that savings are already reflected. It previously appeared as a further subtraction from already discounted item prices. Pricing, payable totals, payment methods and the premium layout are preserved.
+- **Git:** frontend `main`, locally recorded `origin/main`, and the public GitHub `main` response agree at `2001fe8c06fa5f06d612475e68119b0c4a8b8afb`. No separate newer local UI branch was found. Direct Git remote access failed, so a fresh fetch is still required before any eventual merge.
+
+| Current check | Actual result |
+| --- | --- |
+| `npm run test:readiness` | **21/21 pass**: original 18 plus three isolated strict-checker scenarios; synthetic approvals never modify real configuration |
+| `npm run build` | Exit 0, explicitly marked local draft, 77 unresolved; Vite succeeds |
+| `npm run build:merchant` | Exit 1 at 77 unresolved; Vite does not run |
+| `npm run build:vercel`, no system variables | Exit 1 at 77 unresolved; Vite does not run |
+| `VERCEL=1 VERCEL_ENV=preview`, `npm run build:vercel` | Exit 0, draft warnings, Vite succeeds |
+| `VERCEL=1 VERCEL_ENV=production`, `npm run build:vercel` | Exit 1 at 77 unresolved; Vite does not run |
+| Completed synthetic fixture, strict real-checker subprocess | Passes only with completed fixture values/copy/approvals; each missing/false/nonboolean flag and remaining draft copy is independently rejected in Production. This tests preflight, not a real approved Production build. |
+| Focused ESLint on changed component/test and `git diff --check` | Pass; normal Windows line-ending notices only |
+| Selected isolated backend service/MVC regression suite | **43/43 pass**; full application startup and production database behavior remain untested |
+| Built-preview Chrome smoke checks | **34/34 pass** with all external requests mocked/aborted: six public routes at 1440/375/320 px, footer links/metadata/overflow, catalog/stock, cart mutation, both checkouts, unpaid COD confirmation/download escaping/savings, order history, refresh and login redirect |
+| API host | Local `.env`, source fallback, built bundle and intercepted browser requests use `https://sekkin-lk-backend.onrender.com`; Vercel dashboard Production variable is still a manual check |
+
+Builds retain the non-fatal large-JavaScript-chunk warning. No broad UI rebuild or dependency change was made. Machine-readable evidence and a local isolated confirmation screenshot are in [release-verification](release-verification/). The initial browser harness run had an overly exact required-field label selector; it was corrected to the stable input ID and the final 34 checks passed without an application change for that selector issue.
+
+The [manual production runbook](PRODUCTION_RELEASE_RUNBOOK.md) provides exact review-branch commit and eventual merge commands, Vercel settings, required release gates, and source-SHA/domain verification. **No currently completed policy sections can be represented as final:** owner information and reviewed business/legal wording are still missing. The final production release and PayHere readiness remain pending those decisions, catalog/security work and manual deployment verification.
+
+Official guidance checked 16 November 2026: [PayHere application requirements](https://support.payhere.lk/application-process), [policy samples](https://support.payhere.lk/policy-samples). The samples are drafting guidance; website checks do not constitute merchant approval.
+
+---
+
 Reviewed 9 November 2026. **Not ready for merchant submission or production publication.** Local implementation is complete for the requested page scaffolding and the approved COD safety changes; owner decisions, legal review, catalog work, security remediation and deployment remain outstanding. Website changes do not guarantee PayHere approval.
 
 Deployment configuration updated 15 November 2026: explicit Vercel Preview builds may now render draft content for UI review. Production and explicit merchant commands remain strict, including when hosted system variables are unavailable. See [current Vercel settings and commands](VERCEL_DEPLOYMENT.md). The original audit results below remain a record of the earlier review.

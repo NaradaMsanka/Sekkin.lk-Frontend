@@ -1,0 +1,10 @@
+{
+    "date":  "2026-11-16",
+    "mode":  "Names inspected inside locally packaged JAR; not a complete SCA or hosted/container scan",
+    "entries":  [
+                    "BOOT-INF/lib/spring-boot-3.3.3.jar",
+                    "BOOT-INF/lib/tomcat-embed-core-10.1.28.jar",
+                    "BOOT-INF/lib/spring-core-6.1.12.jar",
+                    "BOOT-INF/lib/spring-security-crypto-6.3.3.jar"
+                ]
+}

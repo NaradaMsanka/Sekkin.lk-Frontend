@@ -1,40 +1,99 @@
 {
   "brand": "SEKKIN.LK",
-  "businessName": "sekkinLK",
-  "registeredName": null,
+  "businessName": "SEKKIN LK",
+  "tradingName": "sekkinLK",
+  "registeredName": "SEKKIN LK",
+  "businessType": "Sole Proprietorship",
+  "registrationStatus": "Registered",
+  "registrationNumber": "260918038",
+  "soleProprietorLegalName": "RAVINDU KAUSHAN",
+  "vatRegistered": false,
+  "pricesIncludeApplicableTaxes": true,
   "category": "Cosmetics, skincare and beauty products",
   "country": "Sri Lanka",
   "siteUrl": "https://sekkin-lk-frontend.vercel.app",
-  "supportPhone": "+94 78 815 3473",
-  "whatsappNumber": "94788153473",
-  "supportEmail": null,
-  "postalAddress": null,
-  "businessHours": "Mon–Sat, 9 AM–7 PM",
-  "contactsConfirmed": false,
+  "supportPhone": "0740309918",
+  "whatsappNumber": "94740309918",
+  "supportEmail": "support@sekkin.lk",
+  "postalAddress": "Mahawattha, Batapola, Sri Lanka",
+  "businessHours": "24 hours",
+  "confirmedContactFields": [
+    "supportPhone",
+    "whatsappNumber",
+    "supportEmail",
+    "postalAddress",
+    "businessHours"
+  ],
+  "supportResponseTime": null,
+  "additionalAddressDetails": null,
+  "contactsConfirmed": true,
   "socialLinks": [],
   "policiesApproved": false,
-  "catalogReviewed": false,
+  "catalogReviewed": true,
   "paymentSafetyReviewed": false,
-  "reviewDate": "2026-11-09",
+  "reviewDate": "2026-11-16",
+  "policyEffectiveDate": null,
+  "policyApprovedDate": null,
+  "policyPublicationDate": null,
+  "payhereApplicationStatus": "Pending",
+  "merchantApprovalStatus": "Pending",
   "refund": {
-    "eligibility": null, "returnWindow": null, "damagedItems": null,
-    "condition": null, "requestProcedure": null, "returnShipping": null,
-    "refundMethod": null, "refundTimeline": null, "cancellations": null,
-    "exchanges": null, "hygieneRestrictions": null, "consumerRights": null
+    "eligibility": "Customers may request a change-of-mind return for unused, unopened products in their original packaging with the seal intact. Wrong, damaged or faulty products should be reported separately using the support contacts below.",
+    "returnWindow": "Customers may request a return within seven days of receiving their order. This ordinary return window does not remove applicable mandatory rights concerning wrong, damaged or faulty goods.",
+    "damagedItems": "If an item is wrong, arrives damaged or is faulty, contact support@sekkin.lk or WhatsApp 0740309918 with your order number, product details, reason and relevant photographs. Sekkin.lk covers the return delivery charge in these cases and evaluates these complaints separately from ordinary change-of-mind returns. Wait for return authorization and instructions before sending goods. Returned goods are inspected within two business days of receipt, and the outcome is communicated through your supplied contact channel. If a return is rejected, you will receive an explanation and may request further review through the same support contacts. Applicable mandatory consumer rights are preserved.",
+    "condition": "Products returned because of a change of mind must be unused, unopened and in their original packaging with the seal intact.",
+    "requestProcedure": "Submit return requests to support@sekkin.lk or WhatsApp 0740309918 with your order number, product details, reason and relevant photographs. Wait for return authorization and return instructions before sending products. The approved return destination is Mahawattha, Batapola, Sri Lanka; follow the specific instructions supplied for your authorized return. Returned products are inspected within two business days of receipt. The inspection outcome is sent through your supplied contact channel; a rejected return includes an explanation and a way to request further review through support.",
+    "returnShipping": "Customers pay applicable return delivery charges for ordinary change-of-mind returns. The courier return charge is LKR 500 for a parcel returned due to customer responsibility, including an incorrect delivery address, repeated unavailability after the three delivery attempts, refusal of a correctly supplied order or an ordinary change-of-mind return where that courier charge applies. This charge is disclosed before payment is required and is not charged twice for the same applicable returned parcel. A failed delivery attempt itself costs LKR 0. SEKKIN LK covers the applicable return delivery charge for wrong, damaged-on-arrival or faulty products. These rules do not restrict applicable mandatory consumer rights.",
+    "refundMethod": "Refunds are processed after the returned product is received, inspected and approved. Approved COD refunds are made by bank transfer, with the necessary transfer details arranged directly with the customer through support. The inspection outcome is communicated through your supplied contact channel. A rejected return includes a clear explanation and a way to request further review through support. Never send card numbers, expiry dates or security codes for a refund.",
+    "refundTimeline": "Approved refunds are processed within seven business days after the return inspection is completed and the refund is approved. Returned goods are inspected within two business days of receipt, and the inspection outcome is communicated through your supplied contact channel.",
+    "cancellations": "Customers may cancel before dispatch by emailing support@sekkin.lk, calling or sending a WhatsApp message to 0740309918 with their order number. Cancellation is confirmed when Sekkin.lk sends a cancellation confirmation to the customer. After dispatch, ordinary cancellation is unavailable; customers may request a return under this policy. Applicable mandatory consumer rights are not excluded.",
+    "exchanges": "Exchange requests may be made within seven days of receiving an order, subject to replacement stock. Ordinary exchange products must be unused, unopened and in their original sealed packaging. Approved exchanges are processed within two business days after the returned product is received and inspected, subject to stock availability. Customers pay exchange delivery charges unless Sekkin.lk sent the wrong item or the product arrived damaged or faulty. Any additional price difference must be settled before replacement dispatch. If the replacement costs less, the approved price difference is refunded by the bank-transfer method described in this policy.",
+    "hygieneRestrictions": "Opened bottles, broken seals and damage caused by the customer after delivery are excluded from ordinary change-of-mind returns. These hygiene/condition restrictions do not exclude remedies for wrong, damaged-on-arrival or faulty products, or override applicable mandatory consumer rights.",
+    "consumerRights": "The ordinary seven-day change-of-mind period, sealed-product conditions and customer-responsibility return charge do not remove applicable remedies for wrong, damaged, faulty or nonconforming goods. A remedy, including an appropriate replacement, refund or compensation where applicable, is assessed under the circumstances and applicable Sri Lankan law. You may seek assistance from the Consumer Affairs Authority or other competent authorities or courts without first completing the business's internal complaint process."
   },
   "shipping": {
-    "coverage": null, "processing": null, "deliveryEstimate": null,
-    "charges": null, "partners": null, "tracking": null,
-    "delays": null, "failedDelivery": null
+    "coverage": "We deliver products islandwide across Sri Lanka.",
+    "processing": "Orders are normally processed and dispatched within one business day after confirmation, subject to stock availability. Business days exclude Saturdays, Sundays and Sri Lankan public holidays.",
+    "deliveryEstimate": "Delivery is estimated within 2–3 business days after order confirmation. Business days exclude Saturdays, Sundays and Sri Lankan public holidays. This is an estimate, not a guaranteed delivery date; courier delays and circumstances outside the business's reasonable control may affect delivery.",
+    "charges": "A fixed delivery charge of LKR 350 applies to every order. The delivery charge is displayed at checkout before you confirm your order.",
+    "partners": "Koombiyo Delivery Company is the delivery partner confirmed by the business owner. No courier API or automated tracking integration is claimed.",
+    "tracking": "When the courier supplies a tracking reference, Sekkin.lk shares it manually through an available customer contact channel: WhatsApp, SMS or email. Tracking information is conditional on the courier providing it. My orders displays recorded order status, not live courier tracking; this website does not claim automated tracking, email or SMS integration.",
+    "delays": "Sekkin.lk informs customers through their supplied contact channel when significant delivery delays become known. Customers may contact support@sekkin.lk or 0740309918 about a delayed delivery.",
+    "failedDelivery": "The confirmed courier arrangement allows three delivery attempts. Customers must provide an accurate delivery address and reachable phone number. A failed delivery attempt itself has a LKR 0 charge. If delivery fails, SEKKIN LK contacts the customer to confirm details and arrange the next available delivery; if the parcel has returned to the business, the customer is contacted before another shipment is arranged. The customer pays the LKR 500 courier return charge when a parcel is returned due to customer responsibility: an incorrect address, repeated unavailability after the delivery attempts, refusal of a correctly supplied order or an ordinary change-of-mind return where the charge applies. SEKKIN LK covers the applicable return delivery charge for wrong, damaged or faulty goods; applicable mandatory consumer rights are preserved. The return charge is disclosed before requiring payment, applies only once to the same applicable returned parcel, and is separate from the normal LKR 350 per-order delivery charge. LKR 500 is not added to normal checkout or charged for an attempt alone. Any additional reshipment charge must be communicated and accepted before another shipment is arranged. Customer contact and courier handling are manual; no automated returned-parcel, fee collection or redelivery integration is claimed."
   },
   "privacy": {
-    "controller": null, "processingLocations": null,
-    "retention": null, "rightsProcedure": null
+    "controller": "RAVINDU KAUSHAN is the legal seller and sole proprietor carrying on business as SEKKIN LK (business registration 260918038), using the SEKKIN.LK brand and sekkinLK trading name. RAVINDU KAUSHAN is responsible for the business's customer-information processing. Privacy enquiries and verified access, correction or deletion requests may be sent to support@sekkin.lk or the business address, Mahawattha, Batapola, Sri Lanka. SEKKIN LK is a sole proprietorship, not a separate limited company or partnership.",
+    "processingLocations": null,
+    "retention": "Customer information is kept only as necessary for account management, order fulfilment, legitimate operations and applicable obligations. The owner has approved these targets for technical and legal review: customer-support records 12 months, application logs 30 days and database backups 30 days. Verified account or product-review deletion requests are assessed against applicable obligations; order-record retention is determined by applicable legal and legitimate operational requirements. Where deletion is appropriate, eligible information is removed or anonymized while records that must be retained are preserved. REVIEW REQUIRED — these targets are not verified production retention/deletion controls. The specific applicable order-record period, actual provider/log/backup settings, feasible deletion/anonymization and backup-expiration procedure require review and verification; no automated deletion schedule or legal compliance is claimed.",
+    "rightsProcedure": "Send access, correction or deletion requests to support@sekkin.lk. Requests are assigned to an authorized business administrator, who uses proportionate identity checks before disclosing or deleting personal information. Sekkin.lk acknowledges requests and aims to respond within 30 calendar days, subject to applicable legal requirements. Deletion is assessed against applicable retention obligations; the approved process is handled manually, and no self-service or automated deletion feature is claimed. Administrative access is restricted to authorized personnel."
   },
   "terms": {
-    "orderAcceptance": null, "pricesAndTaxes": null,
-    "paymentMethods": null, "intellectualProperty": null,
-    "liability": null, "complaints": null, "governingLaw": null,
-    "updates": null
+    "orderAcceptance": "Checkout submission creates an order request. An order is accepted after Sekkin.lk verifies product availability and order details and communicates confirmation to the customer. If a product is unavailable or a pricing error is found before acceptance, Sekkin.lk contacts the customer to explain and offer an appropriate correction, alternative or cancellation. The customer must agree to any changed price before proceeding. The final order total, including delivery and applicable discounts, is displayed before confirmation. An order acknowledgement or confirmation is not proof of payment.",
+    "pricesAndTaxes": "All prices are in LKR and include applicable taxes. SEKKIN LK is not VAT registered and does not add a separate VAT charge. The fixed LKR 350 normal delivery charge and applicable discounts are displayed in the final total before order confirmation. Any changed price requires the customer's agreement before proceeding. The existing coupon feature remains enabled: GLOW10 and WELCOME10 each reduce the effective merchandise subtotal by 10%; SAVE500 reduces it by LKR 500 when that subtotal is at least LKR 2,500. Enter one coupon code per order; code matching ignores surrounding spaces and letter case. Coupons can apply to already discounted product sale prices and reduce merchandise only, never the delivery charge. Unknown codes or an unmet SAVE500 minimum give no coupon discount. No coupon expiry dates, per-customer/global usage limits, customer/product eligibility restrictions or administrative coupon-management feature are currently configured; none is promised by these terms. The backend validates the configured calculation and confirms the payable total.",
+    "paymentMethods": "Cash on Delivery (COD) is the current payment method. The courier collects the confirmed order amount on delivery, and courier settlement reports are available. Authorized administrators must review actual courier settlement evidence before recording COD as collected in the audited workflow. Dispatch, delivery and failed collection do not themselves prove payment or mark an order paid. Prices use LKR. PayHere application and merchant approval remain pending; PayHere, KOKO and all online card payments remain disabled. An order acknowledgement or confirmation is not proof of payment.",
+    "intellectualProperty": "The business owner has authorized use of the existing website logo, existing product photographs and existing supplier descriptions. Third-party brand and content rights remain with their respective rights holders; authorization is not a claim that SEKKIN LK owns third-party brands. Do not copy or reuse protected website assets beyond applicable permission or law. This authorization covers the current reviewed assets and does not automatically extend to newly added material.",
+    "liability": "SEKKIN LK remains responsible for obligations and remedies that cannot lawfully be excluded. Delivery estimates are estimates and do not remove the duty to address unreasonable delay or an unfulfilled order. Nothing in these terms excludes liability or customer remedies where exclusion would be unlawful, including applicable rights concerning wrong, damaged, faulty or unsafe goods. No blanket exclusion, exclusive remedy, forced arbitration or waiver of access to competent authorities or courts is imposed.",
+    "complaints": "Send your order number and a description of the complaint to support@sekkin.lk or call or WhatsApp 0740309918. Written complaints may also be sent to Mahawattha, Batapola, Sri Lanka. Sekkin.lk aims to acknowledge complaints within two business days and provide a resolution or progress update within seven business days. Unresolved complaints are escalated to the responsible business owner or authorized manager. These are response aims, not a guarantee of immediate or round-the-clock staffed support. Applicable customer rights are preserved.",
+    "governingLaw": "These terms and purchases are governed by applicable Sri Lankan law. Contact support first if you would like the business to try to resolve a concern, but the internal complaint process does not prevent you from contacting the Consumer Affairs Authority, another competent regulator or a court with lawful jurisdiction. No exclusive foreign forum, compulsory arbitration or restriction of applicable mandatory consumer rights is imposed.",
+    "updates": "These policies take effect on the actual public launch date of SEKKIN.LK. Their actual effective date and publication/last-updated date will be displayed on the relevant pages when published. Material changes will be communicated to affected customers where appropriate. No date is backdated or substituted with the earlier business-confirmation or wording-approval date."
+  },
+  "deliveryCharge": {
+    "amount": 350,
+    "currency": "LKR",
+    "basis": "per-order"
+  },
+  "policyWordingApproval": {
+    "sourceVersion": "abe2b80743126ab944c021e860b0a1f83ae220312b98642e629b617a4f0cf69b",
+    "recordedDate": "2026-11-16",
+    "scope": "Consolidated prepared wording, including consumer remedies, liability, Sri Lankan governing-law and dispute-resolution provisions; actual provider, retention, catalog and security evidence remains separate"
+  },
+  "policyEffectiveDateBasis": "actual-public-launch-date",
+  "catalogReviewApproval": {
+    "recordedDate": "2026-11-16",
+    "catalogVersionSha256": "d1060526b7eabb001e676d21ec6644bbef575ce487a73d779f38269b1cc36115",
+    "scope": "Owner-approved temporary placeholder imagery for the initial release; owner will replace it with original product imagery after deployment. Existing price, stock and fulfilment confirmations remain recorded separately.",
+    "temporaryPlaceholderImagesAccepted": true,
+    "actualProductPhotographyVerified": false,
+    "productionCatalogChanged": false
   }
 }

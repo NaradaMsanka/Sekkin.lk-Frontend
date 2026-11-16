@@ -1,0 +1,188 @@
+{
+    "date":  "2026-11-16",
+    "command":  ".\\mvnw.cmd -o -B package",
+    "exitCode":  0,
+    "buildSuccess":  true,
+    "tests":  192,
+    "failures":  0,
+    "errors":  0,
+    "skipped":  0,
+    "mode":  "Full isolated MVC/mock and replaced H2 suite; no hosted database, secret rotation, production transactions or Docker build",
+    "suites":  [
+                   {
+                       "name":  "com.cosmetic.ecommerce.controller.ImageUploadSecurityTest",
+                       "tests":  5,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.controller.ReviewSecurityTest",
+                       "tests":  4,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.repository.ReviewPurchaseQueryTest",
+                       "tests":  13,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.AccountSecurityPersistenceTest",
+                       "tests":  5,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.AdminBootstrapSafetyTest",
+                       "tests":  6,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.AuthorizationBoundaryTest",
+                       "tests":  21,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.CartIntegrityTest",
+                       "tests":  8,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.JwtConfigurationSafetyTest",
+                       "tests":  15,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.OrderOwnershipSafetyTest",
+                       "tests":  14,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.PasswordInputSafetyTest",
+                       "tests":  5,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.PublicReviewPrivacyTest",
+                       "tests":  1,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.RequestThrottleSafetyTest",
+                       "tests":  7,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.security.UserSerializationSafetyTest",
+                       "tests":  4,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.AdminCollectionReportingTest",
+                       "tests":  1,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.CloudinaryServiceTest",
+                       "tests":  6,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.DirectOrderPaymentSafetyTest",
+                       "tests":  10,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.OrderConcurrencyPersistenceTest",
+                       "tests":  11,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.OrderControllerTest",
+                       "tests":  2,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.OrderLifecycleSafetyTest",
+                       "tests":  10,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.OrderServiceTest",
+                       "tests":  2,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.OrderShippingPersistenceTest",
+                       "tests":  1,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.OrderShippingTest",
+                       "tests":  24,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.ProductImageServiceTest",
+                       "tests":  4,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.ProductServiceTest",
+                       "tests":  3,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   },
+                   {
+                       "name":  "com.cosmetic.ecommerce.service.ReviewServiceTest",
+                       "tests":  10,
+                       "failures":  0,
+                       "errors":  0,
+                       "skipped":  0
+                   }
+               ]
+}

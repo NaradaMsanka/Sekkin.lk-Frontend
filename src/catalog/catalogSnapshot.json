@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "sourceCatalogVersionSha256": "d1060526b7eabb001e676d21ec6644bbef575ce487a73d779f38269b1cc36115",
+  "snapshotAtUtc": "2026-11-16T08:25:03.254636+00:00",
+  "mode": "PUBLIC_CATALOG",
+  "imagesAreIllustrative": true,
+  "products": [
+    {
+      "id": 1,
+      "name": "Cosmetics Product #106",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": 2000.0,
+      "brand": "teting",
+      "stockQuantity": 99,
+      "skinType": "cool",
+      "ingredients": "",
+      "status": "IN_STOCK",
+      "category": "",
+      "imageUrl": "/catalog/illustrative-1.webp",
+      "images": [
+        "/catalog/illustrative-1.webp",
+        "/catalog/illustrative-2.webp"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Cosmetics Product #101",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": null,
+      "brand": null,
+      "stockQuantity": 99,
+      "skinType": null,
+      "ingredients": null,
+      "status": "IN_STOCK",
+      "category": "",
+      "imageUrl": "",
+      "images": []
+    },
+    {
+      "id": 3,
+      "name": "Cosmetics Product #101",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": null,
+      "brand": null,
+      "stockQuantity": 100,
+      "skinType": null,
+      "ingredients": null,
+      "status": "IN_STOCK",
+      "category": "",
+      "imageUrl": "",
+      "images": []
+    }
+  ],
+  "assetProvenance": [
+    {
+      "path": "/catalog/illustrative-1.webp",
+      "sha256": "84ec963006ff35472d2f6beb376657b6b9b3e6dbf4ac38584077275d1a41496b",
+      "sourceUrl": "https://res.cloudinary.com/eey3dxc5/image/upload/v1794135510/sekkinlk/products/d08b86dc-c0e0-44c6-bbac-7c922066a287.webp",
+      "ownerApprovedTemporaryImage": true
+    },
+    {
+      "path": "/catalog/illustrative-2.webp",
+      "sha256": "c0439146dc4c7c5cc9561de87aee1ce78d32fdfa8ad0214a3752728952227852",
+      "sourceUrl": "https://res.cloudinary.com/eey3dxc5/image/upload/v1794135528/sekkinlk/products/c7427a23-4b1f-423d-97cb-cb72e04a41d5.webp",
+      "ownerApprovedTemporaryImage": true
+    }
+  ]
+}

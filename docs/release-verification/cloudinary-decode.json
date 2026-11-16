@@ -1,0 +1,25 @@
+{
+  "checkedDate": "2026-11-16",
+  "mode": "Read-only public image GET; bytes decoded in isolated Chrome with all browser network blocked",
+  "results": [
+    {
+      "url": "https://res.cloudinary.com/eey3dxc5/image/upload/v1794135510/sekkinlk/products/d08b86dc-c0e0-44c6-bbac-7c922066a287.webp",
+      "status": 200,
+      "bytes": 73336,
+      "contentType": "image/webp",
+      "decoded": true,
+      "width": 800,
+      "height": 800
+    },
+    {
+      "url": "https://res.cloudinary.com/eey3dxc5/image/upload/v1794135528/sekkinlk/products/c7427a23-4b1f-423d-97cb-cb72e04a41d5.webp",
+      "status": 200,
+      "bytes": 78328,
+      "contentType": "image/webp",
+      "decoded": true,
+      "width": 800,
+      "height": 800
+    }
+  ],
+  "limit": "Image decodability only; no authenticity, relevance, permissions or stock approval."
+}

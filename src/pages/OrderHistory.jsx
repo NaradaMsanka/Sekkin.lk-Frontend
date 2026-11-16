@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { formatDeliveryCharge } from '../content/delivery';
 import {
   Container, Typography, Box, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, Chip, Button,
@@ -112,6 +113,7 @@ export default function OrderHistory() {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight={700}>Rs. {order.totalAmount?.toFixed(2)}</Typography>
+                      <Typography variant="caption" color="text.secondary">Delivery: {formatDeliveryCharge(order.deliveryCharge)}</Typography>
                     </TableCell>
                     <TableCell>
                       <Chip label={s.label} color={s.color} size="small" sx={{ fontWeight: 600 }} />

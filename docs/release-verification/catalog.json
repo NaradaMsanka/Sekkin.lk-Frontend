@@ -1,0 +1,55 @@
+{
+  "checkedDate": "2026-11-16",
+  "url": "https://sekkin-lk-backend.onrender.com/api/products",
+  "status": 200,
+  "products": [
+    {
+      "id": 3,
+      "name": "Cosmetics Product #101",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": null,
+      "brand": null,
+      "stockQuantity": 100,
+      "skinType": null,
+      "ingredients": null,
+      "status": "IN_STOCK",
+      "imageUrl": null,
+      "images": null,
+      "category": null,
+      "effectivePrice": 2500.0
+    },
+    {
+      "id": 1,
+      "name": "Cosmetics Product #106",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": 2000.0,
+      "brand": "teting",
+      "stockQuantity": 99,
+      "skinType": "cool",
+      "ingredients": "",
+      "status": "IN_STOCK",
+      "imageUrl": "https://res.cloudinary.com/eey3dxc5/image/upload/v1794135510/sekkinlk/products/d08b86dc-c0e0-44c6-bbac-7c922066a287.webp",
+      "images": "[\"https://res.cloudinary.com/eey3dxc5/image/upload/v1794135510/sekkinlk/products/d08b86dc-c0e0-44c6-bbac-7c922066a287.webp\",\"https://res.cloudinary.com/eey3dxc5/image/upload/v1794135528/sekkinlk/products/c7427a23-4b1f-423d-97cb-cb72e04a41d5.webp\"]",
+      "category": null,
+      "effectivePrice": 2000.0
+    },
+    {
+      "id": 2,
+      "name": "Cosmetics Product #101",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": null,
+      "brand": null,
+      "stockQuantity": 99,
+      "skinType": null,
+      "ingredients": null,
+      "status": "IN_STOCK",
+      "imageUrl": null,
+      "images": null,
+      "category": null,
+      "effectivePrice": 2500.0
+    }
+  ]
+}

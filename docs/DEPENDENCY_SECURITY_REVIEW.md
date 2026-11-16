@@ -1,0 +1,28 @@
+# Backend dependency release requirement
+
+**Current final-business phase:** the maintained migration is implemented and packaged as **Spring Boot 4.1.2**, Spring Security **7.1.2**, Framework **7.0.10**, Tomcat **11.0.27**, Hibernate **7.4.13.Final**, PostgreSQL JDBC **42.7.14** and JJWT **0.13.0**. Full packaging passed **209 tests**, including **14 actual PostgreSQL** cases. The exact scanned runtime passed **15 actual container HTTP/PostgreSQL checks**. The [migration record](../../../Backend/docs/MAINTAINED_BOOT_MIGRATION.md) explains actual compatibility changes. Earlier old-version findings below are historical.
+
+Completed [Java/runtime assessment](../../../Backend/docs/RUNTIME_DEPENDENCY_ASSESSMENT.md): Grype 0.121.3 with valid current DB built 16 November 2026 finds **zero Java matches**; runtime hardening reduces **38 matches /17 unique advisories to 3 Medium matches /1 unique BusyBox advisory**, with zero Critical/High. No suppression was added. The remaining vendor-unfixed/possibly-vulnerable wget advisory has no application execution path identified and remains visible for informed review. The source Dockerfile's Maven builder and actual hosted image/settings are unverified; build/scan the final controlled source image before release.
+
+Frontend `npm audit` initially reported **7 affected dependency entries**. A non-forced, range-compatible update changed the lockfile; independent full and production-only audits now return **0 known vulnerabilities**, with 230 components in the CycloneDX SBOM. Resolved fixes include Vite **8.3.8**, ESLint **10.15.0**, minimatch **11.0.8**, follow-redirects **1.16.3**, source-map-js **1.2.2** and Zod **4.6.7**. The [Vite maintainer advisory](https://github.com/vitejs/vite/security/advisories/GHSA-p4f5-76q4-ffq7) independently identifies 8.3.7 as a fixed release for its November dev-server issue; the selected 8.3.8 is later. Static Vercel output is not a deployed Vite development server.
+
+Evidence: [before audit](release-verification/final-npm-audit-before.json), [after full audit](release-verification/final-npm-audit-after-all.json), [after production audit](release-verification/final-npm-audit-after-production.json), [SBOM](release-verification/final-frontend-sbom.cdx.json). These are advisory-database results for the local dependency graph, not a security guarantee or evidence of the deployed revision. Backend JAR/container scan completion and findings must be taken from the final evidence rather than assumed from the version upgrade.
+
+## Historical finding before the migration
+
+Reviewed 16 November 2026. The source still uses Spring Boot **3.3.3** in `Backend/pom.xml`. Its locally resolved managed BOM specifies Spring Security **6.3.3**, Spring Framework **6.1.12** and Tomcat **10.1.28**; the final packaged JAR was independently inspected and contains those runtime versions. See [packaged dependency evidence](release-verification/owner-approval-runtime-dependencies.json). No framework upgrade or complete dependency-vulnerability scan has been claimed.
+
+This is an additional technical release requirement outside the content checker's **36 messages**. Passing functional/security tests does not establish that these dependencies are current or free of known vulnerabilities. Do not approve `paymentSafetyReviewed` while this review is unresolved.
+
+The current Spring Security version falls within the published affected range for **CVE-2025-22228**, involving BCrypt verification of overlong passwords. The local request-boundary fix rejects passwords exceeding 72 UTF-8 bytes before verification/registration; it is a defensive application measure, not a claim that the library has been patched. Select and test a maintained dependency set rather than treating that measure as the final resolution. [Spring advisory](https://spring.io/security/cve-2025-22228/).
+
+Apache publishes multiple subsequent Tomcat fixes, including multipart-upload denial of service affecting versions through 10.1.41. The application enables multipart uploads and the source-managed 10.1.28 lies in that version range; actual exposure also depends on runtime/proxy/authorization configuration, which remains unverified. Do not infer that every listed Tomcat issue is exploitable here. [Apache Tomcat security advisories](https://tomcat.apache.org/security-10.html).
+
+Required next steps:
+
+1. Resolve the complete effective dependency graph and produce an SBOM/vulnerability report with a current advisory database. Include transitive runtime libraries and build tooling; record versions and justified applicability without credentials or customer data.
+2. Choose a currently maintained compatible Spring Boot BOM from the [official project/release guidance](https://spring.io/projects/spring-boot/), or document a verified supported patch arrangement. Do not blindly override only one Spring/Tomcat artifact or replace the parent with an untested major version.
+3. Implement the reviewed dependency migration locally and rerun the complete tests/package, serialization/validation/method-security/CORS checks, database migration/schema validation, Cloudinary integration and isolated PostgreSQL concurrent-order scenarios. Review framework migration notes for changed APIs and defaults.
+4. Verify the resulting packaged runtime versions and scan results, then stage the exact built revision with the matching frontend before any authorized release. Record residual findings with evidence; no false zero-vulnerability result or approval is supplied here.
+
+Framework migration is outstanding. This document supplies the concrete finding and acceptance criteria; it does not claim that a broad compatibility migration was completed as part of the operational-policy approval.

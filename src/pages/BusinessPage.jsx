@@ -1,15 +1,16 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Alert, Box, Button, Chip, Container, Divider, Stack, Typography } from '@mui/material';
-import { ArrowBack, ArrowForward, MailOutlined, PhoneOutlined } from '@mui/icons-material';
+import { ArrowBack, ArrowForward, MailOutlined, PhoneOutlined, WhatsApp } from '@mui/icons-material';
 import business from '../content/business.json';
+import { isContactFieldConfirmed, supportEmailHref, supportPhoneHref, supportWhatsAppHref } from '../content/businessContacts';
 import { businessPages, isBusinessReady, publicBusinessLinks } from '../content/businessPages';
 
 const card = { border: '1px solid #E6DBD3', borderRadius: '20px', bgcolor: '#FFFDFC', minWidth: 0 };
 function usePageMetadata(title, description, path, noindex) {
   useEffect(() => {
     const previousTitle = document.title;
-    document.title = `${title} | SEKKIN.LK`;
+    document.title = `${title} | ${business.brand}`;
     const restorers = [];
     for (const [selector, attributes] of [
       ['meta[name="description"]', { name: 'description', content: description }],
@@ -29,24 +30,31 @@ function usePageMetadata(title, description, path, noindex) {
 
 function BusinessDetails() {
   const fields = [
-    ['Business name', business.businessName], ['Registered business name', business.registeredName],
-    ['Business phone', business.supportPhone], ['Support email', business.supportEmail],
-    ['Business postal address', business.postalAddress], ['Business hours', business.businessHours], ['WhatsApp', business.whatsappNumber],
+    ['Brand', business.brand], ['Trading name', business.tradingName], ['Registered business name', business.registeredName],
+    ['Business type', business.businessType], ['Registration status', business.registrationStatus], ['Business registration number', business.registrationNumber], ['Sole proprietor legal name', business.soleProprietorLegalName],
+    ['Business phone', business.supportPhone, 'supportPhone'], ['Support email', business.supportEmail, 'supportEmail'],
+    ['Business postal address', business.postalAddress, 'postalAddress'], ['Business availability', business.businessHours, 'businessHours'], ['WhatsApp', business.supportPhone, 'whatsappNumber'],
   ];
   return <Box sx={{ ...card, p: { xs: 2.5, sm: 3.5 }, mb: 3 }}>
     <Typography component="h2" sx={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem', mb: 2 }}>Business details</Typography>
     <Box component="dl" sx={{ m: 0, display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'minmax(0, .8fr) minmax(0, 1.4fr)' }, columnGap: 3, rowGap: 1.5 }}>
-      {fields.map(([label, value]) => <Box key={label} sx={{ display: 'contents' }}><Typography component="dt" variant="body2" color="text.secondary">{label}</Typography><Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere', lineHeight: 1.8 }}>{value || 'REVIEW REQUIRED — details to be supplied.'}{value && label !== 'Business name' && !business.contactsConfirmed && <Typography component="span" variant="caption" sx={{ display: 'block', color: '#846038' }}>REVIEW REQUIRED — confirm this existing detail.</Typography>}</Typography></Box>)}
+      {fields.map(([label, value, field]) => <Box key={label} sx={{ display: 'contents' }}><Typography component="dt" variant="body2" color="text.secondary">{label}</Typography><Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere', lineHeight: 1.8 }}>{value || 'REVIEW REQUIRED — details to be supplied.'}{value && field && !isContactFieldConfirmed(field) && <Typography component="span" variant="caption" sx={{ display: 'block', color: '#846038' }}>REVIEW REQUIRED — confirm this detail.</Typography>}</Typography></Box>)}
     </Box>
-    {business.contactsConfirmed && <Stack direction="row" useFlexGap spacing={1.5} sx={{ flexWrap: 'wrap', mt: 3 }}>
-      {business.supportEmail && <Button component="a" href={`mailto:${business.supportEmail}`} variant="contained" startIcon={<MailOutlined />}>Email support</Button>}
-      {business.supportPhone && <Button component="a" href={`tel:${business.supportPhone.replace(/[^+\d]/g, '')}`} variant="outlined" startIcon={<PhoneOutlined />}>Call us</Button>}
-    </Stack>}
+    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>Contact us any time. Business availability does not guarantee an immediate support response. Any further postal-address details needed for merchant verification remain under review.</Typography>
+    <Stack direction="row" useFlexGap spacing={1.5} sx={{ flexWrap: 'wrap', mt: 3 }}>
+      {supportEmailHref && <Button component="a" href={supportEmailHref} variant="contained" startIcon={<MailOutlined />}>Email support</Button>}
+      {supportPhoneHref && <Button component="a" href={supportPhoneHref} variant="outlined" startIcon={<PhoneOutlined />}>Call us</Button>}
+      {supportWhatsAppHref && <Button component="a" href={supportWhatsAppHref} target="_blank" rel="noopener noreferrer" variant="outlined" startIcon={<WhatsApp />}>WhatsApp</Button>}
+    </Stack>
   </Box>;
 }
 
 export default function BusinessPage({ pageKey }) {
   const page = businessPages[pageKey];
+  const hasApprovedPolicyDates = business.policiesApproved === true && /^\d{4}-\d{2}-\d{2}$/.test(business.policyEffectiveDate || '') && /^\d{4}-\d{2}-\d{2}$/.test(business.policyPublicationDate || '');
+  const pendingPolicyDates = business.policyEffectiveDateBasis === 'actual-public-launch-date'
+    ? 'Policy effective date: the actual public launch date. Calendar effective and publication dates will be recorded at publication.'
+    : 'Final policy effective and publication dates await approval and publication.';
   const contents = page.sections.map(item => <Typography component="a" key={item.id} href={`#${item.id}`} sx={{ color: 'text.secondary', textDecoration: 'none', minHeight: 44, py: 1, fontSize: '.8rem', lineHeight: 1.6, '&:hover': { color: 'primary.main' } }}>{item.title}</Typography>);
   usePageMetadata(`${isBusinessReady ? '' : 'Draft — '}${page.title}`, page.description, `/${pageKey}`, !isBusinessReady);
   return <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, lg: 6 }, pt: { xs: 3, md: 5 }, pb: 7 }}>
@@ -61,7 +69,7 @@ export default function BusinessPage({ pageKey }) {
       <Box component="nav" aria-label="On this page" sx={{ ...card, p: 2.5, position: { md: 'sticky' }, top: 108 }}>
         <Box sx={{ display: { xs: 'none', md: 'block' } }}><Typography sx={{ fontSize: '.65rem', letterSpacing: '.13em', textTransform: 'uppercase', color: '#886044', mb: 1.5 }}>On this page</Typography><Stack spacing={.5}>{contents}</Stack></Box>
         <Box component="details" sx={{ display: { xs: 'block', md: 'none' } }}><Box component="summary" sx={{ minHeight: 44, py: 1, fontSize: '.82rem', color: 'primary.main', cursor: 'pointer' }}>On this page</Box><Stack spacing={.5}>{contents}</Stack></Box>
-        <Divider sx={{ my: 2 }} /><Typography variant="caption" color="text.secondary">Draft reviewed {business.reviewDate}. Effective date awaits approval.</Typography>
+        <Divider sx={{ my: 2 }} /><Typography variant="caption" color="text.secondary">{hasApprovedPolicyDates ? `Policies effective ${business.policyEffectiveDate}. Published / last updated ${business.policyPublicationDate}.` : `Business information reviewed ${business.reviewDate}. ${pendingPolicyDates}`}</Typography>
       </Box>
       <Box sx={{ minWidth: 0, maxWidth: 900 }}>
         {pageKey === 'contact' && <BusinessDetails />}

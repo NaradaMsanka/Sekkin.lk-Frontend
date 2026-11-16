@@ -1,5 +1,9 @@
 # Vercel Preview and Production builds
 
+**Latest phase-2 update:** 61 messages still block Production. Full backend tests/package 134/134, frontend tests 32/32 and browser checks 67/67 pass. Backend now requires explicit datasource/JWT configuration, schema validation and exact browser origins (including needed Preview URLs). Follow [the phase-2 report](PRODUCTION_PHASE2_REPORT.md) and [Render security runbook](RENDER_SECURITY_RUNBOOK.md); earlier counts below are historical.
+
+Current review, 16 November 2026 after the owner response: local/Preview builds succeed, while merchant and simulated Production builds correctly reject **61** unresolved messages. The readiness suite has **23 passing tests**. Confirmed contacts/policy clauses and the fixed LKR 350 delivery rule are applied locally. Nine delivery tests, 66 browser checks and 87 selected isolated backend tests also pass; packaging succeeds. Unrelated business/security decisions remain pending. The earlier live check found the production homepage reachable but information-page/shopping deep links returning HTTP 404; deployed Git revision remains unverified. Use the [current consolidated report](PAYHERE_OWNER_RESPONSE_REPORT.md) and [manual release runbook](PRODUCTION_RELEASE_RUNBOOK.md). Do not run production commands until content and backend/security blockers are resolved. No push, merge or deployment has been performed.
+
 Preview permits UI review with unfinished merchant content. Production still requires all business details, policy copy and review flags to pass the existing readiness checker. No business values or approval flags are filled by the build.
 
 | Command | Behavior with unfinished content |
@@ -67,7 +71,7 @@ npm run build:vercel
 
 $env:VERCEL_ENV = 'production'
 npm run build:vercel
-# Expected with the current content: exit 1, 77 unresolved items, Vite never runs.
+# Expected with the current content: exit 1, 61 unresolved items, Vite never runs.
 
 Remove-Item Env:VERCEL, Env:VERCEL_ENV -ErrorAction SilentlyContinue
 npm run build:vercel

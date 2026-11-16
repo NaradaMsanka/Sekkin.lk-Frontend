@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-16",
+  "command": "npm run build",
+  "exitCode": 0,
+  "summary": [
+    "> node scripts/check-merchant-readiness.mjs --build && vite build",
+    "SEKKIN.LK is NOT ready for merchant submission: 10 unresolved items.",
+    "Local draft build only. Do not publish these policies as final. Production and merchant releases remain blocked until review is complete.",
+    "vite v8.3.8 building client environment for production...",
+    "(!) Some chunks are larger than 500 kB after minification. Consider:",
+    "✓ built in 21.18s"
+  ],
+  "limits": "Local draft build only. Strict hosted Production validation is separate.",
+  "policySourceSha256": "ac20c111743243983e3b24e63600dcaa550ce98c09f8b437dfb3af68295c84df"
+}

@@ -1,0 +1,589 @@
+{
+  "date": "2026-11-16",
+  "command": "npm run lint -- --format json",
+  "exitCode": 1,
+  "filesScanned": 45,
+  "errorCount": 16,
+  "warningCount": 1,
+  "files": [
+    {
+      "filePath": "D:\\sekking lk development\\sekkinLk\\Frontend\\frontend\\src\\components\\ImageEditorModal.jsx",
+      "errorCount": 7,
+      "warningCount": 0,
+      "messages": [
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'React' is defined but never used.",
+          "line": 1,
+          "column": 8,
+          "messageId": "unusedVar",
+          "endLine": 1,
+          "endColumn": 13,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "React"
+              },
+              "fix": {
+                "range": [
+                  7,
+                  13
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'React'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'ZoomOut' is defined but never used.",
+          "line": 8,
+          "column": 42,
+          "messageId": "unusedVar",
+          "endLine": 8,
+          "endColumn": 49,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "ZoomOut"
+              },
+              "fix": {
+                "range": [
+                  311,
+                  320
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'ZoomOut'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'Tune' is defined but never used.",
+          "line": 9,
+          "column": 3,
+          "messageId": "unusedVar",
+          "endLine": 9,
+          "endColumn": 7,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "Tune"
+              },
+              "fix": {
+                "range": [
+                  320,
+                  328
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'Tune'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'AutoAwesome' is defined but never used.",
+          "line": 10,
+          "column": 26,
+          "messageId": "unusedVar",
+          "endLine": 10,
+          "endColumn": 37,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "AutoAwesome"
+              },
+              "fix": {
+                "range": [
+                  398,
+                  411
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'AutoAwesome'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'aspectRatio' is assigned a value but never used.",
+          "line": 19,
+          "column": 3,
+          "messageId": "unusedVar",
+          "endLine": 19,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "aspectRatio"
+              },
+              "fix": {
+                "range": [
+                  582,
+                  601
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'aspectRatio'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "react-hooks/set-state-in-effect",
+          "severity": 2,
+          "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n  41 |   useEffect(() => {\n  42 |     if (!imageSrc || !open) return;\n> 43 |     setImageReady(false);\n     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  44 |     imageObjRef.current = null;\n  45 |     const img = new Image();\n  46 |     // Only set crossOrigin on remote http/https URLs; data URLs or blobs can fail or taint canvas",
+          "line": 43,
+          "column": 5,
+          "endLine": 43,
+          "endColumn": 18,
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "react-hooks/immutability",
+          "severity": 2,
+          "message": "Error: Cannot access variable before it is declared\n\n`handleReset` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n  50 |     img.onload = () => {\n  51 |       imageObjRef.current = img;\n> 52 |       handleReset();\n     |       ^^^^^^^^^^^ `handleReset` accessed before it is declared\n  53 |       setImageReady(true);\n  54 |     };\n  55 |     img.onerror = () => alert(\"This image could not be loaded. Please choose a local image to replace it.\");\n\n  58 |   }, [imageSrc, open]);\n  59 |\n> 60 |   const handleReset = () => {\n     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 61 |     setScale(1);\n     | ^^^^^^^^^^^^^^^^\n> 62 |     setRotation(0);\n     | ^^^^^^^^^^^^^^^^\n> 63 |     setFlipH(false);\n     | ^^^^^^^^^^^^^^^^\n> 64 |     setPan({ x: 0, y: 0 });\n     | ^^^^^^^^^^^^^^^^\n> 65 |     setBrightness(100);\n     | ^^^^^^^^^^^^^^^^\n> 66 |     setContrast(100);\n     | ^^^^^^^^^^^^^^^^\n> 67 |     setSaturation(100);\n     | ^^^^^^^^^^^^^^^^\n> 68 |     setActivePreset(\"normal\");\n     | ^^^^^^^^^^^^^^^^\n> 69 |   };\n     | ^^^^^ `handleReset` is declared here\n  70 |\n  71 |   // Draw on Canvas\n  72 |   const draw = useCallback(() => {",
+          "line": 52,
+          "column": 7,
+          "endLine": 52,
+          "endColumn": 18,
+          "preexistingInHeadUnderCurrentRules": true
+        }
+      ],
+      "baseline": {
+        "relativePath": "src/components/ImageEditorModal.jsx",
+        "sourceUnchangedFromHead": true,
+        "errorCount": 7,
+        "warningCount": 0,
+        "matchedCurrentFindings": 7,
+        "messages": [
+          {
+            "line": 1,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'React' is defined but never used."
+          },
+          {
+            "line": 8,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'ZoomOut' is defined but never used."
+          },
+          {
+            "line": 9,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'Tune' is defined but never used."
+          },
+          {
+            "line": 10,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'AutoAwesome' is defined but never used."
+          },
+          {
+            "line": 19,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'aspectRatio' is assigned a value but never used."
+          },
+          {
+            "line": 43,
+            "ruleId": "react-hooks/set-state-in-effect",
+            "severity": 2,
+            "message": "Error: Calling setState synchronously within an effect can trigger cascading renders"
+          },
+          {
+            "line": 52,
+            "ruleId": "react-hooks/immutability",
+            "severity": 2,
+            "message": "Error: Cannot access variable before it is declared"
+          }
+        ]
+      }
+    },
+    {
+      "filePath": "D:\\sekking lk development\\sekkinLk\\Frontend\\frontend\\src\\components\\ImageSequenceManager.jsx",
+      "errorCount": 6,
+      "warningCount": 0,
+      "messages": [
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'React' is defined but never used.",
+          "line": 1,
+          "column": 8,
+          "messageId": "unusedVar",
+          "endLine": 1,
+          "endColumn": 13,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "React"
+              },
+              "fix": {
+                "range": [
+                  7,
+                  13
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'React'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'Button' is defined but never used.",
+          "line": 3,
+          "column": 20,
+          "messageId": "unusedVar",
+          "endLine": 3,
+          "endColumn": 26,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "Button"
+              },
+              "fix": {
+                "range": [
+                  75,
+                  83
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'Button'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'Card' is defined but never used.",
+          "line": 3,
+          "column": 35,
+          "messageId": "unusedVar",
+          "endLine": 3,
+          "endColumn": 39,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "Card"
+              },
+              "fix": {
+                "range": [
+                  90,
+                  96
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'Card'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'Chip' is defined but never used.",
+          "line": 4,
+          "column": 12,
+          "messageId": "unusedVar",
+          "endLine": 4,
+          "endColumn": 16,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "Chip"
+              },
+              "fix": {
+                "range": [
+                  119,
+                  125
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'Chip'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'Alert' is defined but never used.",
+          "line": 4,
+          "column": 18,
+          "messageId": "unusedVar",
+          "endLine": 4,
+          "endColumn": 23,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "Alert"
+              },
+              "fix": {
+                "range": [
+                  125,
+                  132
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'Alert'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'CloudUpload' is defined but never used.",
+          "line": 7,
+          "column": 3,
+          "messageId": "unusedVar",
+          "endLine": 7,
+          "endColumn": 14,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "CloudUpload"
+              },
+              "fix": {
+                "range": [
+                  175,
+                  187
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'CloudUpload'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        }
+      ],
+      "baseline": {
+        "relativePath": "src/components/ImageSequenceManager.jsx",
+        "sourceUnchangedFromHead": true,
+        "errorCount": 6,
+        "warningCount": 0,
+        "matchedCurrentFindings": 6,
+        "messages": [
+          {
+            "line": 1,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'React' is defined but never used."
+          },
+          {
+            "line": 3,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'Button' is defined but never used."
+          },
+          {
+            "line": 3,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'Card' is defined but never used."
+          },
+          {
+            "line": 4,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'Chip' is defined but never used."
+          },
+          {
+            "line": 4,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'Alert' is defined but never used."
+          },
+          {
+            "line": 7,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'CloudUpload' is defined but never used."
+          }
+        ]
+      }
+    },
+    {
+      "filePath": "D:\\sekking lk development\\sekkinLk\\Frontend\\frontend\\src\\pages\\OrderHistory.jsx",
+      "errorCount": 3,
+      "warningCount": 1,
+      "messages": [
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'React' is defined but never used.",
+          "line": 1,
+          "column": 8,
+          "messageId": "unusedVar",
+          "endLine": 1,
+          "endColumn": 13,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "React"
+              },
+              "fix": {
+                "range": [
+                  7,
+                  13
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'React'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "no-unused-vars",
+          "severity": 2,
+          "message": "'Divider' is defined but never used.",
+          "line": 8,
+          "column": 46,
+          "messageId": "unusedVar",
+          "endLine": 8,
+          "endColumn": 53,
+          "suggestions": [
+            {
+              "messageId": "removeVar",
+              "data": {
+                "varName": "Divider"
+              },
+              "fix": {
+                "range": [
+                  366,
+                  375
+                ],
+                "text": ""
+              },
+              "desc": "Remove unused variable 'Divider'."
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "react-hooks/set-state-in-effect",
+          "severity": 2,
+          "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n  35 |   };\n  36 |\n> 37 |   useEffect(() => { fetchOrders(); }, []);\n     |                     ^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  38 |\n  39 |   const totalSpent = orders\n  40 |     .filter(o => o.status !== 'CANCELLED')",
+          "line": 37,
+          "column": 21,
+          "endLine": 37,
+          "endColumn": 32,
+          "preexistingInHeadUnderCurrentRules": true
+        },
+        {
+          "ruleId": "react-hooks/exhaustive-deps",
+          "severity": 1,
+          "message": "React Hook useEffect has a missing dependency: 'fetchOrders'. Either include it or remove the dependency array.",
+          "line": 37,
+          "column": 39,
+          "endLine": 37,
+          "endColumn": 41,
+          "suggestions": [
+            {
+              "desc": "Update the dependencies array to be: [fetchOrders]",
+              "fix": {
+                "range": [
+                  1354,
+                  1356
+                ],
+                "text": "[fetchOrders]"
+              }
+            }
+          ],
+          "preexistingInHeadUnderCurrentRules": true
+        }
+      ],
+      "baseline": {
+        "relativePath": "src/pages/OrderHistory.jsx",
+        "sourceUnchangedFromHead": false,
+        "errorCount": 3,
+        "warningCount": 1,
+        "matchedCurrentFindings": 4,
+        "messages": [
+          {
+            "line": 1,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'React' is defined but never used."
+          },
+          {
+            "line": 7,
+            "ruleId": "no-unused-vars",
+            "severity": 2,
+            "message": "'Divider' is defined but never used."
+          },
+          {
+            "line": 36,
+            "ruleId": "react-hooks/set-state-in-effect",
+            "severity": 2,
+            "message": "Error: Calling setState synchronously within an effect can trigger cascading renders"
+          },
+          {
+            "line": 36,
+            "ruleId": "react-hooks/exhaustive-deps",
+            "severity": 1,
+            "message": "React Hook useEffect has a missing dependency: 'fetchOrders'. Either include it or remove the dependency array."
+          }
+        ]
+      }
+    }
+  ],
+  "limits": "Whole current frontend lint. Baseline attribution is reviewed separately; no errors are suppressed or configured away.",
+  "baselineAudit": {
+    "commit": "2001fe8c06fa5f06d612475e68119b0c4a8b8afb",
+    "method": "Applied current installed ESLint/config to Git HEAD source in memory via lintText; source comparison, not historical dependency execution. Matches rule/severity/message first line per file with duplicate counts.",
+    "newlyIntroducedFindingCount": 0,
+    "sourceMutations": false
+  },
+  "postInspectionSourceVerification": [
+    {
+      "filePath": "D:\\sekking lk development\\sekkinLk\\Frontend\\frontend\\src\\components\\ImageEditorModal.jsx",
+      "exactBytesMatchPreLintSource": true,
+      "sha256": "ee3553553ee7bf3b655795143cad04e18f9f04f0a7af5e03ce6ad98c7d22c7ae"
+    },
+    {
+      "filePath": "D:\\sekking lk development\\sekkinLk\\Frontend\\frontend\\src\\components\\ImageSequenceManager.jsx",
+      "exactBytesMatchPreLintSource": true,
+      "sha256": "a8a9b7333e908ce858d78d44c9b23f5e5c4feefcb71286e819d6106afda74331"
+    },
+    {
+      "filePath": "D:\\sekking lk development\\sekkinLk\\Frontend\\frontend\\src\\pages\\OrderHistory.jsx",
+      "exactBytesMatchPreLintSource": true,
+      "sha256": "abde88c363aefb405e9024040d1bacaf46736bf244a59cd31593180b032de5aa"
+    }
+  ],
+  "sourceChangedByLintReview": false,
+  "policySourceSha256": "ac20c111743243983e3b24e63600dcaa550ce98c09f8b437dfb3af68295c84df"
+}

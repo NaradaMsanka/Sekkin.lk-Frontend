@@ -8,6 +8,9 @@ import { ArrowBack, ArrowForward, CheckCircleOutlined, Close, LocalOfferOutlined
 import ProductMedia from '../components/storefront/ProductMedia';
 import api from '../services/api';
 import PolicyLinks from '../components/PolicyLinks';
+import DeliveryPricingNotice from '../components/DeliveryPricingNotice';
+import { estimateOrderTotals, formatDeliveryCharge } from '../content/delivery';
+import { orderRequests, validateOrderReceipt } from '../services/orderRequest';
 
 const panel = { border: '1px solid #E6DBD3', borderRadius: '20px', bgcolor: '#FFFDFC', minWidth: 0 };
 const formatter = new Intl.NumberFormat('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,6 +38,7 @@ function CheckoutSection({ id, icon, title, description, children }) {
 export default function Checkout() {
   const navigate = useNavigate();
   const [address, setAddress] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [coupon, setCoupon] = useState('');
   const [cart, setCart] = useState(null);
   const [cartLoading, setCartLoading] = useState(true);
@@ -45,6 +49,8 @@ export default function Checkout() {
   const [orderError, setOrderError] = useState('');
   const [uncertainOrder, setUncertainOrder] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
+  const [retryWarning, setRetryWarning] = useState('');
+  const [priceChanged, setPriceChanged] = useState(false);
   const orderPending = useRef(false);
 
   useEffect(() => {
@@ -73,14 +79,13 @@ export default function Checkout() {
     return () => clearTimeout(timer);
   }, [placedOrder, navigate]);
 
-  const retryCart = () => { setCartLoading(true); setSlowLoading(false); setCartError(''); setRequest(value => value + 1); };
+  const retryCart = () => { setCartLoading(true); setSlowLoading(false); setCartError(''); setPriceChanged(false); setOrderError(''); setRequest(value => value + 1); };
   const items = cart?.items || [];
   const itemCount = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const subtotal = Number(cart?.totalPrice || 0);
   const code = coupon.trim().toUpperCase();
   // Display estimates using the existing coupon rules. OrderService confirms the actual total.
-  const discount = ['GLOW10', 'WELCOME10'].includes(code) ? subtotal * .1 : code === 'SAVE500' && subtotal >= 2500 ? 500 : 0;
-  const estimatedTotal = Math.max(0, subtotal - discount);
+  const { couponDiscount: discount, deliveryCharge, total: estimatedTotal } = estimateOrderTotals(subtotal, code, items.length > 0);
   const offer = offers.find(item => item.code === code);
   const couponHelp = !code ? 'Choose an offer below or enter your own code.'
     : code === 'SAVE500' && subtotal < 2500 ? 'SAVE500 requires a subtotal of Rs. 2,500 or more.'
@@ -88,23 +93,37 @@ export default function Checkout() {
 
   const handleCheckout = async event => {
     event.preventDefault();
-    if (orderPending.current || cartLoading || !items.length || !address.trim()) return;
+    if (orderPending.current || cartLoading || priceChanged || !items.length || !address.trim() || !customerPhone.trim()) return;
     const token = localStorage.getItem('token');
     if (!token || ['undefined', 'null'].includes(token)) { navigate('/login', { replace: true }); return; }
     orderPending.current = true; setSubmitting(true); setOrderError(''); setUncertainOrder(false);
+    let requestSent = false;
     try {
+      const retry = await orderRequests.get('cart', {
+        account: token,
+        items: items.map(item => ({ productId: item.product.id, quantity: Number(item.quantity) })).sort((a, b) => Number(a.productId) - Number(b.productId)),
+        shippingAddress: address.trim(), customerPhone: customerPhone.trim(), couponCode: code || null, expectedTotal: estimatedTotal,
+      }, { newPurchase: true });
+      setRetryWarning(retry.warning);
+      requestSent = true;
       const { data } = await api.post('/api/orders', {
-        shippingAddress: address,
+        shippingAddress: address.trim(),
+        customerPhone: customerPhone.trim(),
         couponCode: code || null,
-      });
-      setPlacedOrder(data || {});
+        expectedTotal: estimatedTotal,
+        cartItems: items.map(item => ({ productId: item.product.id, quantity: Number(item.quantity) })),
+      }, { headers: { 'Idempotency-Key': retry.key } });
+      setPlacedOrder(validateOrderReceipt(data));
+      const completion = orderRequests.complete('cart', retry.key);
+      if (completion.warning) setRetryWarning(completion.warning);
       // This endpoint clears the cart after the order is successfully created.
       window.dispatchEvent(new CustomEvent('sekkin:cart-updated', { detail: { items: [] } }));
     } catch (err) {
       if (err.response?.status === 401) { localStorage.removeItem('token'); navigate('/login', { replace: true }); return; }
-      const uncertain = !err.response || err.response.status >= 500;
+      const uncertain = requestSent && (!err.response || err.response.status >= 500);
       setUncertainOrder(uncertain);
-      setOrderError(uncertain ? 'We couldn’t confirm your order. Check My orders before trying again.' : errorMessage(err, 'Your order couldn’t be placed. Please review your cart and try again.'));
+      setPriceChanged(err.response?.status === 409);
+      setOrderError(!requestSent ? err.message || 'Retry protection could not be prepared. Your request was not sent.' : uncertain ? 'The result is unclear. Check My orders, or retry with unchanged details to retrieve the same request. Changing the request may create another order.' : errorMessage(err, 'Your order request could not be received. Please review your cart and try again.'));
     } finally { orderPending.current = false; setSubmitting(false); }
   };
 
@@ -112,9 +131,9 @@ export default function Checkout() {
     <Box className="store-entrance" role="status" sx={{ ...panel, p: { xs: 3, sm: 5 }, textAlign: 'center' }}>
       <Box sx={{ display: 'grid', placeItems: 'center', width: 76, height: 76, mx: 'auto', mb: 3, borderRadius: '50%', bgcolor: '#EDF3EC', color: 'success.main' }}><CheckCircleOutlined sx={{ fontSize: 36 }} /></Box>
       <Typography sx={{ color: '#9A7457', fontSize: '.65rem', textTransform: 'uppercase', letterSpacing: '.15em', mb: 1 }}>Thank you for choosing Sekkin.lk</Typography>
-      <Typography component="h1" sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: '2rem', sm: '2.5rem' }, mb: 2 }}>Your order is received</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.9, mb: 3 }}>We’ve received your order{placedOrder.id != null ? ` #${placedOrder.id}` : ''}. You can follow its progress in My orders.</Typography>
-      {placedOrder.totalAmount != null && <Box sx={{ borderBlock: '1px solid #E6DBD3', py: 2, mb: 3 }}><Typography variant="caption" color="text.secondary">Order total</Typography><Typography sx={{ color: 'primary.main', fontWeight: 600, fontSize: '1.5rem', mt: .5 }}>{money(placedOrder.totalAmount)}</Typography></Box>}
+      <Typography component="h1" sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: '2rem', sm: '2.5rem' }, mb: 2 }}>Order request received</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.9, mb: 3 }}>We’ve received your request #{placedOrder.orderId ?? placedOrder.id}. Staff must verify the details and confirm acceptance before dispatch. This acknowledgement is not acceptance or proof of payment. You can follow its progress in My orders.</Typography>
+      {placedOrder.totalAmount != null && <Box sx={{ borderBlock: '1px solid #E6DBD3', py: 2, mb: 3 }}><Typography variant="body2" color="text.secondary">Delivery Charge: {formatDeliveryCharge(placedOrder.deliveryCharge)}</Typography><Typography variant="caption" color="text.secondary">Order total</Typography><Typography sx={{ color: 'primary.main', fontWeight: 600, fontSize: '1.5rem', mt: .5 }}>{money(placedOrder.totalAmount)}</Typography></Box>}
       <Button component={Link} to="/orders" variant="contained" fullWidth endIcon={<ArrowForward />}>View my orders</Button>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>Taking you to your orders shortly…</Typography>
     </Box>
@@ -137,6 +156,7 @@ export default function Checkout() {
       </Box> : <Box component="form" id="cart-checkout-form" onSubmit={handleCheckout} aria-busy={submitting} sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) 340px', lg: 'minmax(0, 1fr) 380px' }, gap: { xs: 3, lg: 4 }, alignItems: 'start' }}>
         <Stack spacing={3} sx={{ minWidth: 0 }}>
           <CheckoutSection id="checkout-delivery-heading" icon={<LocationOnOutlined sx={{ fontSize: 21 }} />} title="01. Delivery details" description="Let us know where your order should arrive.">
+            <TextField id="checkout-phone" label="Delivery phone number" type="tel" fullWidth required autoComplete="tel" value={customerPhone} onChange={event => setCustomerPhone(event.target.value)} disabled={submitting} slotProps={{ htmlInput: { maxLength: 40 } }} helperText="A reachable number for order confirmation and delivery." sx={{ mb: 2.5 }} />
             <TextField id="checkout-address" label="Full delivery address" fullWidth required multiline minRows={4} maxRows={8} autoComplete="street-address" value={address} onChange={event => setAddress(event.target.value)} disabled={submitting} placeholder="House number, street, city, province and postal code" helperText="Include your complete address so we can find you easily." />
           </CheckoutSection>
           <CheckoutSection id="checkout-coupon-heading" icon={<LocalOfferOutlined sx={{ fontSize: 21 }} />} title="02. Have a coupon?" description="A little saving for your daily favourites. This step is optional.">
@@ -159,15 +179,19 @@ export default function Checkout() {
           <Divider sx={{ my: 3 }} />
           <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 1.75, alignItems: 'center' }}>
             <Typography variant="body2" color="text.secondary">Subtotal</Typography><Typography variant="body2" sx={{ textAlign: 'right' }}>{money(cart.totalPrice)}</Typography>
-            <Typography variant="body2" color="text.secondary">Delivery</Typography><Typography variant="body2" sx={{ color: 'success.main', textAlign: 'right' }}>Free</Typography>
+            <Typography variant="body2" color="text.secondary">Delivery Charge</Typography><Typography variant="body2" sx={{ textAlign: 'right' }}>{formatDeliveryCharge(deliveryCharge)}</Typography>
             {discount > 0 && <><Typography variant="body2" sx={{ color: 'success.main', overflowWrap: 'anywhere' }}>Coupon ({code})</Typography><Typography id="checkout-discount" variant="body2" sx={{ color: 'success.main', textAlign: 'right', whiteSpace: 'nowrap' }}>− {money(discount)}</Typography></>}
           </Box>
+          <DeliveryPricingNotice />
           <Divider sx={{ my: 3 }} />
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: 1, mb: 2 }}><Typography sx={{ fontSize: '.9rem', fontWeight: 500 }}>Estimated total</Typography><Typography id="checkout-total" aria-live="polite" sx={{ color: 'primary.main', fontSize: '1.4rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{money(estimatedTotal)}</Typography></Box>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.8, mb: 3 }}>Discounts and availability are confirmed when you place your order.</Typography>
           <PolicyLinks />
+          {retryWarning && <Alert severity="warning" sx={{ mb: 2 }}>{retryWarning}</Alert>}
           {orderError && <Alert severity="error" sx={{ mb: 2 }}>{orderError}{uncertainOrder && <Button component={Link} to="/orders" color="inherit" size="small" sx={{ display: 'flex', mt: 1, px: 0 }}>Check my orders</Button>}</Alert>}
-          <Button type="submit" fullWidth variant="contained" disabled={submitting || !address.trim()} aria-busy={submitting} endIcon={submitting ? <CircularProgress size={17} color="inherit" /> : <ArrowForward />} className="store-primary-action" sx={{ minHeight: 50 }}>{submitting ? 'Placing your order…' : 'Place order'}</Button>
+          {priceChanged && <Button type="button" variant="outlined" fullWidth onClick={retryCart} sx={{ mb: 2 }}>Refresh summary and review total</Button>}
+          <Button type="submit" fullWidth variant="contained" disabled={submitting || priceChanged || !address.trim() || !customerPhone.trim()} aria-busy={submitting} endIcon={submitting ? <CircularProgress size={17} color="inherit" /> : <ArrowForward />} className="store-primary-action" sx={{ minHeight: 50 }}>{submitting ? 'Sending your request…' : 'Place order'}</Button>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2, lineHeight: 1.8 }}>Checkout submits an order request. Staff confirm acceptance after checking your details and availability. COD is collected on delivery.</Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2, lineHeight: 1.8 }}>{submitting ? 'Please keep this page open while we confirm your order.' : 'Your order confirmation will appear here.'}</Typography>
         </Box>
       </Box>}

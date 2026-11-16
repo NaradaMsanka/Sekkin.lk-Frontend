@@ -1,0 +1,1198 @@
+{
+  "date": "2026-11-16",
+  "mode": "Local built Vite preview; isolated browser API fixtures; every external request intercepted or aborted; no live transactions",
+  "checks": [
+    {
+      "name": "public direct refresh and responsive layout /refund-policy at 1440",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Refund & Return Policy | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 1440,
+        "scroll": 1440,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "confirmed ordinary return rules preserve unresolved remedies at 1440",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public direct refresh and responsive layout /privacy-policy at 1440",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Privacy Policy | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 1440,
+        "scroll": 1440,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /terms-and-conditions at 1440",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Terms & Conditions | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 1440,
+        "scroll": 1440,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /contact at 1440",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Contact us | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 1440,
+        "scroll": 1440,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "confirmed contact details and links at 1440",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public direct refresh and responsive layout /about at 1440",
+      "passed": true,
+      "detail": {
+        "title": "Draft — About Sekkin.lk | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 1440,
+        "scroll": 1440,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /shipping-policy at 1440",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Shipping & Delivery | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 1440,
+        "scroll": 1440,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "fixed shipping and approved dispatch estimate preserve courier review at 1440",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public direct refresh and responsive layout /refund-policy at 375",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Refund & Return Policy | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 375,
+        "scroll": 375,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "confirmed ordinary return rules preserve unresolved remedies at 375",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public direct refresh and responsive layout /privacy-policy at 375",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Privacy Policy | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 375,
+        "scroll": 375,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /terms-and-conditions at 375",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Terms & Conditions | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 375,
+        "scroll": 375,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /contact at 375",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Contact us | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 375,
+        "scroll": 375,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "confirmed contact details and links at 375",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public direct refresh and responsive layout /about at 375",
+      "passed": true,
+      "detail": {
+        "title": "Draft — About Sekkin.lk | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 375,
+        "scroll": 375,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /shipping-policy at 375",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Shipping & Delivery | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 375,
+        "scroll": 375,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "fixed shipping and approved dispatch estimate preserve courier review at 375",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public direct refresh and responsive layout /refund-policy at 320",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Refund & Return Policy | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 320,
+        "scroll": 320,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "confirmed ordinary return rules preserve unresolved remedies at 320",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public direct refresh and responsive layout /privacy-policy at 320",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Privacy Policy | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 320,
+        "scroll": 320,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /terms-and-conditions at 320",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Terms & Conditions | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 320,
+        "scroll": 320,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /contact at 320",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Contact us | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 320,
+        "scroll": 320,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "confirmed contact details and links at 320",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public direct refresh and responsive layout /about at 320",
+      "passed": true,
+      "detail": {
+        "title": "Draft — About Sekkin.lk | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 320,
+        "scroll": 320,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "public direct refresh and responsive layout /shipping-policy at 320",
+      "passed": true,
+      "detail": {
+        "title": "Draft — Shipping & Delivery | Sekkin.lk",
+        "robots": "noindex, follow",
+        "width": 320,
+        "scroll": 320,
+        "footer": [
+          "/",
+          "/",
+          "/cart",
+          "/orders",
+          "/contact",
+          "/shipping-policy",
+          "/refund-policy",
+          "/about",
+          "/privacy-policy",
+          "/terms-and-conditions",
+          "tel:+94740309918",
+          "mailto:support@sekkin.lk",
+          "https://wa.me/94740309918",
+          "/contact"
+        ],
+        "warning": true,
+        "h1": 1
+      }
+    },
+    {
+      "name": "fixed shipping and approved dispatch estimate preserve courier review at 320",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "catalog displays server fixture and stock state",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "all visible storefront WhatsApp links use the confirmed number",
+      "passed": true,
+      "detail": [
+        "https://wa.me/94740309918",
+        "https://wa.me/94740309918",
+        "https://wa.me/94740309918",
+        "https://wa.me/94740309918"
+      ]
+    },
+    {
+      "name": "product quick view has the confirmed WhatsApp link and honest Buy now action",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "public review UI never derives author labels from account emails",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct checkout exposes no raw card inputs",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "checkout has public policy links before submitting",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct checkout discloses fixed delivery before submission",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct quantity changes keep one fee",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct flat coupon discounts merchandise only",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct coupon minimum updates with quantity",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct percentage coupon leaves delivery unchanged",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct-checkout responsive layout at 375",
+      "passed": true,
+      "detail": {
+        "navLayout": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "display": "flex",
+            "left": 6,
+            "right": 48,
+            "width": 42
+          },
+          {
+            "tag": "A",
+            "text": "Sekkin.lkBeauty · Elegance · Confidence",
+            "display": "flex",
+            "left": 52,
+            "right": 159.109375,
+            "width": 107.109375
+          },
+          {
+            "tag": "NAV",
+            "text": "ShopMy orders",
+            "display": "none",
+            "left": 0,
+            "right": 0,
+            "width": 0
+          },
+          {
+            "tag": "DIV",
+            "text": "Log inSign up",
+            "display": "flex",
+            "left": 279,
+            "right": 363,
+            "width": 84
+          }
+        ],
+        "width": 375,
+        "scroll": 375,
+        "dialogWidth": 357,
+        "dialogScroll": 357,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "direct-checkout responsive layout at 320",
+      "passed": true,
+      "detail": {
+        "navLayout": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "display": "flex",
+            "left": 6,
+            "right": 48,
+            "width": 42
+          },
+          {
+            "tag": "A",
+            "text": "Sekkin.lkBeauty · Elegance · Confidence",
+            "display": "flex",
+            "left": 52,
+            "right": 159.109375,
+            "width": 107.109375
+          },
+          {
+            "tag": "NAV",
+            "text": "ShopMy orders",
+            "display": "none",
+            "left": 0,
+            "right": 0,
+            "width": 0
+          },
+          {
+            "tag": "DIV",
+            "text": "Log inSign up",
+            "display": "flex",
+            "left": 224,
+            "right": 308,
+            "width": 84
+          }
+        ],
+        "width": 320,
+        "scroll": 320,
+        "dialogWidth": 302,
+        "dialogScroll": 302,
+        "overflowElements": [
+          {
+            "tag": "BUTTON",
+            "text": "Ingredients",
+            "right": 370.546875,
+            "width": 105.28125,
+            "className": "MuiButtonBase-root MuiTab-root MuiTab-textColorPrimary css-127q632"
+          }
+        ]
+      }
+    },
+    {
+      "name": "mocked COD retry contains no card or payment-status fields",
+      "passed": true,
+      "detail": [
+        {
+          "method": "POST",
+          "endpoint": "/api/orders/direct",
+          "body": {
+            "productId": 901,
+            "quantity": 1,
+            "name": "Fixture buyer <b>literal</b>",
+            "phoneNumber": "0000000000",
+            "address": "Test-only address",
+            "postalCode": null,
+            "email": "buyer@example.test",
+            "paymentMethod": "COD",
+            "couponCode": "GLOW10",
+            "expectedTotal": 2150
+          },
+          "idempotencyKey": "4b1278be-a83a-4f43-a015-d9a128622214"
+        },
+        {
+          "method": "POST",
+          "endpoint": "/api/orders/direct",
+          "body": {
+            "productId": 901,
+            "quantity": 1,
+            "name": "Fixture buyer <b>literal</b>",
+            "phoneNumber": "0000000000",
+            "address": "Test-only address",
+            "postalCode": null,
+            "email": "buyer@example.test",
+            "paymentMethod": "COD",
+            "couponCode": "GLOW10",
+            "expectedTotal": 2150
+          },
+          "idempotencyKey": "4b1278be-a83a-4f43-a015-d9a128622214"
+        }
+      ]
+    },
+    {
+      "name": "lost direct response retries the unchanged intent with the same key",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct request supplies retry key and reviewed total without overriding server pricing",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "confirmation remains unpaid and downloadable text is escaped",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "product savings are included rather than shown as another deduction",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "direct confirmation and download use stored server amounts",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "cod-confirmation responsive layout at 375",
+      "passed": true,
+      "detail": {
+        "navLayout": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "display": "flex",
+            "left": 6,
+            "right": 48,
+            "width": 42
+          },
+          {
+            "tag": "A",
+            "text": "Sekkin.lkBeauty · Elegance · Confidence",
+            "display": "flex",
+            "left": 52,
+            "right": 159.109375,
+            "width": 107.109375
+          },
+          {
+            "tag": "NAV",
+            "text": "ShopMy orders",
+            "display": "none",
+            "left": 0,
+            "right": 0,
+            "width": 0
+          },
+          {
+            "tag": "DIV",
+            "text": "Log inSign up",
+            "display": "flex",
+            "left": 279,
+            "right": 363,
+            "width": 84
+          }
+        ],
+        "width": 375,
+        "scroll": 375,
+        "dialogWidth": 357,
+        "dialogScroll": 357,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "cod-confirmation responsive layout at 320",
+      "passed": true,
+      "detail": {
+        "navLayout": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "display": "flex",
+            "left": 6,
+            "right": 48,
+            "width": 42
+          },
+          {
+            "tag": "A",
+            "text": "Sekkin.lkBeauty · Elegance · Confidence",
+            "display": "flex",
+            "left": 52,
+            "right": 159.109375,
+            "width": 107.109375
+          },
+          {
+            "tag": "NAV",
+            "text": "ShopMy orders",
+            "display": "none",
+            "left": 0,
+            "right": 0,
+            "width": 0
+          },
+          {
+            "tag": "DIV",
+            "text": "Log inSign up",
+            "display": "flex",
+            "left": 224,
+            "right": 308,
+            "width": 84
+          }
+        ],
+        "width": 320,
+        "scroll": 320,
+        "dialogWidth": 302,
+        "dialogScroll": 302,
+        "overflowElements": [
+          {
+            "tag": "BUTTON",
+            "text": "Ingredients",
+            "right": 370.546875,
+            "width": 105.28125,
+            "className": "MuiButtonBase-root MuiTab-root MuiTab-textColorPrimary css-127q632"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cart discloses fixed delivery amount",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "cart responsive layout at 375",
+      "passed": true,
+      "detail": {
+        "navLayout": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "display": "flex",
+            "left": 6,
+            "right": 48,
+            "width": 42
+          },
+          {
+            "tag": "A",
+            "text": "Sekkin.lkBeauty · Elegance · Confidence",
+            "display": "flex",
+            "left": 52,
+            "right": 159.109375,
+            "width": 107.109375
+          },
+          {
+            "tag": "NAV",
+            "text": "ShopMy orders",
+            "display": "none",
+            "left": 0,
+            "right": 0,
+            "width": 0
+          },
+          {
+            "tag": "DIV",
+            "text": "1B",
+            "display": "flex",
+            "left": 279,
+            "right": 363,
+            "width": 84
+          }
+        ],
+        "width": 375,
+        "scroll": 375,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "cart responsive layout at 320",
+      "passed": true,
+      "detail": {
+        "navLayout": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "display": "flex",
+            "left": 6,
+            "right": 48,
+            "width": 42
+          },
+          {
+            "tag": "A",
+            "text": "Sekkin.lkBeauty · Elegance · Confidence",
+            "display": "flex",
+            "left": 52,
+            "right": 159.109375,
+            "width": 107.109375
+          },
+          {
+            "tag": "NAV",
+            "text": "ShopMy orders",
+            "display": "none",
+            "left": 0,
+            "right": 0,
+            "width": 0
+          },
+          {
+            "tag": "DIV",
+            "text": "1B",
+            "display": "flex",
+            "left": 224,
+            "right": 308,
+            "width": 84
+          }
+        ],
+        "width": 320,
+        "scroll": 320,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "cart quantity uses updated mocked server total",
+      "passed": true,
+      "detail": {
+        "total": 4000
+      }
+    },
+    {
+      "name": "cart checkout discloses fixed delivery amount",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "cart-checkout responsive layout at 375",
+      "passed": true,
+      "detail": {
+        "navLayout": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "display": "flex",
+            "left": 6,
+            "right": 48,
+            "width": 42
+          },
+          {
+            "tag": "A",
+            "text": "Sekkin.lkBeauty · Elegance · Confidence",
+            "display": "flex",
+            "left": 52,
+            "right": 159.109375,
+            "width": 107.109375
+          },
+          {
+            "tag": "NAV",
+            "text": "ShopMy orders",
+            "display": "none",
+            "left": 0,
+            "right": 0,
+            "width": 0
+          },
+          {
+            "tag": "DIV",
+            "text": "1B",
+            "display": "flex",
+            "left": 279,
+            "right": 363,
+            "width": 84
+          }
+        ],
+        "width": 375,
+        "scroll": 375,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "cart-checkout responsive layout at 320",
+      "passed": true,
+      "detail": {
+        "navLayout": [
+          {
+            "tag": "BUTTON",
+            "text": "",
+            "display": "flex",
+            "left": 6,
+            "right": 48,
+            "width": 42
+          },
+          {
+            "tag": "A",
+            "text": "Sekkin.lkBeauty · Elegance · Confidence",
+            "display": "flex",
+            "left": 52,
+            "right": 159.109375,
+            "width": 107.109375
+          },
+          {
+            "tag": "NAV",
+            "text": "ShopMy orders",
+            "display": "none",
+            "left": 0,
+            "right": 0,
+            "width": 0
+          },
+          {
+            "tag": "DIV",
+            "text": "1B",
+            "display": "flex",
+            "left": 224,
+            "right": 308,
+            "width": 84
+          }
+        ],
+        "width": 320,
+        "scroll": 320,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "cart coupon leaves delivery unchanged",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "cart confirmation uses server delivery and final total",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "cart checkout sends reachable-phone field, address and coupon without card credentials",
+      "passed": true,
+      "detail": [
+        {
+          "method": "POST",
+          "endpoint": "/api/orders",
+          "body": {
+            "shippingAddress": "Test-only address",
+            "customerPhone": "0000000000",
+            "couponCode": "GLOW10",
+            "expectedTotal": 2150,
+            "cartItems": [
+              {
+                "productId": 901,
+                "quantity": 1
+              }
+            ]
+          },
+          "idempotencyKey": "89f5d4d6-cd3f-4140-aa5b-bdc757fc75e9"
+        }
+      ]
+    },
+    {
+      "name": "cart request supplies retry key, intended items and reviewed total",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "mocked order history loads pending order",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "historical order keeps zero delivery and original total",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "admin history keeps stored amounts",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "admin order shows stored fixed fee and total",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "admin report uses the protected all-orders route",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "acceptance cannot submit without explicit evidence and attestation",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "admin acceptance sends reference and stays unpaid",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "wrong collection amount never reaches the mocked API",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "verified collection sends exact historical total and preserves zero delivery",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "built SPA direct request /cart",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "built SPA direct request /checkout",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "built SPA direct request /orders",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "built SPA direct request /product/901",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "failed all-device logout never reports revocation success or discards the local session",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "successful all-device logout calls revocation before clearing the local token",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "unauthenticated checkout redirects to login",
+      "passed": true,
+      "detail": {}
+    },
+    {
+      "name": "no page runtime errors",
+      "passed": true,
+      "detail": []
+    },
+    {
+      "name": "all API requests targeted expected hosted Render URL and were intercepted",
+      "passed": true,
+      "detail": {
+        "apiRequests": 30
+      }
+    }
+  ],
+  "errors": [],
+  "passed": 77,
+  "failed": 0
+}

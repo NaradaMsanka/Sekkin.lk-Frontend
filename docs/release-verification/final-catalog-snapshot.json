@@ -1,0 +1,89 @@
+{
+  "checkedAtUtc": "2026-11-16T08:25:03.254636+00:00",
+  "endpoint": "https://sekkin-lk-backend.onrender.com/api/products",
+  "status": 200,
+  "readOnly": true,
+  "catalogVersionSha256": "d1060526b7eabb001e676d21ec6644bbef575ce487a73d779f38269b1cc36115",
+  "canonicalization": "Products sorted by numeric ID; JSON sort_keys=true, compact separators, UTF-8",
+  "products": [
+    {
+      "id": 3,
+      "name": "Cosmetics Product #101",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": null,
+      "brand": null,
+      "stockQuantity": 100,
+      "skinType": null,
+      "ingredients": null,
+      "status": "IN_STOCK",
+      "imageUrl": null,
+      "images": null,
+      "category": null,
+      "effectivePrice": 2500.0
+    },
+    {
+      "id": 1,
+      "name": "Cosmetics Product #106",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": 2000.0,
+      "brand": "teting",
+      "stockQuantity": 99,
+      "skinType": "cool",
+      "ingredients": "",
+      "status": "IN_STOCK",
+      "imageUrl": "https://res.cloudinary.com/eey3dxc5/image/upload/v1794135510/sekkinlk/products/d08b86dc-c0e0-44c6-bbac-7c922066a287.webp",
+      "images": "[\"https://res.cloudinary.com/eey3dxc5/image/upload/v1794135510/sekkinlk/products/d08b86dc-c0e0-44c6-bbac-7c922066a287.webp\",\"https://res.cloudinary.com/eey3dxc5/image/upload/v1794135528/sekkinlk/products/c7427a23-4b1f-423d-97cb-cb72e04a41d5.webp\"]",
+      "category": null,
+      "effectivePrice": 2000.0
+    },
+    {
+      "id": 2,
+      "name": "Cosmetics Product #101",
+      "description": "Cosmetics item",
+      "price": 2500.0,
+      "discountPrice": null,
+      "brand": null,
+      "stockQuantity": 99,
+      "skinType": null,
+      "ingredients": null,
+      "status": "IN_STOCK",
+      "imageUrl": null,
+      "images": null,
+      "category": null,
+      "effectivePrice": 2500.0
+    }
+  ],
+  "ownerApproval": "Final business approval attachment, section9: current products/prices/stock correct and approved after review; section8 authorizes existing logo/photos/descriptions",
+  "technicalImageChecks": [
+    {
+      "url": "https://res.cloudinary.com/eey3dxc5/image/upload/v1794135510/sekkinlk/products/d08b86dc-c0e0-44c6-bbac-7c922066a287.webp",
+      "checkedAtUtc": "2026-11-16T08:25:01.290797+00:00",
+      "status": 200,
+      "format": "WEBP",
+      "width": 800,
+      "height": 800,
+      "bytes": 73336,
+      "sha256": "84ec963006ff35472d2f6beb376657b6b9b3e6dbf4ac38584077275d1a41496b",
+      "localInspectionFile": "C:\\Users\\NARADA~1\\AppData\\Local\\Temp\\sekkin-final-catalog-image-1.webp"
+    },
+    {
+      "url": "https://res.cloudinary.com/eey3dxc5/image/upload/v1794135528/sekkinlk/products/c7427a23-4b1f-423d-97cb-cb72e04a41d5.webp",
+      "checkedAtUtc": "2026-11-16T08:25:02.883327+00:00",
+      "status": 200,
+      "format": "WEBP",
+      "width": 800,
+      "height": 800,
+      "bytes": 78328,
+      "sha256": "c0439146dc4c7c5cc9561de87aee1ce78d32fdfa8ad0214a3752728952227852",
+      "localInspectionFile": "C:\\Users\\NARADA~1\\AppData\\Local\\Temp\\sekkin-final-catalog-image-2.webp"
+    }
+  ],
+  "noSkuOrVariantFieldsInCurrentModel": true,
+  "missingMainImageProductIds": [
+    3,
+    2
+  ],
+  "limits": "Owner commercial approval is recorded; sparse identifying descriptions and absent product images are technical/content review findings, not proof the goods are fake. No products, prices or stock changed."
+}

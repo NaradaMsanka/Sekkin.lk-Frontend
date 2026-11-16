@@ -1,0 +1,8 @@
+{
+  "checkedDate": "2026-11-16",
+  "url": "https://sekkin-lk-backend.onrender.com/api/products",
+  "mode": "read-only follow-up after owner response",
+  "status": 200,
+  "productCount": 3,
+  "missingMainImages": 2
+}

@@ -1,0 +1,31 @@
+{
+  "checkedAtUtc": "2026-11-16T16:06:15.923051+00:00",
+  "mode": "PUBLIC_CATALOG",
+  "productionEnvironment": {
+    "VERCEL": "1",
+    "VERCEL_ENV": "production"
+  },
+  "productionBuildExitCode": 0,
+  "actualBackendContainmentVerified": true,
+  "merchantBuildExitCode": 1,
+  "merchantUnresolvedItems": 10,
+  "frontendTests": {
+    "passed": 50,
+    "failed": 0
+  },
+  "browserChecks": {
+    "passed": 94,
+    "failed": 0,
+    "externalRequests": 0
+  },
+  "backendMaintenanceTests": {
+    "passed": 17,
+    "failed": 0
+  },
+  "limits": [
+    "The 209-test transactional result is prior evidence, not a new full run.",
+    "No production database migration or credential rotation occurred.",
+    "Full policy/payment approval flags remain false.",
+    "Remaining Medium BusyBox advisory and actual provider retention/regions remain for transactional activation."
+  ]
+}

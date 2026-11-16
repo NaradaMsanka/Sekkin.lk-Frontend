@@ -1,0 +1,604 @@
+{
+  "date": "2026-11-16",
+  "count": 61,
+  "configurationCount": 29,
+  "renderedCopyCount": 32,
+  "categoryCounts": {
+    "A": 0,
+    "B": 26,
+    "C": 32,
+    "D": 1,
+    "E": 2
+  },
+  "clearedSinceFixedDelivery": [],
+  "addedSinceFixedDelivery": [],
+  "approvals": {
+    "contactsConfirmed": false,
+    "policiesApproved": false,
+    "catalogReviewed": false,
+    "paymentSafetyReviewed": false
+  },
+  "records": [
+    {
+      "id": 1,
+      "message": "Confirm business.registeredName",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 5,
+      "field": "registeredName",
+      "action": "Provide the legal seller name, business type/registration status and registration number if applicable. The brand/trading name is already confirmed."
+    },
+    {
+      "id": 2,
+      "message": "Review refund.damagedItems",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 38,
+      "field": "refund.damagedItems",
+      "action": "Decide inspection, remedy selection and dispute procedure for wrong/damaged/faulty items; retain confirmed reporting and business-paid return delivery."
+    },
+    {
+      "id": 3,
+      "message": "Review refund.requestProcedure",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 40,
+      "field": "refund.requestProcedure",
+      "action": "Provide the actual return destination, authorization and detailed instructions. Do not assume the business contact address is the return address."
+    },
+    {
+      "id": 4,
+      "message": "Review refund.refundMethod",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 42,
+      "field": "refund.refundMethod",
+      "action": "Choose the COD refund method and inspection/outcome communication/dispute process; receipt and inspection before refund are already confirmed."
+    },
+    {
+      "id": 5,
+      "message": "Review refund.refundTimeline",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 43,
+      "field": "refund.refundTimeline",
+      "action": "Specify refund processing duration and its start event."
+    },
+    {
+      "id": 6,
+      "message": "Review refund.cancellations",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 44,
+      "field": "refund.cancellations",
+      "action": "Specify how a pre-dispatch cancellation is confirmed. Do not re-approve the confirmed cancellation rule."
+    },
+    {
+      "id": 7,
+      "message": "Review refund.exchanges",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 45,
+      "field": "refund.exchanges",
+      "action": "Specify exchange processing time and treatment of a lower-priced replacement; retain the confirmed seven-day/condition/cost rules."
+    },
+    {
+      "id": 8,
+      "message": "Review refund.consumerRights",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 47,
+      "field": "refund.consumerRights",
+      "action": "Supply appropriately reviewed mandatory consumer-rights wording and remedies; no blanket hygiene exclusion or waiver."
+    },
+    {
+      "id": 9,
+      "message": "Review shipping.processing",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 51,
+      "field": "shipping.processing",
+      "action": "Specify order processing/dispatch time, working days and any cut-off."
+    },
+    {
+      "id": 10,
+      "message": "Review shipping.deliveryEstimate",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 52,
+      "field": "shipping.deliveryEstimate",
+      "action": "Specify whether the confirmed 2–3-business-day estimate begins at confirmation or dispatch, and the weekend/holiday calendar."
+    },
+    {
+      "id": 11,
+      "message": "Review shipping.tracking",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 55,
+      "field": "shipping.tracking",
+      "action": "Specify whether tracking is available and the actual customer communication channel; do not claim an unimplemented integration."
+    },
+    {
+      "id": 12,
+      "message": "Review shipping.delays",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 56,
+      "field": "shipping.delays",
+      "action": "Specify customer notification/support procedure for courier delays."
+    },
+    {
+      "id": 13,
+      "message": "Review shipping.failedDelivery",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 57,
+      "field": "shipping.failedDelivery",
+      "action": "Specify attempts, unavailable recipients, wrong addresses, redelivery/returned-parcel procedure and related charges."
+    },
+    {
+      "id": 14,
+      "message": "Review privacy.controller",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 60,
+      "field": "privacy.controller",
+      "action": "Identify the responsible legal data controller using verified seller identity."
+    },
+    {
+      "id": 15,
+      "message": "Review privacy.processingLocations",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 61,
+      "field": "privacy.processingLocations",
+      "action": "Operator verifies actual provider-account regions, access/transfers and service arrangements; owner approves the resulting disclosure. Do not infer regions from provider names."
+    },
+    {
+      "id": 16,
+      "message": "Review privacy.retention",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 62,
+      "field": "privacy.retention",
+      "action": "Decide category-specific retention and deletion/backup/log treatment for accounts, orders, reviews and support."
+    },
+    {
+      "id": 17,
+      "message": "Review privacy.rightsProcedure",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 63,
+      "field": "privacy.rightsProcedure",
+      "action": "Define access/correction/deletion requests, identity checks, responsible staff and response times. Support email is already confirmed."
+    },
+    {
+      "id": 18,
+      "message": "Review terms.orderAcceptance",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 66,
+      "field": "terms.orderAcceptance",
+      "action": "Decide legal acceptance point and stock/price-error handling/customer notice."
+    },
+    {
+      "id": 19,
+      "message": "Review terms.pricesAndTaxes",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 67,
+      "field": "terms.pricesAndTaxes",
+      "action": "Confirm tax status and whether prices include applicable taxes; approve pricing-error/price-change treatment. Do not invent tax obligations."
+    },
+    {
+      "id": 20,
+      "message": "Review terms.paymentMethods",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 68,
+      "field": "terms.paymentMethods",
+      "action": "Decide COD collection confirmation, failed collection and eligibility rules. COD itself and pending PayHere status need no new approval."
+    },
+    {
+      "id": 21,
+      "message": "Review terms.intellectualProperty",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 69,
+      "field": "terms.intellectualProperty",
+      "action": "Verify brand/website/image/supplier-content rights and approve use terms."
+    },
+    {
+      "id": 22,
+      "message": "Review terms.liability",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 70,
+      "field": "terms.liability",
+      "action": "Obtain reviewed liability wording preserving mandatory consumer rights."
+    },
+    {
+      "id": 23,
+      "message": "Review terms.complaints",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 71,
+      "field": "terms.complaints",
+      "action": "Define complaint acknowledgement, resolution/escalation and response time. Confirmed contacts/hours are unchanged."
+    },
+    {
+      "id": 24,
+      "message": "Review terms.governingLaw",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 72,
+      "field": "terms.governingLaw",
+      "action": "Provide appropriately reviewed governing-law/dispute provisions."
+    },
+    {
+      "id": 25,
+      "message": "Review terms.updates",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 73,
+      "field": "terms.updates",
+      "action": "Approve policy version/change notifications and actual effective/publication dates after final review."
+    },
+    {
+      "id": 26,
+      "message": "Owner/technical sign-off required: contactsConfirmed",
+      "category": "B",
+      "source": "src/content/business.json",
+      "line": 25,
+      "field": "contactsConfirmed",
+      "action": "Verify supplied contacts in the implementation and complete missing legal identity. Do not ask the owner to re-confirm existing contact facts or set this flag automatically."
+    },
+    {
+      "id": 27,
+      "message": "Owner/technical sign-off required: policiesApproved",
+      "category": "C",
+      "source": "src/content/business.json",
+      "line": 27,
+      "field": "policiesApproved",
+      "action": "Owner/legal review of all six completed pages and actual dates; set true only after genuine final approval."
+    },
+    {
+      "id": 28,
+      "message": "Owner/technical sign-off required: catalogReviewed",
+      "category": "E",
+      "source": "src/content/business.json",
+      "line": 28,
+      "field": "catalogReviewed",
+      "action": "Review genuine SKUs, variants, descriptions/claims, authorized relevant images, LKR prices/discounts and actual stock. No production catalog mutation is authorized."
+    },
+    {
+      "id": 29,
+      "message": "Owner/technical sign-off required: paymentSafetyReviewed",
+      "category": "D",
+      "source": "src/content/business.json",
+      "line": 29,
+      "field": "paymentSafetyReviewed",
+      "action": "Finish security/inventory/session/abuse controls and verify the reviewed deployed revisions/runtime settings. Passing local tests alone cannot approve this flag."
+    },
+    {
+      "id": 30,
+      "message": "Approve final policy text: /refund-policy#damaged-items",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 14,
+      "field": "refund-policy#damaged-items",
+      "dependencies": "refund.damagedItems",
+      "action": "Complete and obtain approval for /refund-policy#damaged-items after: refund.damagedItems. Keep draft markers until approved."
+    },
+    {
+      "id": 31,
+      "message": "Approve final policy text: /refund-policy#request",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 16,
+      "field": "refund-policy#request",
+      "dependencies": "refund.requestProcedure",
+      "action": "Complete and obtain approval for /refund-policy#request after: refund.requestProcedure. Keep draft markers until approved."
+    },
+    {
+      "id": 32,
+      "message": "Approve final policy text: /refund-policy#refunds",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 18,
+      "field": "refund-policy#refunds",
+      "dependencies": "refund.refundMethod; refund.refundTimeline",
+      "action": "Complete and obtain approval for /refund-policy#refunds after: refund.refundMethod; refund.refundTimeline. Keep draft markers until approved."
+    },
+    {
+      "id": 33,
+      "message": "Approve final policy text: /refund-policy#cancellations",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 19,
+      "field": "refund-policy#cancellations",
+      "dependencies": "refund.cancellations",
+      "action": "Complete and obtain approval for /refund-policy#cancellations after: refund.cancellations. Keep draft markers until approved."
+    },
+    {
+      "id": 34,
+      "message": "Approve final policy text: /refund-policy#exchanges",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 20,
+      "field": "refund-policy#exchanges",
+      "dependencies": "refund.exchanges",
+      "action": "Complete and obtain approval for /refund-policy#exchanges after: refund.exchanges. Keep draft markers until approved."
+    },
+    {
+      "id": 35,
+      "message": "Approve final policy text: /refund-policy#rights",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 21,
+      "field": "refund-policy#rights",
+      "dependencies": "refund.consumerRights",
+      "action": "Complete and obtain approval for /refund-policy#rights after: refund.consumerRights. Keep draft markers until approved."
+    },
+    {
+      "id": 36,
+      "message": "Approve final introduction: /privacy-policy",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 27,
+      "field": "privacy-policy",
+      "dependencies": "All privacy sections; policiesApproved",
+      "action": "Complete and obtain approval for /privacy-policy after: All privacy sections; policiesApproved. Keep draft markers until approved."
+    },
+    {
+      "id": 37,
+      "message": "Approve final policy text: /privacy-policy#controller",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 29,
+      "field": "privacy-policy#controller",
+      "dependencies": "registeredName; privacy.controller",
+      "action": "Complete and obtain approval for /privacy-policy#controller after: registeredName; privacy.controller. Keep draft markers until approved."
+    },
+    {
+      "id": 38,
+      "message": "Approve final policy text: /privacy-policy#services",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 32,
+      "field": "privacy-policy#services",
+      "dependencies": "privacy.processingLocations; operator dashboard verification (D)",
+      "action": "Complete and obtain approval for /privacy-policy#services after: privacy.processingLocations; operator dashboard verification (D). Keep draft markers until approved."
+    },
+    {
+      "id": 39,
+      "message": "Approve final policy text: /privacy-policy#payments",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 33,
+      "field": "privacy-policy#payments",
+      "dependencies": "Payment-data policy approval; historical records/log exposure review (D)",
+      "action": "Complete and obtain approval for /privacy-policy#payments after: Payment-data policy approval; historical records/log exposure review (D). Keep draft markers until approved."
+    },
+    {
+      "id": 40,
+      "message": "Approve final policy text: /privacy-policy#retention",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 35,
+      "field": "privacy-policy#retention",
+      "dependencies": "privacy.retention",
+      "action": "Complete and obtain approval for /privacy-policy#retention after: privacy.retention. Keep draft markers until approved."
+    },
+    {
+      "id": 41,
+      "message": "Approve final policy text: /privacy-policy#rights",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 36,
+      "field": "privacy-policy#rights",
+      "dependencies": "privacy.rightsProcedure",
+      "action": "Complete and obtain approval for /privacy-policy#rights after: privacy.rightsProcedure. Keep draft markers until approved."
+    },
+    {
+      "id": 42,
+      "message": "Approve final policy text: /privacy-policy#updates",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 37,
+      "field": "privacy-policy#updates",
+      "dependencies": "terms.updates; actual final dates",
+      "action": "Complete and obtain approval for /privacy-policy#updates after: terms.updates; actual final dates. Keep draft markers until approved."
+    },
+    {
+      "id": 43,
+      "message": "Approve final introduction: /terms-and-conditions",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 43,
+      "field": "terms-and-conditions",
+      "dependencies": "All Terms sections; policiesApproved",
+      "action": "Complete and obtain approval for /terms-and-conditions after: All Terms sections; policiesApproved. Keep draft markers until approved."
+    },
+    {
+      "id": 44,
+      "message": "Approve final policy text: /terms-and-conditions#identity",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 45,
+      "field": "terms-and-conditions#identity",
+      "dependencies": "registeredName; business type/status",
+      "action": "Complete and obtain approval for /terms-and-conditions#identity after: registeredName; business type/status. Keep draft markers until approved."
+    },
+    {
+      "id": 45,
+      "message": "Approve final policy text: /terms-and-conditions#products",
+      "category": "E",
+      "source": "src/content/businessPages.js",
+      "line": 47,
+      "field": "terms-and-conditions#products",
+      "dependencies": "catalogReviewed; genuine catalog and image/claim rights (E)",
+      "action": "Complete and obtain approval for /terms-and-conditions#products after: catalogReviewed; genuine catalog and image/claim rights (E). Keep draft markers until approved."
+    },
+    {
+      "id": 46,
+      "message": "Approve final policy text: /terms-and-conditions#prices",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 48,
+      "field": "terms-and-conditions#prices",
+      "dependencies": "terms.pricesAndTaxes",
+      "action": "Complete and obtain approval for /terms-and-conditions#prices after: terms.pricesAndTaxes. Keep draft markers until approved."
+    },
+    {
+      "id": 47,
+      "message": "Approve final policy text: /terms-and-conditions#orders",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 49,
+      "field": "terms-and-conditions#orders",
+      "dependencies": "terms.orderAcceptance",
+      "action": "Complete and obtain approval for /terms-and-conditions#orders after: terms.orderAcceptance. Keep draft markers until approved."
+    },
+    {
+      "id": 48,
+      "message": "Approve final policy text: /terms-and-conditions#payments",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 50,
+      "field": "terms-and-conditions#payments",
+      "dependencies": "terms.paymentMethods; verified COD collection procedure (D)",
+      "action": "Complete and obtain approval for /terms-and-conditions#payments after: terms.paymentMethods; verified COD collection procedure (D). Keep draft markers until approved."
+    },
+    {
+      "id": 49,
+      "message": "Approve final policy text: /terms-and-conditions#ownership",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 53,
+      "field": "terms-and-conditions#ownership",
+      "dependencies": "terms.intellectualProperty",
+      "action": "Complete and obtain approval for /terms-and-conditions#ownership after: terms.intellectualProperty. Keep draft markers until approved."
+    },
+    {
+      "id": 50,
+      "message": "Approve final policy text: /terms-and-conditions#liability",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 54,
+      "field": "terms-and-conditions#liability",
+      "dependencies": "terms.liability",
+      "action": "Complete and obtain approval for /terms-and-conditions#liability after: terms.liability. Keep draft markers until approved."
+    },
+    {
+      "id": 51,
+      "message": "Approve final policy text: /terms-and-conditions#complaints",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 55,
+      "field": "terms-and-conditions#complaints",
+      "dependencies": "terms.complaints",
+      "action": "Complete and obtain approval for /terms-and-conditions#complaints after: terms.complaints. Keep draft markers until approved."
+    },
+    {
+      "id": 52,
+      "message": "Approve final policy text: /terms-and-conditions#law",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 56,
+      "field": "terms-and-conditions#law",
+      "dependencies": "terms.governingLaw",
+      "action": "Complete and obtain approval for /terms-and-conditions#law after: terms.governingLaw. Keep draft markers until approved."
+    },
+    {
+      "id": 53,
+      "message": "Approve final policy text: /terms-and-conditions#changes",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 57,
+      "field": "terms-and-conditions#changes",
+      "dependencies": "terms.updates; actual final dates",
+      "action": "Complete and obtain approval for /terms-and-conditions#changes after: terms.updates; actual final dates. Keep draft markers until approved."
+    },
+    {
+      "id": 54,
+      "message": "Approve final policy text: /shipping-policy#processing",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 66,
+      "field": "shipping-policy#processing",
+      "dependencies": "shipping.processing",
+      "action": "Complete and obtain approval for /shipping-policy#processing after: shipping.processing. Keep draft markers until approved."
+    },
+    {
+      "id": 55,
+      "message": "Approve final policy text: /shipping-policy#timelines",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 67,
+      "field": "shipping-policy#timelines",
+      "dependencies": "shipping.deliveryEstimate; retain confirmed estimate/fee",
+      "action": "Complete and obtain approval for /shipping-policy#timelines after: shipping.deliveryEstimate; retain confirmed estimate/fee. Keep draft markers until approved."
+    },
+    {
+      "id": 56,
+      "message": "Approve final policy text: /shipping-policy#tracking",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 70,
+      "field": "shipping-policy#tracking",
+      "dependencies": "shipping.tracking",
+      "action": "Complete and obtain approval for /shipping-policy#tracking after: shipping.tracking. Keep draft markers until approved."
+    },
+    {
+      "id": 57,
+      "message": "Approve final policy text: /shipping-policy#delays",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 71,
+      "field": "shipping-policy#delays",
+      "dependencies": "shipping.delays",
+      "action": "Complete and obtain approval for /shipping-policy#delays after: shipping.delays. Keep draft markers until approved."
+    },
+    {
+      "id": 58,
+      "message": "Approve final policy text: /shipping-policy#failed-delivery",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 72,
+      "field": "shipping-policy#failed-delivery",
+      "dependencies": "shipping.failedDelivery",
+      "action": "Complete and obtain approval for /shipping-policy#failed-delivery after: shipping.failedDelivery. Keep draft markers until approved."
+    },
+    {
+      "id": 59,
+      "message": "Approve final policy text: /about#care",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 83,
+      "field": "about#care",
+      "dependencies": "Final policy completion and policiesApproved",
+      "action": "Complete and obtain approval for /about#care after: Final policy completion and policiesApproved. Keep draft markers until approved."
+    },
+    {
+      "id": 60,
+      "message": "Approve final policy text: /about#business",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 84,
+      "field": "about#business",
+      "dependencies": "registeredName; verified business type/status",
+      "action": "Complete and obtain approval for /about#business after: registeredName; verified business type/status. Keep draft markers until approved."
+    },
+    {
+      "id": 61,
+      "message": "Approve final policy text: /contact#availability",
+      "category": "C",
+      "source": "src/content/businessPages.js",
+      "line": 93,
+      "field": "contact#availability",
+      "dependencies": "registeredName; verified legal identity (contacts/hours already supplied)",
+      "action": "Complete and obtain approval for /contact#availability after: registeredName; verified legal identity (contacts/hours already supplied). Keep draft markers until approved."
+    }
+  ]
+}
