@@ -1,3 +1,5 @@
+> **Current public mode: PUBLIC_CATALOG, deployed 16 November 2026.** See [the verified catalog release](PUBLIC_CATALOG_RELEASE_RESULT.md). Its static frontend and no-database/JWT backend maintenance entrypoint are explicitly separate from the retained COD activation instructions below. Keep full merchant/COD approvals and gates intact; they are not satisfied by catalog publication.
+
 # Render security configuration and coordinated release
 
 Prepared 16 November 2026. **Instructions only: no dashboard settings, credentials, roles, data or deployments were changed.** The current final-business phase is recorded in the readiness report and source map; earlier 36-message counts describe the preceding operational-approval revision. Local security changes do not revoke anything accepted by the current deployed revision. **Follow [urgent containment](URGENT_SECURITY_CONTAINMENT.md) now, independently of unrelated business approvals, through the authorized operator.** Containment and enabling public shopping are separate release decisions.

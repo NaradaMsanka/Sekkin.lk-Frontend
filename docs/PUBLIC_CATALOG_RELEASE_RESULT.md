@@ -6,12 +6,18 @@ The owner explicitly authorized the catalog fallback, commits, pushes and deploy
 
 - Render backend revision: `8ab50ff8c603e7e164a684bb8fb4fee5c31c2b11`, independently observed on the existing HTTPS service.
 - Eight real mutation requests returned 503, including both order-creation paths, registration, login and admin collection. Four potentially sensitive GET routes returned only the identical non-personal maintenance JSON. The reviewed entrypoint starts no Spring/datasource/JWT components. Evidence: [actual containment](release-verification/catalog-backend-containment.json).
-- Frontend: 50 tests pass; 94 browser checks pass at 320/375/1440px with the actual CSP, old browser-token fixtures and zero external requests. Local images have the approved original hashes; approved product names, descriptions and prices match the reviewed snapshot.
+- Frontend: 51 tests pass; 94 browser checks pass at 320/375/1440px with the actual CSP, old browser-token fixtures and zero external requests. Local images have the approved original hashes; approved product names, descriptions and prices match the reviewed snapshot.
 - Genuine `VERCEL_ENV=production npm run build:vercel` passes the separate catalog gate, including a live matching backend-revision check. Only the isolated catalog entry graph is bundled. API connections and form submission are also prohibited by CSP.
 - `npm run build:merchant` still fails correctly with ten unresolved transactional/policy requirements. `policiesApproved` and `paymentSafetyReviewed` remain false. Catalog mode does not claim working COD checkout or PayHere readiness.
 - Changed catalog/build files pass scoped ESLint. Existing unrelated whole-repository lint debt remains deferred by the owner. The non-failing bundle-size warning remains.
 
-Frontend publication status and the actual deployed source identity will be recorded after public verification, not inferred from a push or build. No calendar publication date has been invented.
+## Actual public publication
+
+**GO / DEPLOYED ? PUBLIC CATALOG** at https://sekkin-lk-frontend.vercel.app/ on **16 November 2026**. Vercel reports the deployment completed successfully. The actual public release manifest independently confirmed first frontend revision `d658d5ab1f0df1a11c47f5c9b81d3a5a9986f8e4` paired with backend `8ab50ff8c603e7e164a684bb8fb4fee5c31c2b11`.
+
+The live site then passed **136 browser checks**, with the actual delivered CSP, direct routes, mobile widths, old-token fixture, zero application JavaScript errors, zero storage calls and **zero external requests**. Five public HTTP routes also delivered the required CSP/security headers. Current `npm audit` reports **zero known vulnerabilities**. See [publication receipt](release-verification/catalog-publication.json) and [actual live browser results](release-verification/catalog-live-browser-smoke.json).
+
+The real catalog launch date is now recorded in `src/catalog/publication.json` and displayed on catalog information pages. It applies only to these published catalog pages; full transactional policy dates/approvals remain unchanged. A follow-up release records these verified facts and date metadata. Its final deployed revision is independently recorded in `release-verification/catalog-final-deployment.json` after public verification. No migration, credential rotation, customer order or production database write occurred. No owner action is required to view the public catalog.
 
 ## Remaining requirements classified
 

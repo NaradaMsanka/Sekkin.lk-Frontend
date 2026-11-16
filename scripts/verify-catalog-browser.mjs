@@ -20,9 +20,11 @@ const server = http.createServer((request, response) => {
   response.setHeader('Content-Type', mime[path.extname(file)] || 'application/octet-stream');
   response.end(fs.readFileSync(file));
 });
-await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-const origin = `http://127.0.0.1:${server.address().port}`;
-const browser = await chromium.launch({ headless: true, executablePath: process.env.BROWSER_EXECUTABLE_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
+const liveOrigin = process.env.CATALOG_ORIGIN;
+if (liveOrigin && liveOrigin !== 'https://sekkin-lk-frontend.vercel.app') throw new Error('Use the approved existing Production origin.');
+if (!liveOrigin) await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const origin = liveOrigin || `http://127.0.0.1:${server.address().port}`;
+const browser = await chromium.launch({ headless: true, executablePath: process.env.BROWSER_EXECUTABLE_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', ...(process.env.CATALOG_PROXY ? { proxy: { server: process.env.CATALOG_PROXY } } : {}) });
 const checks = [], errors = [], externalRequests = [];
 function check(name, passed, detail = {}) {
   checks.push({ name, passed, detail });
@@ -57,6 +59,7 @@ try {
     await page.setViewportSize({ width, height: 900 });
     for (const route of ['/', '/product/1', ...information.map(value => `/${value}`), '/checkout', '/cart', '/login', '/register', '/admin', '/orders']) {
       const response = await page.goto(origin + route, { waitUntil: 'networkidle' });
+      if (liveOrigin) check(`Live CSP blocks API connections and forms ${route} at ${width}`, /connect-src 'none'/.test(response.headers()['content-security-policy'] || '') && /form-action 'none'/.test(response.headers()['content-security-policy'] || ''));
       await page.locator('main h1').waitFor();
       const state = await page.evaluate(() => ({
         width: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth,
@@ -87,12 +90,13 @@ try {
   await page.waitForTimeout(300);
   check('No application JavaScript errors', errors.length === 0, { errors });
   check('No backend or third-party network requests', externalRequests.length === 0, { externalRequests });
-  await page.screenshot({ path: 'docs/release-verification/catalog-mobile.png', fullPage: true });
+  const prefix = liveOrigin ? 'catalog-live' : 'catalog';
+  await page.screenshot({ path: `docs/release-verification/${prefix}-mobile.png`, fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.screenshot({ path: 'docs/release-verification/catalog-desktop.png', fullPage: true });
-  fs.writeFileSync('docs/release-verification/catalog-browser-smoke.json', JSON.stringify({ checkedAtUtc: new Date().toISOString(), scope: 'Actual built static catalog with Vercel CSP headers, isolated local HTTP server, old browser token fixture; no live records changed', browser: browser.version(), checks, errors, externalRequests }, null, 2) + '\n');
+  await page.screenshot({ path: `docs/release-verification/${prefix}-desktop.png`, fullPage: true });
+  fs.writeFileSync(`docs/release-verification/${prefix}-browser-smoke.json`, JSON.stringify({ checkedAtUtc: new Date().toISOString(), scope: liveOrigin ? 'Actual existing Vercel public Production site; real CSP headers, old browser token fixture, no live records changed' : 'Actual built static catalog with Vercel CSP headers, isolated local HTTP server, old browser token fixture; no live records changed', origin, browser: browser.version(), checks, errors, externalRequests }, null, 2) + '\n');
   console.log(JSON.stringify({ passed: checks.length, failed: 0, externalRequests: externalRequests.length }));
 } finally {
   await browser.close();
-  await new Promise(resolve => server.close(resolve));
+  if (server.listening) await new Promise(resolve => server.close(resolve));
 }

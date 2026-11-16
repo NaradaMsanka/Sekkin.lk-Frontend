@@ -1,4 +1,7 @@
 import business from './catalogBusiness.json' with { type: 'json' };
+import publication from './publication.json' with { type: 'json' };
+
+export const catalogPublicationDate = publication.effectiveDate;
 
 export const orderingNotice = 'Online ordering is temporarily unavailable. Browse the collection and contact us for product information or help with an existing order.';
 export const catalogLinks = [
@@ -31,7 +34,7 @@ export const catalogPages = {
       ['Hosting and connection information', 'Vercel receives connection information needed to deliver and protect the website, which can include IP address, request time and browser/request metadata. Its infrastructure and service processing may be international. This notice does not promise storage in a particular country or a specific account-level log-retention period. Provider processing is subject to the applicable service settings and Vercel’s privacy information.'],
       ['Contacting the business', 'If you choose email, telephone or WhatsApp, the business and those service providers receive the information you send. It is used to respond to your enquiry or handle an existing order. Send only necessary information. This catalog does not automatically export those messages into an account or order database.'],
       ['Retention and requests', 'The business keeps necessary correspondence and existing transaction records for the relevant enquiry, operational needs and applicable obligations. Proposed 12-month support and 30-day log/backup periods remain under implementation review; they are not promised automatic deletion controls. Verified access, correction or deletion requests are reviewed manually through support, with proportionate identity checks and a response aim of 30 calendar days, subject to applicable obligations. No self-service deletion or compliance certification is claimed.'],
-      ['Publication and changes', 'This notice applies to the public catalog release. The intended effective date is its actual public launch; actual publication details are recorded when publication is verified. A future shopping/account release requires its own accurate disclosures and completed safety checks.'],
+      ['Publication and changes', `This notice applies to the public catalog release, first publicly verified on ${publication.effectiveDate}. A future shopping/account release requires its own accurate disclosures and completed safety checks.`],
     ],
   },
   'terms-and-conditions': {

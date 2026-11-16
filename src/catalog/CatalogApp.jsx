@@ -7,7 +7,7 @@ import BrandShowcase from '../components/storefront/BrandShowcase';
 import Reveal from '../components/storefront/Reveal';
 import RouteScroll from '../components/RouteScroll';
 import snapshot from './catalogSnapshot.json';
-import { catalogLinks, catalogPages, orderingNotice } from './catalogContent';
+import { catalogLinks, catalogPages, catalogPublicationDate, orderingNotice } from './catalogContent';
 
 const price = product => product.discountPrice > 0 && product.discountPrice < product.price ? product.discountPrice : product.price;
 const supportEmailHref = `mailto:${business.supportEmail}`;
@@ -105,7 +105,7 @@ function ProductPage() {
 
 function InformationPage({ pageKey }) {
   const page = catalogPages[pageKey];
-  return <Container maxWidth="md" sx={{ py: 5, px: { xs: 2.5, sm: 3 } }}><Button component={Link} to="/" startIcon={<ArrowBack />} sx={{ mb: 4 }}>Back to collection</Button><Typography component="h1" sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: '2.25rem', md: '3rem' }, mb: 2 }}>{page.title}</Typography><Typography color="text.secondary" sx={{ lineHeight: 1.9, mb: 4 }}>{page.intro}</Typography>{page.sections.map(([title, ...paragraphs]) => <Box component="section" key={title} sx={{ bgcolor: '#FFFDFC', border: '1px solid #E6DBD3', borderRadius: 3, p: { xs: 2.5, sm: 3.5 }, mb: 2.5 }}><Typography component="h2" sx={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', mb: 2 }}>{title}</Typography>{paragraphs.map((text, index) => <Typography key={index} variant="body2" sx={{ lineHeight: 1.95, mb: 1.5, overflowWrap: 'anywhere' }}>{text}</Typography>)}{pageKey === 'contact' && <ContactButtons />}</Box>)}{pageKey === 'privacy-policy' && <Typography component="a" href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Vercel privacy information</Typography>}</Container>;
+  return <Container maxWidth="md" sx={{ py: 5, px: { xs: 2.5, sm: 3 } }}><Button component={Link} to="/" startIcon={<ArrowBack />} sx={{ mb: 4 }}>Back to collection</Button><Typography component="h1" sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: '2.25rem', md: '3rem' }, mb: 2 }}>{page.title}</Typography><Typography color="text.secondary" sx={{ lineHeight: 1.9, mb: 4 }}>{page.intro}</Typography><Typography variant="caption" component="p" color="text.secondary" sx={{ mb: 3 }}>Catalog information effective {catalogPublicationDate}. Applies to this public catalog release.</Typography>{page.sections.map(([title, ...paragraphs]) => <Box component="section" key={title} sx={{ bgcolor: '#FFFDFC', border: '1px solid #E6DBD3', borderRadius: 3, p: { xs: 2.5, sm: 3.5 }, mb: 2.5 }}><Typography component="h2" sx={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', mb: 2 }}>{title}</Typography>{paragraphs.map((text, index) => <Typography key={index} variant="body2" sx={{ lineHeight: 1.95, mb: 1.5, overflowWrap: 'anywhere' }}>{text}</Typography>)}{pageKey === 'contact' && <ContactButtons />}</Box>)}{pageKey === 'privacy-policy' && <Typography component="a" href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">Vercel privacy information</Typography>}</Container>;
 }
 
 function Unavailable() {

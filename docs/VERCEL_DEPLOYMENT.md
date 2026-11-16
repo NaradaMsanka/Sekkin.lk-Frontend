@@ -1,3 +1,5 @@
+> **Current public mode: PUBLIC_CATALOG, deployed 16 November 2026.** See [the verified catalog release](PUBLIC_CATALOG_RELEASE_RESULT.md). Its static frontend and no-database/JWT backend maintenance entrypoint are explicitly separate from the retained COD activation instructions below. Keep full merchant/COD approvals and gates intact; they are not satisfied by catalog publication.
+
 # Vercel Preview and Production builds
 
 **Latest phase-2 update:** 61 messages still block Production. Full backend tests/package 134/134, frontend tests 32/32 and browser checks 67/67 pass. Backend now requires explicit datasource/JWT configuration, schema validation and exact browser origins (including needed Preview URLs). Follow [the phase-2 report](PRODUCTION_PHASE2_REPORT.md) and [Render security runbook](RENDER_SECURITY_RUNBOOK.md); earlier counts below are historical.

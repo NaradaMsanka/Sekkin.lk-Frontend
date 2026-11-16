@@ -47,3 +47,16 @@ test('catalog security headers prohibit API connections and form submission', ()
   const csp = config.headers[0].headers.find(header => header.key === 'Content-Security-Policy').value;
   assert.match(csp, /connect-src 'none'/); assert.match(csp, /form-action 'none'/);
 });
+
+test('catalog launch date comes from actual public verification and does not approve COD policies', () => {
+  const json = path => JSON.parse(fs.readFileSync(new URL(`../${path}`, import.meta.url)));
+  const publication = json('src/catalog/publication.json');
+  const receipt = json('docs/release-verification/catalog-publication.json');
+  assert.equal(publication.effectiveDate, receipt.effectiveDate);
+  assert.equal(publication.publicationVerifiedAtUtc, receipt.firstPublicVerificationAtUtc);
+  assert.equal(publication.firstPublishedFrontendCommit, receipt.frontendCommit);
+  assert.equal(receipt.manifest.mode, 'PUBLIC_CATALOG');
+  assert.equal(receipt.manifest.checkout, 'DISABLED');
+  assert.equal(inputs.sourceBusiness.policiesApproved, false);
+  assert.equal(inputs.sourceBusiness.paymentSafetyReviewed, false);
+});

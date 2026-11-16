@@ -1,5 +1,5 @@
 {
-  "checkedAtUtc": "2026-11-16T16:06:15.923051+00:00",
+  "checkedAtUtc": "2026-11-16T16:10:36.463040+00:00",
   "mode": "PUBLIC_CATALOG",
   "productionEnvironment": {
     "VERCEL": "1",
@@ -10,7 +10,7 @@
   "merchantBuildExitCode": 1,
   "merchantUnresolvedItems": 10,
   "frontendTests": {
-    "passed": 50,
+    "passed": 51,
     "failed": 0
   },
   "browserChecks": {
@@ -27,5 +27,12 @@
     "No production database migration or credential rotation occurred.",
     "Full policy/payment approval flags remain false.",
     "Remaining Medium BusyBox advisory and actual provider retention/regions remain for transactional activation."
-  ]
+  ],
+  "liveBrowserChecks": {
+    "passed": 136,
+    "failed": 0,
+    "externalRequests": 0
+  },
+  "npmAuditKnownVulnerabilities": 0,
+  "actualPublicSiteVerified": true
 }
