@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "mode": "PUBLIC_CATALOG",
-  "frontendOrigin": "https://sekkin-lk-frontend.vercel.app",
-  "backendOrigin": "https://sekkin-lk-backend.onrender.com",
-  "orderingEnabled": false,
-  "accountsEnabled": false,
-  "onlinePaymentsEnabled": false
-}

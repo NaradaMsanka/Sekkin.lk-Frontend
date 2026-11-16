@@ -7,8 +7,6 @@ import {
 import { Add, ArrowBack, ArrowForward, DeleteOutlined, Remove, ShoppingCartOutlined } from '@mui/icons-material';
 import ProductMedia from '../components/storefront/ProductMedia';
 import api from '../services/api';
-import DeliveryPricingNotice from '../components/DeliveryPricingNotice';
-import { estimateOrderTotals, formatDeliveryCharge } from '../content/delivery';
 
 const border = '#E6DBD3';
 const panel = { border: `1px solid ${border}`, borderRadius: '20px', bgcolor: '#FFFDFC' };
@@ -80,7 +78,6 @@ export default function Cart() {
 
   const items = cart?.items || [];
   const itemCount = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-  const totals = estimateOrderTotals(cart?.totalPrice || 0, '', items.length > 0);
   const updating = busyProduct !== null;
 
   return (
@@ -162,12 +159,11 @@ export default function Cart() {
           <Typography id="cart-summary-heading" component="h2" sx={{ fontFamily: 'Georgia, serif', fontSize: '1.7rem', mb: 3 }}>Order summary</Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 2, alignItems: 'center', fontSize: '.88rem' }}>
             <Typography variant="body2" color="text.secondary">Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</Typography><Typography variant="body2" sx={{ textAlign: 'right' }}>{money(cart.totalPrice)}</Typography>
-            <Typography variant="body2" color="text.secondary">Delivery Charge</Typography><Typography variant="body2" sx={{ textAlign: 'right' }}>{formatDeliveryCharge(totals.deliveryCharge)}</Typography>
+            <Typography variant="body2" color="text.secondary">Delivery</Typography><Typography variant="body2" sx={{ color: 'success.main', textAlign: 'right' }}>Free</Typography>
           </Box>
-          <DeliveryPricingNotice />
           <Divider sx={{ my: 3 }} />
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'baseline', gap: 1, mb: 3 }}>
-            <Typography sx={{ fontWeight: 500 }}>Estimated total</Typography><Typography id="cart-total" aria-live="polite" sx={{ fontSize: { xs: '1.3rem', sm: '1.45rem' }, fontWeight: 600, color: 'primary.main', whiteSpace: 'nowrap' }}>{money(totals.total)}</Typography>
+            <Typography sx={{ fontWeight: 500 }}>Total</Typography><Typography id="cart-total" aria-live="polite" sx={{ fontSize: { xs: '1.3rem', sm: '1.45rem' }, fontWeight: 600, color: 'primary.main', whiteSpace: 'nowrap' }}>{money(cart.totalPrice)}</Typography>
           </Box>
           <Button component={Link} to="/checkout" fullWidth variant="contained" disabled={updating} endIcon={<ArrowForward />} className="store-primary-action" sx={{ minHeight: 50, px: 2 }}>Proceed to checkout</Button>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2, lineHeight: 1.8 }}>Review your delivery details in the next step.</Typography>

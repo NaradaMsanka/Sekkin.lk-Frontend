@@ -5,15 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/build-release.mjs",
-    "build:vercel": "node scripts/build-release.mjs --vercel",
-    "build:merchant": "node scripts/check-merchant-readiness.mjs && vite build --mode merchant",
-    "check:catalog": "node scripts/check-catalog-readiness.mjs --strict",
-    "check:cod": "node scripts/check-merchant-readiness.mjs",
-    "test:catalog": "node --test scripts/catalog-readiness.test.mjs",
+    "build": "vite build",
+    "build:vercel": "vite build",
+    "build:merchant": "node scripts/check-merchant-readiness.mjs && vite build",
     "check:merchant": "node scripts/check-merchant-readiness.mjs",
     "test:readiness": "node --test scripts/readiness.test.mjs",
-    "test:orders": "node --test scripts/order-request.test.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

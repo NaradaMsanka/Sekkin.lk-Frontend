@@ -1,11 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import PolicyLinks from './PolicyLinks';
 import business from '../content/business.json';
-import { supportEmailHref, supportPhoneHref } from '../content/businessContacts';
-import { estimateOrderTotals, formatDeliveryCharge } from '../content/delivery';
-import DeliveryPricingNotice from './DeliveryPricingNotice';
 import axios from 'axios';
-import { orderRequests, validateOrderReceipt } from '../services/orderRequest';
 import {
   Dialog, DialogContent, DialogActions, Box, Typography,
   TextField, Button, Grid, Divider, Stack, Chip,
@@ -65,10 +61,9 @@ export default function DirectCheckoutModal(props) {
   return props.product ? <CheckoutContent {...props} /> : null;
 }
 
-function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty = 1 }) {
+function CheckoutContent({ open, onClose, product, initialQty = 1 }) {
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [savedCustomer] = useState(readSavedCustomer);
-  const [product, setProduct] = useState(suppliedProduct);
 
   // Quantity
   const [qty, setQty] = useState(initialQty);
@@ -92,17 +87,13 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [orderReceipt, setOrderReceipt] = useState(null);
-  const [retryWarning, setRetryWarning] = useState('');
-  const [priceChanged, setPriceChanged] = useState(false);
-  const [uncertainRequest, setUncertainRequest] = useState(false);
 
   const [receiptDate, setReceiptDate] = useState('');
-  const [previousSession, setPreviousSession] = useState({ open, initialQty, product: suppliedProduct });
+  const [previousSession, setPreviousSession] = useState({ open, initialQty, product });
 
   // Sync a new checkout session before paint; preserve customer input and method.
-  if (previousSession.open !== open || previousSession.initialQty !== initialQty || previousSession.product !== suppliedProduct) {
-    setPreviousSession({ open, initialQty, product: suppliedProduct });
-    if (previousSession.product !== suppliedProduct) setProduct(suppliedProduct);
+  if (previousSession.open !== open || previousSession.initialQty !== initialQty || previousSession.product !== product) {
+    setPreviousSession({ open, initialQty, product });
     if (previousSession.open !== open) {
       const customer = readSavedCustomer();
       if (!name && customer.name) setName(customer.name);
@@ -112,20 +103,32 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
     }
     if (open) {
       setQty(initialQty || 1);
-      setErrorMessage(uncertainRequest ? 'A previous request result is unclear. Retry with unchanged details to retrieve it, or contact support before creating a different request.' : '');
+      setErrorMessage('');
       setOrderReceipt(null);
-      setPriceChanged(false);
     }
   }
 
   // Pricing calculations
-  const unitPrice = Number(Number(product.discountPrice) > 0 && Number(product.discountPrice) < Number(product.price)
+  const unitPrice = Number(product.discountPrice && product.discountPrice < product.price
     ? product.discountPrice
     : product.price) || 0;
 
   const subtotal = unitPrice * qty;
 
-  const { couponDiscount, deliveryCharge, total: grandTotal } = estimateOrderTotals(subtotal, appliedCoupon);
+  // Retain the existing COD charge; the owner must approve delivery policy.
+  const deliveryCharge = 0;
+
+  // Coupon Discount
+  const couponDiscount = useMemo(() => {
+    if (!appliedCoupon || !VALID_COUPONS[appliedCoupon]) return 0;
+    const rule = VALID_COUPONS[appliedCoupon];
+    if (rule.min > 0 && subtotal < rule.min) return 0;
+    if (rule.rate > 0) return subtotal * rule.rate;
+    if (rule.flat > 0) return rule.flat;
+    return 0;
+  }, [appliedCoupon, subtotal]);
+
+  const grandTotal = Math.max(0, (subtotal + deliveryCharge) - couponDiscount);
 
   const handleApplyCoupon = () => {
     setCouponError('');
@@ -148,7 +151,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
-    if (orderPending.current || priceChanged) return;
+    if (orderPending.current) return;
     setErrorMessage('');
 
     // Form validations
@@ -171,7 +174,6 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
 
     orderPending.current = true;
     setLoading(true);
-    let requestSent = false;
 
     try {
       const payload = {
@@ -183,56 +185,24 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
         postalCode: postalCode.trim() || null,
         email: email.trim(),
         paymentMethod: paymentMethod,
-        couponCode: appliedCoupon || null,
-        expectedTotal: grandTotal,
+        couponCode: appliedCoupon || null
       };
 
       const token = localStorage.getItem('token');
-      const retry = await orderRequests.get('direct', { ...payload, account: token || 'guest' }, { newPurchase: true });
-      setRetryWarning(retry.warning);
       const headers = { 'Content-Type': 'application/json' };
-      headers['Idempotency-Key'] = retry.key;
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      requestSent = true;
       const res = await axios.post(`${API_BASE_URL}/api/orders/direct`, payload, { headers });
-      validateOrderReceipt(res.data, { direct: true });
-      const completion = orderRequests.complete('direct', retry.key);
-      if (completion.warning) setRetryWarning(completion.warning);
-      setUncertainRequest(false);
       setOrderReceipt(res.data);
       setReceiptDate((res.data.orderDate ? new Date(res.data.orderDate) : new Date()).toLocaleString());
       // Auto-download order confirmation directly to customer's device
       generateAndDownloadSlip(res.data);
     } catch (err) {
-      console.error('Direct order could not be confirmed.');
-      const uncertain = requestSent && (!err.response || err.response.status >= 500);
-      setUncertainRequest(uncertain);
-      setPriceChanged(err.response?.status === 409);
-      const msg = !requestSent ? err.message || 'Retry protection could not be prepared. Your request was not sent.' : uncertain
-        ? 'The result is unclear. Retry with unchanged details to retrieve the same request, or contact support. Changing details may create another order.'
-        : err.response?.data?.message || err.response?.data || 'Your order request could not be received. Please verify your details.';
+      console.error('Direct order failed:', err);
+      const msg = err.response?.data?.message || err.response?.data || 'Failed to place order. Please verify your details.';
       setErrorMessage(typeof msg === 'string' ? msg : 'Error placing order. Please try again.');
-    } finally {
-      orderPending.current = false;
-      setLoading(false);
-    }
-  };
-
-  const refreshProduct = async () => {
-    if (orderPending.current) return;
-    orderPending.current = true;
-    setLoading(true);
-    try {
-      const { data } = await axios.get(`${API_BASE_URL}/api/products/${product.id}`);
-      if (!data || Number(data.id) !== Number(product.id) || !Number.isFinite(Number(data.price))) throw new Error('Invalid product response');
-      setProduct(data);
-      setPriceChanged(false);
-      setErrorMessage('Product details refreshed. Review the displayed total before submitting your request again.');
-    } catch {
-      setErrorMessage('Product details could not be refreshed. Please keep the request unchanged and contact support if its result is unclear.');
     } finally {
       orderPending.current = false;
       setLoading(false);
@@ -243,8 +213,8 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
     if (!rawReceipt) return;
     const escapeText = value => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const receipt = Object.fromEntries(Object.entries(rawReceipt).map(([key, value]) => [key, typeof value === 'string' ? escapeText(value) : value]));
-    const dateStr = receipt.orderDate ? new Date(receipt.orderDate).toLocaleString() : receiptDate || 'Date unavailable';
-    const paymentBadge = `Cash on Delivery (${receipt.paymentStatus}) — not proof of payment`;
+    const dateStr = new Date(receipt.orderDate || Date.now()).toLocaleString();
+    const paymentBadge = 'Cash on Delivery (PENDING_COD) — not proof of payment';
 
     const slipHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -417,9 +387,8 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
         <div class="info-box">
           <div class="info-title">Payment Method & Status</div>
           <div style="font-weight: 700; color: #1A1A1A; font-size: 14px;">${paymentBadge}</div>
-          <div style="color: #555; margin-top: 4px;">Delivery Charge: <b>${formatDeliveryCharge(receipt.deliveryCharge)}</b></div>
-          <div style="color: #555; margin-top: 2px;">Order Status: <b>${receipt.status}</b></div>
-          <div style="color: #555; margin-top: 4px;">Request acknowledgement only. Staff confirm acceptance after verifying the details and availability.</div>
+          <div style="color: #555; margin-top: 4px;">Delivery Charge: <b>${receipt.deliveryCharge > 0 ? 'Rs. ' + receipt.deliveryCharge.toFixed(2) : 'FREE'}</b></div>
+          <div style="color: #555; margin-top: 2px;">Order Status: <b>${receipt.status || 'PROCESSING'}</b></div>
         </div>
       </div>
 
@@ -444,15 +413,14 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
 
       <div class="summary-box">
         <div class="summary-row"><span>Subtotal:</span><span>Rs. ${(receipt.subtotal || 0).toFixed(2)}</span></div>
-        <div class="summary-row"><span>Delivery Charge:</span><span>${formatDeliveryCharge(receipt.deliveryCharge)}</span></div>
-        ${receipt.couponDiscount > 0 ? '<div class="summary-row"><span>Coupon savings:</span><span>− Rs. ' + receipt.couponDiscount.toFixed(2) + '</span></div>' : ''}
+        <div class="summary-row"><span>Delivery Charge:</span><span>${receipt.deliveryCharge > 0 ? 'Rs. ' + receipt.deliveryCharge.toFixed(2) : 'FREE'}</span></div>
+        ${receipt.discountAmount > 0 ? '<div class="summary-row" style="color: #2E7D32; font-weight: 600;"><span>Discount Saved:</span><span>- Rs. ' + receipt.discountAmount.toFixed(2) + '</span></div>' : ''}
         <div class="total-row"><span>Grand Total:</span><span>Rs. ${(receipt.totalAmount || 0).toFixed(2)}</span></div>
-        ${receipt.discountAmount > 0 ? '<div class="summary-row" style="color: #2E7D32; font-weight: 600; margin-top: 12px;"><span>Savings included:</span><span>Rs. ' + receipt.discountAmount.toFixed(2) + '</span></div><p style="font-size: 12px; color: #555;">Product and coupon savings are already reflected in your total.</p>' : ''}
       </div>
 
       <div class="footer">
         <p style="margin: 0; font-weight: 600;">Thank you for your purchase with Sekkin.lk! ✨</p>
-        <p style="margin: 4px 0 0 0;">${supportEmailHref || supportPhoneHref ? escapeText(`${business.supportEmail} · ${business.supportPhone} · ${business.postalAddress}`) : 'Support details await business confirmation.'}</p>
+        <p style="margin: 4px 0 0 0;">${business.contactsConfirmed ? escapeText(business.supportPhone || business.supportEmail || business.businessName) : 'Support details await business confirmation.'}</p>
         <button class="print-btn no-print" onclick="window.print()">🖨️ Print Slip / Save as PDF</button>
       </div>
     </div>
@@ -470,8 +438,8 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch {
-      console.warn('The order confirmation download could not start.');
+    } catch (e) {
+      console.warn('Auto download error:', e);
     }
   };
 
@@ -513,7 +481,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
           {orderReceipt ? 'Thank you for your order.' : 'A little closer to your glow.'}
         </Typography>
         <Typography id="direct-checkout-description" sx={{ color: '#726661', fontSize: '.78rem', mt: 1, lineHeight: 1.7 }}>
-          {orderReceipt ? 'Your order request acknowledgement is ready below.' : 'Your delivery details and cash-on-delivery order — all in one place.'}
+          {orderReceipt ? 'Your order details and receipt are ready below.' : 'Your delivery details and cash-on-delivery order — all in one place.'}
         </Typography>
         <IconButton aria-label="Close checkout" onClick={onClose} disabled={loading} sx={{ position: 'absolute', top: { xs: 14, sm: 22 }, right: { xs: 12, sm: 20 }, color: '#726661', bgcolor: '#FCF8F5', width: 40, height: 40 }}>
           <Close fontSize="small" />
@@ -525,12 +493,10 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
           <Box id="printable-receipt" sx={panelSx}>
             <Stack spacing={1} sx={{ textAlign: 'center', mb: 3, alignItems: 'center' }} role="status">
               <CheckCircle sx={{ fontSize: 44, color: '#386749' }} />
-              <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>Order request received</Typography>
+              <Typography variant="h6" component="h3" sx={{ fontWeight: 600 }}>Order confirmed</Typography>
               <Typography variant="body2" color="text.secondary">Order #{orderReceipt.orderId}</Typography>
               <Typography variant="caption" color="text.secondary">{receiptDate}</Typography>
             </Stack>
-
-            <Alert severity="info" sx={{ mb: 2, borderRadius: 2 }}>This acknowledges your request. Staff must verify your details and availability and confirm acceptance before dispatch. It is not acceptance or proof of payment.</Alert>
 
             <Alert severity="success" icon={<Download fontSize="inherit" />} sx={{ borderRadius: 2, mb: 3, fontSize: '.8rem' }}>
               Your receipt download has started. You can download another copy below.
@@ -548,7 +514,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
               <Grid size={{ xs: 12, sm: 6 }}>
                 <Box sx={{ p: 2, bgcolor: '#FCF8F5', borderRadius: 2, height: '100%' }}>
                   <Typography sx={{ fontSize: '.7rem', color: ROSE, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.08em', mb: 1 }}>Payment details</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{orderReceipt.paymentStatus === 'PAID' ? 'Cash on delivery — collection recorded' : 'Cash on delivery — payment pending'}</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>Cash on delivery — payment pending</Typography>
                   <Chip size="small" label={orderReceipt.paymentStatus || 'PENDING_COD'} sx={{ fontSize: '.65rem', mt: 1, mb: 1, bgcolor: '#EDF3EC', color: '#386749', fontWeight: 600, maxWidth: '100%' }} />
                   <Typography variant="body2" color="text.secondary">Order status: {orderReceipt.status}</Typography>
                 </Box>
@@ -563,16 +529,12 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
             </Box>
             <Stack spacing={1.25}>
               <SummaryRow label="Subtotal">Rs. {orderReceipt.subtotal?.toFixed(2)}</SummaryRow>
-              <SummaryRow label="Delivery Charge">{formatDeliveryCharge(orderReceipt.deliveryCharge)}</SummaryRow>
-              {orderReceipt.couponDiscount > 0 && <SummaryRow label="Coupon savings" highlight>− Rs. {orderReceipt.couponDiscount.toFixed(2)}</SummaryRow>}
+              <SummaryRow label="Delivery">{orderReceipt.deliveryCharge > 0 ? `Rs. ${orderReceipt.deliveryCharge.toFixed(2)}` : 'Free'}</SummaryRow>
+              {orderReceipt.discountAmount > 0 && <SummaryRow label="Discount" highlight>− Rs. {orderReceipt.discountAmount.toFixed(2)}</SummaryRow>}
               <Divider />
               <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 1, fontWeight: 600, color: ROSE }}>
                 <span>Total</span><span>Rs. {orderReceipt.totalAmount?.toFixed(2)}</span>
               </Box>
-              {orderReceipt.discountAmount > 0 && <>
-                <SummaryRow label="Savings included" highlight>Rs. {orderReceipt.discountAmount.toFixed(2)}</SummaryRow>
-                <Typography variant="caption" color="text.secondary">Product and coupon savings are already reflected in your total.</Typography>
-              </>}
             </Stack>
           </Box>
 
@@ -586,8 +548,6 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
         <Box component="form" onSubmit={handleSubmitOrder} sx={{ display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
           <DialogContent sx={{ p: { xs: 2, sm: 3 }, minHeight: 0 }}>
             {errorMessage && <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }} onClose={() => setErrorMessage('')}>{errorMessage}</Alert>}
-            {retryWarning && <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>{retryWarning}</Alert>}
-            {priceChanged && <Button type="button" variant="outlined" disabled={loading} onClick={refreshProduct} sx={{ mb: 2 }}>Refresh product and review total</Button>}
 
             <Box sx={{ ...panelSx, mb: 2.5, display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
               <Box sx={{ width: { xs: 64, sm: 80 }, height: { xs: 76, sm: 90 }, flexShrink: 0, bgcolor: '#FCF8F5', borderRadius: 2, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
@@ -648,10 +608,9 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
                 <Divider sx={{ mb: 2.5 }} />
                 <Stack spacing={1.5}>
                   <SummaryRow label={`Subtotal (${qty} ${qty > 1 ? 'items' : 'item'})`}>Rs. {subtotal.toFixed(2)}</SummaryRow>
-                  <SummaryRow label="Delivery Charge">{formatDeliveryCharge(deliveryCharge)}</SummaryRow>
+                  <SummaryRow label="Delivery">{deliveryCharge > 0 ? `Rs. ${deliveryCharge.toFixed(2)}` : 'Free'}</SummaryRow>
                   {couponDiscount > 0 && <SummaryRow label="Coupon savings" highlight>− Rs. {couponDiscount.toFixed(2)}</SummaryRow>}
                 </Stack>
-                <DeliveryPricingNotice />
 
                 <Box sx={{ my: 2.5, pt: 2.5, borderTop: `1px solid ${BORDER}` }}>
                   <Typography sx={{ fontSize: '.75rem', color: '#726661', mb: 1.5, display: 'flex', alignItems: 'center', gap: .75 }}><LocalOffer sx={{ fontSize: 15 }} /> Have a discount code?</Typography>
@@ -663,10 +622,10 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
                   {appliedCoupon && <Alert severity="success" sx={{ mt: 1.5, py: .25, borderRadius: 2, fontSize: '.72rem' }} onClose={() => setAppliedCoupon('')}><strong>{appliedCoupon}</strong> applied. You saved Rs. {couponDiscount.toFixed(2)}.</Alert>}
                 </Box>
                 <Box sx={{ p: 2, bgcolor: '#FCF8F5', borderRadius: 2, display: 'flex', flexDirection: 'column', gap: .5 }}>
-                  <Typography sx={{ fontSize: '.75rem', color: '#726661' }}>Estimated total due</Typography>
+                  <Typography sx={{ fontSize: '.75rem', color: '#726661' }}>Total due</Typography>
                   <Typography sx={{ fontSize: { xs: '1.45rem', sm: '1.6rem' }, fontWeight: 600, color: ROSE, fontVariantNumeric: 'tabular-nums', overflowWrap: 'anywhere' }}>Rs. {grandTotal.toFixed(2)}</Typography>
                 </Box>
-                <Typography sx={{ mt: 2, color: '#8C7C76', fontSize: '.68rem', lineHeight: 1.7 }}>Checkout submits a request for staff confirmation. Your request acknowledgement downloads when received. COD is collected on delivery.</Typography>
+                <Typography sx={{ mt: 2, color: '#8C7C76', fontSize: '.68rem', lineHeight: 1.7 }}>Your receipt will download after your order is confirmed.</Typography>
               </Box>
             </Box>
           </DialogContent>
@@ -676,7 +635,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
             <Button
               type="submit"
               variant="contained"
-              disabled={loading || priceChanged}
+              disabled={loading}
               aria-busy={loading}
               startIcon={loading ? <CircularProgress size={17} color="inherit" /> : undefined}
               endIcon={!loading ? <ArrowForward sx={{ fontSize: 18 }} /> : undefined}

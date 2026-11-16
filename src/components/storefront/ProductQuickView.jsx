@@ -3,7 +3,6 @@ import { Box, Button, Chip, CircularProgress, Dialog, DialogContent, IconButton,
 import { Add, ArrowForward, Close, Remove, ShoppingCart, WhatsApp } from '@mui/icons-material';
 import ProductMedia from './ProductMedia';
 import { ProductPrice } from './ProductCard';
-import { whatsappProductHref } from '../../content/businessContacts';
 
 export default function ProductQuickView({ product, onClose, quantity, setQuantity, onAddToCart, onBuy, busy }) {
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
@@ -29,10 +28,10 @@ export default function ProductQuickView({ product, onClose, quantity, setQuanti
               </Box>
             </Stack>
             <Stack spacing={1}>
-              <Button variant="contained" endIcon={<ArrowForward />} disabled={product.stockQuantity <= 0} onClick={() => onBuy(product, quantity)}>Buy now</Button>
+              <Button variant="contained" endIcon={<ArrowForward />} disabled={product.stockQuantity <= 0} onClick={() => onBuy(product, quantity)}>Pay now</Button>
               <Button className="store-cart-button" variant="outlined" startIcon={busy ? <CircularProgress size={17} /> : <ShoppingCart />} disabled={busy || product.stockQuantity <= 0} onClick={() => onAddToCart(product, quantity)}>{busy ? 'Adding to cart…' : 'Add to cart'}</Button>
               <Button component={Link} to={`/product/${product.id}`} onClick={onClose} color="inherit">View full details</Button>
-              <Button component="a" href={whatsappProductHref(product.name)} target="_blank" rel="noopener noreferrer" startIcon={<WhatsApp />} size="small" sx={{ color: '#4F6958' }}>Ask about this product</Button>
+              <Button component="a" href={`https://wa.me/94788153473?text=${encodeURIComponent(`Hello Sekkin.lk, I have a question about ${product.name}`)}`} target="_blank" rel="noopener noreferrer" startIcon={<WhatsApp />} size="small" sx={{ color: '#4F6958' }}>Ask about this product</Button>
             </Stack>
           </Box>
         </Box>

@@ -1,9 +1,0 @@
-{
-    "date":  "2026-11-16",
-    "command":  "node --test scripts/readiness.test.mjs scripts/delivery.test.mjs scripts/order-request.test.mjs",
-    "exitCode":  0,
-    "tests":  43,
-    "passed":  43,
-    "failed":  0,
-    "mode":  "Isolated Node tests; no hosted API writes"
-}

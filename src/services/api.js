@@ -66,9 +66,9 @@ api.interceptors.response.use(
         // Unmount and StrictMode cleanup intentionally cancel requests.
         if (axios.isCancel(error)) return Promise.reject(error);
         if (!error.response) {
-            console.error('The store request could not connect.');
+            console.error('Network/CORS error:', error.message);
         } else if (error.response.status === 401) {
-            console.warn('The backend rejected authentication.');
+            console.warn('401 Unauthorized from backend on:', error.config?.url);
         }
         return Promise.reject(error);
     }

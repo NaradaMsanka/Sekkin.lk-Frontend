@@ -46,8 +46,8 @@ export default function Register() {
             setTimeout(() => navigate("/"), 1200);
             return;
           }
-        } catch {
-          console.warn("Automatic sign-in could not complete.");
+        } catch (loginErr) {
+          console.warn("Auto-login error:", loginErr);
         }
         setTimeout(() => navigate("/login"), 1500);
       } else {

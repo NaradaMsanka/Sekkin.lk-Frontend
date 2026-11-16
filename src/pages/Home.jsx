@@ -16,7 +16,6 @@ import ProductQuickView from '../components/storefront/ProductQuickView';
 import BrandShowcase from '../components/storefront/BrandShowcase';
 import Reveal from '../components/storefront/Reveal';
 import api, { API, resolveImageUrl } from '../services/api';
-import { supportWhatsAppHref } from '../content/businessContacts';
 
 const effectivePrice = product => product.discountPrice > 0 && product.discountPrice < product.price ? product.discountPrice : product.price;
 const gridColumns = { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))', lg: 'repeat(4, minmax(0, 1fr))' };
@@ -175,7 +174,7 @@ export default function Home() {
             <Typography color="text.secondary" sx={{ maxWidth: 430, fontSize: { xs: '0.88rem', sm: '0.95rem' }, lineHeight: 1.9, mb: 3.5 }}>Discover skincare and beauty essentials for your everyday routine. Find your next favourite at SEKKIN.LK.</Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ alignItems: { xs: 'stretch', sm: 'center' }, maxWidth: { xs: 320, sm: 'none' } }}>
               <Button className="store-primary-action" component="a" href="#catalog-section" variant="contained" endIcon={<ArrowForward />} sx={{ px: 3, py: 1.5 }}>Explore the collection</Button>
-              <Button component="a" href={supportWhatsAppHref || '/contact'} target="_blank" rel="noopener noreferrer" color="inherit" startIcon={<WhatsApp />} sx={{ color: 'text.secondary' }}>Let’s find your routine</Button>
+              <Button component="a" href="https://wa.me/94788153473" target="_blank" rel="noopener noreferrer" color="inherit" startIcon={<WhatsApp />} sx={{ color: 'text.secondary' }}>Let’s find your routine</Button>
             </Stack>
             <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'center', mt: { xs: 3.5, md: 5 }, color: '#87766C' }}>
               <SpaOutlined sx={{ fontSize: 21 }} /><Typography variant="caption" sx={{ letterSpacing: '0.02em' }}>Thoughtful beauty. Everyday confidence.</Typography>

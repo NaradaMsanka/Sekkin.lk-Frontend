@@ -67,7 +67,7 @@ export default function ProductReviews({ productId, reviews, loading, error, onR
           {loading ? <><Skeleton height={70} /><Skeleton height={100} /></> : error ? <Alert severity="warning" action={<Button size="small" onClick={onRetry}>Retry</Button>}>{error}</Alert> : reviews.length === 0 ? (
             <Box sx={{ ...panel, py: 5, textAlign: 'center' }}><StarOutlined sx={{ color: '#A88B79', fontSize: 36, mb: 1 }} /><Typography sx={{ fontWeight: 500, mb: 1 }}>No reviews yet</Typography><Typography variant="body2" color="text.secondary">Purchased this product? Share your experience once your order is delivered.</Typography></Box>
           ) : reviews.map(review => {
-            const author = 'Customer';
+            const author = review.userEmail?.split('@')[0] || 'Customer';
             const date = review.createdAt ? new Date(review.createdAt) : null;
             return <Box component="article" key={review.id} sx={{ ...panel, mb: 2.5 }}>
               <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center', mb: 1.5 }}>

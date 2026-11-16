@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar, Toolbar, Typography, Button, IconButton, Badge, Box, Drawer,
   List, ListItem, ListItemButton, ListItemText, ListItemIcon, Avatar,
-  Menu, MenuItem, Divider, Container, Tooltip, Fab, Stack, SvgIcon, useMediaQuery, Alert, Snackbar,
+  Menu, MenuItem, Divider, Container, Tooltip, Fab, Stack, SvgIcon, useMediaQuery,
 } from '@mui/material';
 import {
   ShoppingCart, PersonOutlineOutlined, Menu as MenuIcon, Close,
@@ -13,9 +13,8 @@ import {
 import api from '../services/api';
 import BusinessFooter from './BusinessFooter';
 import business from '../content/business.json';
-import { supportWhatsAppHref } from '../content/businessContacts';
 
-const WHATSAPP_URL = supportWhatsAppHref;
+const WHATSAPP_URL = business.contactsConfirmed && business.whatsappNumber ? 'https://wa.me/' + business.whatsappNumber.replace(/\D/g, '') : null;
 const SUPPORT_LINK_PROPS = WHATSAPP_URL ? { component: 'a', href: WHATSAPP_URL, target: '_blank', rel: 'noopener noreferrer' } : { component: Link, to: '/contact' };
 const SOCIAL_LINKS = business.socialLinks.filter(link => /^https:\/\//.test(link.href)).map(link => ({ ...link, icon: { Instagram, Facebook, TikTok: TikTokIcon }[link.label] || WhatsApp }));
 const NAV_LINKS = [
@@ -96,8 +95,6 @@ export function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [cartState, setCartState] = useState(null);
-  const [revokingSessions, setRevokingSessions] = useState(false);
-  const [sessionError, setSessionError] = useState('');
   const token = localStorage.getItem('token');
   const user = token ? parseJwt(token) : null;
   const isAdmin = user?.role === 'ADMIN';
@@ -131,20 +128,6 @@ export function Navbar() {
     setDrawerOpen(false);
     setCartState(null);
     navigate('/login');
-  };
-
-  const handleLogoutAll = async () => {
-    if (revokingSessions) return;
-    setRevokingSessions(true);
-    setSessionError('');
-    try {
-      await api.post('/api/auth/logout-all');
-      handleLogout();
-    } catch {
-      setSessionError('We could not confirm logout on all devices. Please try again.');
-    } finally {
-      setRevokingSessions(false);
-    }
   };
 
   return (
@@ -229,9 +212,6 @@ export function Navbar() {
                     <MenuItem onClick={handleLogout} sx={{ color: 'primary.main' }}>
                       <ListItemIcon><Logout fontSize="small" color="primary" /></ListItemIcon>Log out
                     </MenuItem>
-                    <MenuItem onClick={handleLogoutAll} disabled={revokingSessions}>
-                      <ListItemIcon><Logout fontSize="small" /></ListItemIcon>{revokingSessions ? 'Logging out…' : 'Log out on all devices'}
-                    </MenuItem>
                   </Menu>
                 </>
               ) : (
@@ -278,7 +258,6 @@ export function Navbar() {
               <>
                 <Typography variant="body2" color="text.secondary" noWrap>{user?.sub}</Typography>
                 <Button variant="outlined" startIcon={<Logout />} onClick={handleLogout}>Log out</Button>
-                <Button disabled={revokingSessions} onClick={handleLogoutAll}>{revokingSessions ? 'Logging out…' : 'Log out on all devices'}</Button>
               </>
             ) : (
               <>
@@ -292,9 +271,6 @@ export function Navbar() {
           </Stack>
         </Box>
       </Drawer>
-      <Snackbar open={Boolean(sessionError)} onClose={() => setSessionError('')} autoHideDuration={7000}>
-        <Alert severity="error" onClose={() => setSessionError('')}>{sessionError}</Alert>
-      </Snackbar>
     </>
   );
 }

@@ -1,6 +1,8 @@
 # SEKKIN.LK frontend
 
-See [Vercel deployment settings and Git commands](docs/VERCEL_DEPLOYMENT.md) for draft UI Previews and strict Production readiness checks.
+Run `npm ci` and `npm run dev` to start the storefront and admin dashboard. The admin dashboard is at `/admin`; API requests use `VITE_API_BASE_URL` from `.env`.
+
+Run `npm run build` for a production build. See [Vercel deployment settings](docs/VERCEL_DEPLOYMENT.md) for hosting configuration.
 
 ## React + Vite
 
