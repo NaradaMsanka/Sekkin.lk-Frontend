@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { formatDeliveryCharge } from '../content/delivery';
+import { allowedOrderTransitions, canRecordCodCollection } from '../services/orderRequest';
 import {
   Container, Grid, Card, CardContent, Typography, Box, Stack,
   Chip, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Paper, Button, TextField, Select, MenuItem, FormControl,
   InputLabel, Alert, Skeleton, Avatar, Divider, IconButton, Tabs, Tab,
   Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Tooltip,
-  InputAdornment, CircularProgress
+  InputAdornment, CircularProgress, Checkbox, FormControlLabel
 } from "@mui/material";
 import {
-  Dashboard, Inventory, Receipt, People, TrendingUp,
-  Warning, Add, Delete, Refresh, AdminPanelSettings, Edit,
-  CheckCircle, Search, LocalShipping,
-  AttachMoney, ShoppingBag, ArrowUpward, ArrowDownward,
-  Close, Save, Spa, PhotoLibrary
+  Dashboard, Inventory, Receipt, TrendingUp,
+  Warning, Add, Delete, Refresh, Edit, Search,
+  ShoppingBag, Close, Save, Spa
 } from "@mui/icons-material";
 import ImageSequenceManager from "../components/ImageSequenceManager";
 
@@ -64,6 +64,13 @@ export default function AdminDashboard() {
   });
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [orderAction, setOrderAction] = useState(null);
+  const [actionReference, setActionReference] = useState('');
+  const [collectionAmount, setCollectionAmount] = useState('');
+  const [actionAttested, setActionAttested] = useState(false);
+  const [actionSaving, setActionSaving] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const actionPending = useRef(false);
 
   // Search & Filter
   const [productSearch, setProductSearch] = useState("");
@@ -91,19 +98,16 @@ export default function AdminDashboard() {
     setError("");
     try {
       const headers = getAuthHeaders();
-      const [statsRes, prodsRes] = await Promise.all([
+      const [statsRes, prodsRes, ordersRes] = await Promise.all([
         axios.get(`${API}/admin/dashboard`, headers),
         axios.get(`${API}/products`),
+        axios.get(`${API}/admin/orders`, headers),
       ]);
       setStats(statsRes.data);
       setProducts(prodsRes.data);
 
-      try {
-        const ordersRes = await axios.get(`${API}/orders`, headers);
-        setOrders(ordersRes.data);
-      } catch {
-        setOrders(statsRes.data.recentOrders || []);
-      }
+      if (!Array.isArray(ordersRes.data)) throw new Error('Invalid admin orders response');
+      setOrders(ordersRes.data);
     } catch (e) {
       setError(e.response?.status === 403
         ? "Access denied. You need an active ADMIN account to access this panel."
@@ -114,7 +118,9 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchAll(true);
+    let active = true;
+    Promise.resolve().then(() => { if (active) fetchAll(true); });
+    return () => { active = false; };
   }, []);
 
   // 1. ADD NEW PRODUCT
@@ -258,13 +264,39 @@ export default function AdminDashboard() {
   };
 
   // 6. UPDATE ORDER STATUS
-  const handleStatusUpdate = async (orderId, status) => {
+  const openOrderAction = (order, kind, status) => {
+    setOrderAction({ order, kind, status });
+    setActionReference('');
+    setCollectionAmount(order.totalAmount != null ? Number(order.totalAmount).toFixed(2) : '');
+    setActionAttested(false);
+    setActionError('');
+  };
+
+  const submitOrderAction = async event => {
+    event.preventDefault();
+    if (!orderAction || actionPending.current || !actionAttested) return;
+    const { order, kind, status } = orderAction;
+    if (kind !== 'status' && !actionReference.trim()) return;
+    if (kind === 'collection' && (!Number.isFinite(Number(collectionAmount)) || Number(collectionAmount) !== Number(order.totalAmount))) {
+      setActionError('The verified collection amount must equal the stored order total.');
+      return;
+    }
+    actionPending.current = true;
+    setActionSaving(true);
+    setActionError('');
     try {
-      await axios.put(`${API}/orders/${orderId}/status`, { status }, getAuthHeaders());
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
-      setSnack({ open: true, msg: `Order #${orderId} marked as ${status}! ✅`, severity: 'success' });
-    } catch {
-      setSnack({ open: true, msg: 'Order status update failed.', severity: 'error' });
+      if (kind === 'acceptance') await axios.post(`${API}/admin/orders/${order.id}/accept`, { reference: actionReference.trim() }, getAuthHeaders());
+      else if (kind === 'collection') await axios.post(`${API}/admin/orders/${order.id}/cod-collection`, { amount: Number(collectionAmount), reference: actionReference.trim() }, getAuthHeaders());
+      else await axios.patch(`${API}/orders/${order.id}/status`, { status }, getAuthHeaders());
+      setOrderAction(null);
+      setSnack({ open: true, msg: `Order #${order.id} updated. Refreshing the saved record.`, severity: 'success' });
+      await fetchAll(false);
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data;
+      setActionError(typeof message === 'string' ? message : 'The result could not be confirmed. Refresh the saved order before retrying; no payment is assumed collected.');
+    } finally {
+      actionPending.current = false;
+      setActionSaving(false);
     }
   };
 
@@ -289,7 +321,7 @@ export default function AdminDashboard() {
   });
 
   const STAT_CARDS = [
-    { label: 'Total Sales Revenue', value: `Rs. ${stats.totalRevenue?.toLocaleString() || 0}`, icon: <TrendingUp />, color: '#B5385C', bg: '#FDF0F4' },
+    { label: 'Verified COD collections', value: `Rs. ${stats.totalRevenue?.toLocaleString() || 0}`, icon: <TrendingUp />, color: '#B5385C', bg: '#FDF0F4' },
     { label: 'Total Orders', value: stats.totalOrders || orders.length, icon: <Receipt />, color: '#7B1F3A', bg: '#F5E6EA' },
     { label: 'Total Catalog Items', value: products.length, icon: <Inventory />, color: '#C9956A', bg: '#FDF5EE' },
     { label: 'Total Inventory Stock', value: `${totalStockUnits} units`, icon: <ShoppingBag />, color: '#2E7D32', bg: '#EDF7ED' },
@@ -811,7 +843,7 @@ export default function AdminDashboard() {
               <Table>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#FAF7F5' }}>
-                    {['Order ID', 'Customer', 'Shipping Address', 'Total Amount', 'Order Status', 'Update Status'].map(h => (
+                    {['Order ID', 'Customer', 'Shipping Address', 'Total Amount', 'Order & Payment Status', 'Order Actions'].map(h => (
                       <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', color: 'text.secondary' }}>
                         {h}
                       </TableCell>
@@ -845,6 +877,7 @@ export default function AdminDashboard() {
                           <Typography fontWeight={800} color="#9B00A1">
                             Rs. {order.totalAmount?.toLocaleString()}
                           </Typography>
+                          <Typography variant="caption" color="text.secondary">Delivery: {formatDeliveryCharge(order.deliveryCharge)}</Typography>
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -853,19 +886,22 @@ export default function AdminDashboard() {
                             size="small"
                             sx={{ fontWeight: 700 }}
                           />
+                          <Typography variant="body2" sx={{ mt: 1 }}>{order.paymentMethod || 'Unrecorded method'} / {order.paymentStatus || 'Unrecorded payment status'}</Typography>
+                          {order.acceptanceReference && <Typography variant="caption" display="block">Acceptance: {order.acceptanceReference} · {order.acceptedAt}</Typography>}
+                          {order.codCollectionReference && <Typography variant="caption" display="block">Collection: {order.codCollectionReference} · {order.codCollectedAt}</Typography>}
+                          {order.inventoryReserved == null && <Typography variant="caption" color="warning.main" display="block">Legacy inventory review required</Typography>}
                         </TableCell>
                         <TableCell>
-                          <FormControl size="small" sx={{ minWidth: 150 }}>
-                            <Select
-                              value={order.status}
-                              onChange={e => handleStatusUpdate(order.id, e.target.value)}
-                              sx={{ borderRadius: 2 }}
-                            >
-                              {['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map(s => (
-                                <MenuItem key={s} value={s}>{s}</MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                          <Stack spacing={1} sx={{ minWidth: 170 }}>
+                            {order.status === 'PENDING' && <Button variant="outlined" size="small" disabled={actionSaving || order.inventoryReserved !== true} onClick={() => openOrderAction(order, 'acceptance')}>Verify and accept request</Button>}
+                            {allowedOrderTransitions(order.status).length > 0 && <FormControl size="small">
+                              <Select aria-label={`Update order ${order.id} status`} value={order.status} onChange={e => openOrderAction(order, 'status', e.target.value)} disabled={actionSaving} sx={{ borderRadius: 2 }}>
+                                <MenuItem value={order.status}>{order.status}</MenuItem>
+                                {allowedOrderTransitions(order.status).map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+                              </Select>
+                            </FormControl>}
+                            {canRecordCodCollection(order) && <Button variant="outlined" size="small" color="success" disabled={actionSaving} onClick={() => openOrderAction(order, 'collection')}>Record verified COD collection</Button>}
+                          </Stack>
                         </TableCell>
                       </TableRow>
                     ))
@@ -876,6 +912,30 @@ export default function AdminDashboard() {
           </Box>
         </Card>
       )}
+
+      <Dialog open={Boolean(orderAction)} onClose={actionSaving ? undefined : () => setOrderAction(null)} maxWidth="sm" fullWidth>
+        <Box component="form" onSubmit={submitOrderAction}>
+          <DialogTitle>{orderAction?.kind === 'acceptance' ? 'Confirm order acceptance' : orderAction?.kind === 'collection' ? 'Record verified COD collection' : 'Confirm fulfilment update'} #{orderAction?.order.id}</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={2}>
+              <Alert severity="info">Stored total: Rs. {Number(orderAction?.order.totalAmount || 0).toFixed(2)}. Delivery: {formatDeliveryCharge(orderAction?.order.deliveryCharge)}. A delivery update does not record payment.</Alert>
+              {orderAction?.kind === 'acceptance' && <Typography variant="body2">Verify the customer details and reserved stock, communicate acceptance to the customer, then record a nonsecret confirmation reference.</Typography>}
+              {orderAction?.kind === 'collection' && <>
+                <Typography variant="body2">Record COD collection only after verifying the actual courier settlement report and the exact stored order total. A delivered status or failed collection is insufficient.</Typography>
+                <TextField label="Verified collected amount (LKR)" required type="number" value={collectionAmount} onChange={event => setCollectionAmount(event.target.value)} disabled={actionSaving} slotProps={{ htmlInput: { min: 0, step: '0.01' } }} />
+              </>}
+              {orderAction?.kind !== 'status' && <TextField label={orderAction?.kind === 'acceptance' ? 'Acceptance confirmation reference' : 'Collection evidence reference'} required inputProps={{ maxLength: 120 }} value={actionReference} onChange={event => setActionReference(event.target.value)} disabled={actionSaving} helperText="Use a nonsecret operational reference. Do not enter card, banking, identity or customer secrets." />}
+              {orderAction?.kind === 'status' && <Typography>Change {orderAction.order.status} to {orderAction.status}. {orderAction.status === 'CANCELLED' ? 'Cancellation is available only before dispatch; reserved inventory is released by the server.' : 'Confirm the actual fulfilment event before recording it.'}</Typography>}
+              <FormControlLabel control={<Checkbox checked={actionAttested} onChange={event => setActionAttested(event.target.checked)} disabled={actionSaving} />} label={orderAction?.kind === 'acceptance' ? 'I verified the details and stock and communicated acceptance to the customer.' : orderAction?.kind === 'collection' ? 'I verified the actual courier settlement report, exact stored total and evidence reference.' : 'I verified this fulfilment event and understand it does not collect payment.'} />
+              {actionError && <Alert severity="error">{actionError}</Alert>}
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setOrderAction(null)} disabled={actionSaving}>Cancel</Button>
+            <Button type="submit" variant="contained" disabled={actionSaving || !actionAttested || (orderAction?.kind !== 'status' && !actionReference.trim())}>{actionSaving ? 'Saving…' : 'Save verified action'}</Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
 
       {/* ================= EDIT PRODUCT DETAILS DIALOG ================= */}
       <Dialog

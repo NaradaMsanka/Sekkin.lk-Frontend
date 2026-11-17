@@ -19,7 +19,7 @@ test('current missing business decisions block readiness', () => {
   assert.ok(issues.includes('Confirm business.registeredName'));
   assert.ok(issues.includes('Confirm business.supportEmail'));
   assert.ok(issues.includes('Review refund.returnWindow'));
-  assert.ok(issues.includes('Review shipping.charges'));
+  assert.ok(issues.includes('Review shipping.partners'));
 });
 test('complete business values still require every sign-off', () => {
   const data = completeFixture(); assert.deepEqual(getReadinessIssues(data), []);

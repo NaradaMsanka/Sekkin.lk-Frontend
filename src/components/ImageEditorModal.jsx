@@ -1,22 +1,25 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Box, Typography, Button, Slider, Stack, IconButton,
   Tooltip, CircularProgress, Chip, Divider, Paper
 } from "@mui/material";
 import {
-  RotateRight, RotateLeft, Flip, ZoomIn, ZoomOut,
-  Tune, RestartAlt, CheckCircle, Close, PhotoCamera,
-  Brightness6, Contrast, AutoAwesome
+  RotateRight, RotateLeft, Flip, ZoomIn,
+  RestartAlt, CheckCircle, Close, PhotoCamera,
+  Brightness6, Contrast
 } from "@mui/icons-material";
 import api, { resolveImageUrl } from "../services/api";
 
-export default function ImageEditorModal({
+export default function ImageEditorModal(props) {
+  return props.open && props.imageSrc ? <ImageEditorContent key={props.imageSrc} {...props} /> : null;
+}
+
+function ImageEditorContent({
   open,
   imageSrc,
   onApply,
-  onClose,
-  aspectRatio = 1 // 1:1 square for cosmetic products
+  onClose
 }) {
   const canvasRef = useRef(null);
   const imageObjRef = useRef(null);
@@ -37,10 +40,20 @@ export default function ImageEditorModal({
   const [uploading, setUploading] = useState(false);
   const [imageReady, setImageReady] = useState(false);
 
-  // Load image when imageSrc changes
+  const handleReset = useCallback(() => {
+    setScale(1);
+    setRotation(0);
+    setFlipH(false);
+    setPan({ x: 0, y: 0 });
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setActivePreset("normal");
+  }, []);
+
+  // Each opened source mounts a fresh editor; load callbacks update readiness.
   useEffect(() => {
     if (!imageSrc || !open) return;
-    setImageReady(false);
     imageObjRef.current = null;
     const img = new Image();
     // Only set crossOrigin on remote http/https URLs; data URLs or blobs can fail or taint canvas
@@ -55,18 +68,7 @@ export default function ImageEditorModal({
     img.onerror = () => alert("This image could not be loaded. Please choose a local image to replace it.");
     img.src = resolveImageUrl(imageSrc);
     return () => { img.onload = null; img.onerror = null; };
-  }, [imageSrc, open]);
-
-  const handleReset = () => {
-    setScale(1);
-    setRotation(0);
-    setFlipH(false);
-    setPan({ x: 0, y: 0 });
-    setBrightness(100);
-    setContrast(100);
-    setSaturation(100);
-    setActivePreset("normal");
-  };
+  }, [imageSrc, open, handleReset]);
 
   // Draw on Canvas
   const draw = useCallback(() => {

@@ -1,22 +1,48 @@
 # SEKKIN.LK frontend
 
-Run `npm ci` and `npm run dev` to start the storefront and admin dashboard. The admin dashboard is at `/admin`; API requests use `VITE_API_BASE_URL` from `.env`.
+React 19, Vite and Material UI storefront/admin interface for a cosmetics e-commerce project.
 
-Run `npm run build` for a production build. See [Vercel deployment settings](docs/VERCEL_DEPLOYMENT.md) for hosting configuration.
+## Local submission demo
 
-## React + Vite
+Requires Node.js 22. Start the backend's `start-demo.ps1` in another terminal; it prints the temporary admin credentials and serves a temporary sample catalog on port 8080.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+From this repository root (`Frontend/frontend` in the shared workspace):
 
-Currently, two official plugins are available:
+```powershell
+npm ci
+npm run dev:demo
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Open `http://localhost:5173`. Demo mode explicitly sends API requests to `http://localhost:8080`, even when an existing `.env` points to Render. Port 5173 must be free. Sign in with the printed admin account, visit `/admin`, and register a separate customer to demonstrate cart checkout. Backend demo data resets when the backend stops.
 
-## React Compiler
+The backend repository's `docs/DEMO_SUBMISSION.md` contains the presentation walkthrough and submission checklist.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features and routes
 
-## Expanding the ESLint configuration
+| Route | Feature |
+| --- | --- |
+| `/` | Responsive catalog, search/filter controls and product quick view |
+| `/product/:id` | Product details, reviews and direct COD checkout |
+| `/register`, `/login` | Customer accounts |
+| `/cart`, `/checkout` | Cart quantities, coupons, delivery estimates and COD orders |
+| `/orders` | Customer order history |
+| `/admin` | Products/stock, reporting and order operations |
+| `/about`, `/contact` and policy routes | Business information; unresolved content is visibly marked as draft |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The demo supports cash on delivery. Online payments, automated email/courier integrations and final merchant policies remain future work. Cloudinary uploads need separately configured backend credentials.
+
+## Checks and normal development
+
+```powershell
+npm run lint
+npm test
+npm run build
+```
+
+`npm test` runs all existing delivery, order retry and business-readiness tests. `npm run test:readiness` runs only the readiness tests. A successful build does not approve merchant content.
+
+For ordinary development, configure the public `VITE_API_BASE_URL` from `.env.example`, then run `npm run dev`. Restart Vite after environment changes. Never put backend secrets in `VITE_*` variables.
+
+Use `npm run check:merchant` and `npm run build:merchant` when preparing a commercial launch. These intentionally fail while business details, policies and sign-offs remain unresolved. Drafts can be demonstrated for submission without claiming commercial readiness.
+
+See [Vercel deployment settings](docs/VERCEL_DEPLOYMENT.md). The normal build and hosting commands remain separate from `dev:demo`.

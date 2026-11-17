@@ -1,10 +1,10 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import {
-  Box, Typography, Button, Stack, Card, IconButton,
-  Tooltip, Chip, Alert, Paper
+  Box, Typography, Stack, IconButton,
+  Tooltip, Paper
 } from "@mui/material";
 import {
-  CloudUpload, ArrowBack, ArrowForward, Star, StarBorder,
+  ArrowBack, ArrowForward, Star, StarBorder,
   Delete, Edit, PhotoLibrary, AddPhotoAlternate
 } from "@mui/icons-material";
 import ImageEditorModal from "./ImageEditorModal";

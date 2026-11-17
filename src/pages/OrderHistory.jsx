@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { formatDeliveryCharge } from '../content/delivery';
 import {
   Container, Typography, Box, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, Chip, Button,
-  Skeleton, Alert, Stack, Card, CardContent, Divider
+  Skeleton, Alert, Stack, Card, CardContent
 } from '@mui/material';
 import { History, ShoppingBag, Refresh, ReceiptLong } from '@mui/icons-material';
 
@@ -20,20 +21,29 @@ export default function OrderHistory() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [request, setRequest] = useState(0);
   const navigate = useNavigate();
 
-  const fetchOrders = async () => {
+  const fetchOrders = () => {
     setLoading(true);
-    try {
-      const res = await api.get('/api/orders');
-      setOrders(res.data);
-    } catch (err) {
-      if (err.response?.status === 401) navigate('/login');
-      else setError('Failed to load orders.');
-    } finally { setLoading(false); }
+    setError('');
+    setRequest(value => value + 1);
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    api.get('/api/orders', { signal: controller.signal })
+      .then(({ data }) => {
+        if (!controller.signal.aborted) setOrders(data);
+      })
+      .catch(err => {
+        if (controller.signal.aborted) return;
+        if (err.response?.status === 401) navigate('/login');
+        else setError('Failed to load orders.');
+      })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [navigate, request]);
 
   const totalSpent = orders
     .filter(o => o.status !== 'CANCELLED')
@@ -112,6 +122,7 @@ export default function OrderHistory() {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight={700}>Rs. {order.totalAmount?.toFixed(2)}</Typography>
+                      <Typography variant="caption" color="text.secondary">Delivery: {formatDeliveryCharge(order.deliveryCharge)}</Typography>
                     </TableCell>
                     <TableCell>
                       <Chip label={s.label} color={s.color} size="small" sx={{ fontWeight: 600 }} />

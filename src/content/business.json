@@ -24,7 +24,7 @@
   },
   "shipping": {
     "coverage": null, "processing": null, "deliveryEstimate": null,
-    "charges": null, "partners": null, "tracking": null,
+    "charges": "A fixed delivery charge of LKR 350 applies to every order. The delivery charge is displayed at checkout before you confirm your order.", "partners": null, "tracking": null,
     "delays": null, "failedDelivery": null
   },
   "privacy": {

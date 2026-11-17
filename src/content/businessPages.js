@@ -65,7 +65,7 @@ export const businessPages = {
       section('coverage', 'Delivery coverage', review(business.shipping.coverage, 'Confirm delivery areas within Sri Lanka and any excluded or remote locations. The earlier islandwide claim is unverified.')),
       section('processing', 'Order processing', review(business.shipping.processing, 'Confirm processing times, working days, cut-off times and stock-related delays.')),
       section('timelines', 'Estimated delivery periods', review(business.shipping.deliveryEstimate, 'Confirm realistic delivery estimates by area and when the estimate starts. No delivery date is guaranteed in this draft.')),
-      section('charges', 'Delivery charges', 'The cart checkout and retained COD flow currently display zero delivery charges. The owner must confirm these values as an approved business policy.', review(business.shipping.charges, 'Approve delivery charges, applicable conditions and how charges are shown before order confirmation.')),
+      section('charges', 'Delivery charges', business.shipping.charges),
       section('partners', 'Delivery partners', review(business.shipping.partners, 'Confirm delivery partners or state explicitly if none are contracted.')),
       section('tracking', 'Tracking & updates', 'My orders shows recorded order status. It is not a courier-tracking integration.', review(business.shipping.tracking, 'Confirm whether tracking is offered and how customers receive it. No automated email/SMS delivery update service has been verified.')),
       section('delays', 'Delays', review(business.shipping.delays, 'Confirm the customer notification and support procedure for delivery delays.')),
