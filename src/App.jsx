@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import { Navbar, Footer, SupportButton } from './components/SiteChrome';
 import Home from './pages/Home';
@@ -16,6 +16,17 @@ import { businessPages } from './content/businessPages';
 export default function App() {
   return (
     <Router>
+      <AppLayout />
+    </Router>
+  );
+}
+
+function AppLayout() {
+  const { pathname } = useLocation();
+  const isAdminPage = pathname === '/admin' || pathname === '/admin/';
+
+  return (
+    <>
       <RouteScroll />
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
         <Box component="a" href="#main-content" sx={{
@@ -25,7 +36,7 @@ export default function App() {
         }}>
           Skip to content
         </Box>
-        <Navbar />
+        {!isAdminPage && <Navbar />}
         <Box component="main" id="main-content" tabIndex={-1} sx={{ outline: 'none' }}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -40,9 +51,9 @@ export default function App() {
             <Route path="*" element={<BusinessNotFound />} />
           </Routes>
         </Box>
-        <Footer />
-        <SupportButton />
+        {!isAdminPage && <Footer />}
+        {!isAdminPage && <SupportButton />}
       </Box>
-    </Router>
+    </>
   );
 }

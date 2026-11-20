@@ -114,7 +114,7 @@ export default function ImageSequenceManager({
       />
 
       {/* Header Info */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+      <Box sx={{ display: "flex", flexDirection: { xs: 'column', sm: 'row' }, justifyContent: "space-between", alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1, mb: 1.5 }}>
         <Typography variant="subtitle2" fontWeight={700} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <PhotoLibrary fontSize="small" sx={{ color: "primary.main" }} />
           Product Image Sequence ({images.length} / {maxImages})
