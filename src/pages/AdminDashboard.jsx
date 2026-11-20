@@ -1,57 +1,46 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { formatDeliveryCharge } from '../content/delivery';
-import { allowedOrderTransitions, canRecordCodCollection } from '../services/orderRequest';
 import {
-  Container, Grid, Card, CardContent, Typography, Box, Stack,
-  Chip, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Paper, Button, TextField, Select, MenuItem, FormControl,
-  InputLabel, Alert, Skeleton, Avatar, Divider, IconButton, Tabs, Tab,
-  Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Tooltip,
-  InputAdornment, CircularProgress, Checkbox, FormControlLabel
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControlLabel,
+  IconButton,
+  Snackbar,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
-import {
-  Dashboard, Inventory, Receipt, TrendingUp,
-  Warning, Add, Delete, Refresh, Edit, Search,
-  ShoppingBag, Close, Save, Spa
-} from "@mui/icons-material";
-import ImageSequenceManager from "../components/ImageSequenceManager";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sekkin-lk-backend.onrender.com";
-const API = `${API_BASE_URL}/api`;
-
-const resolveImageUrl = (imgUrl) => {
-  if (!imgUrl || typeof imgUrl !== 'string') return '';
-  if (imgUrl.startsWith('http://localhost:8080')) {
-    return imgUrl.replace('http://localhost:8080', API_BASE_URL);
-  }
-  if (imgUrl.startsWith('http://127.0.0.1:8080')) {
-    return imgUrl.replace('http://127.0.0.1:8080', API_BASE_URL);
-  }
-  if (imgUrl.startsWith('/uploads/')) {
-    return `${API_BASE_URL}${imgUrl}`;
-  }
-  return imgUrl;
-};
+import { Add, Close, Save } from "@mui/icons-material";
+import { API } from "../services/api";
+import { formatDeliveryCharge } from "../content/delivery";
+import AdminWorkspace from "../components/admin/AdminWorkspace";
+import { ProductFormFields } from "../components/admin/AdminUi";
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");
   return { headers: { Authorization: `Bearer ${token}` } };
 }
 
-const STATUS_COLORS = {
-  PENDING: 'warning',
-  PROCESSING: 'info',
-  SHIPPED: 'primary',
-  DELIVERED: 'success',
-  CANCELLED: 'error'
-};
-
 export default function AdminDashboard() {
-  const [tab, setTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [addingOpen, setAddingOpen] = useState(false);
+  const [stockSaving, setStockSaving] = useState(null);
+  const stockPending = useRef(false);
+  const [snack, setSnack] = useState({
+    open: false,
+    msg: "",
+    severity: "success",
+  });
 
   // Stats & Data
   const [stats, setStats] = useState({
@@ -60,27 +49,31 @@ export default function AdminDashboard() {
     totalProducts: 0,
     totalUsers: 0,
     lowStockProducts: [],
-    recentOrders: []
+    recentOrders: [],
   });
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [orderAction, setOrderAction] = useState(null);
-  const [actionReference, setActionReference] = useState('');
-  const [collectionAmount, setCollectionAmount] = useState('');
+  const [actionReference, setActionReference] = useState("");
+  const [collectionAmount, setCollectionAmount] = useState("");
   const [actionAttested, setActionAttested] = useState(false);
   const [actionSaving, setActionSaving] = useState(false);
-  const [actionError, setActionError] = useState('');
+  const [actionError, setActionError] = useState("");
   const actionPending = useRef(false);
-
-  // Search & Filter
-  const [productSearch, setProductSearch] = useState("");
-  const [orderFilterStatus, setOrderFilterStatus] = useState("ALL");
 
   // Add Product State
   const [newProduct, setNewProduct] = useState({
-    name: '', brand: '', price: '', discountPrice: '', stockQuantity: '',
-    skinType: '', description: '', ingredients: '', status: 'ACTIVE',
-    imageUrl: '', images: []
+    name: "",
+    brand: "",
+    price: "",
+    discountPrice: "",
+    stockQuantity: "",
+    skinType: "",
+    description: "",
+    ingredients: "",
+    status: "ACTIVE",
+    imageUrl: "",
+    images: [],
   });
 
   // Edit Product Modal State
@@ -88,13 +81,22 @@ export default function AdminDashboard() {
   const [savingEdit, setSavingEdit] = useState(false);
   const [addingProduct, setAddingProduct] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: '', brand: '', price: '', discountPrice: '', stockQuantity: '',
-    skinType: '', description: '', ingredients: '', status: 'ACTIVE',
-    imageUrl: '', images: []
+    name: "",
+    brand: "",
+    price: "",
+    discountPrice: "",
+    stockQuantity: "",
+    skinType: "",
+    description: "",
+    ingredients: "",
+    status: "ACTIVE",
+    imageUrl: "",
+    images: [],
   });
 
   const fetchAll = async (showSkeleton = true) => {
     if (showSkeleton) setLoading(true);
+    else setRefreshing(true);
     setError("");
     try {
       const headers = getAuthHeaders();
@@ -103,24 +105,37 @@ export default function AdminDashboard() {
         axios.get(`${API}/products`),
         axios.get(`${API}/admin/orders`, headers),
       ]);
+      if (
+        !statsRes.data ||
+        !Array.isArray(prodsRes.data) ||
+        !Array.isArray(ordersRes.data)
+      ) {
+        throw new Error("Invalid admin data response");
+      }
       setStats(statsRes.data);
       setProducts(prodsRes.data);
-
-      if (!Array.isArray(ordersRes.data)) throw new Error('Invalid admin orders response');
       setOrders(ordersRes.data);
+      setLastUpdated(new Date());
     } catch (e) {
-      setError(e.response?.status === 403
-        ? "Access denied. You need an active ADMIN account to access this panel."
-        : "Failed to connect to the backend server. Make sure Spring Boot is running.");
+      setError(
+        [401, 403].includes(e.response?.status)
+          ? "Access denied. You need an active ADMIN account to access this panel."
+          : "We couldn't load your store data. Check your connection and try again.",
+      );
     } finally {
       if (showSkeleton) setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     let active = true;
-    Promise.resolve().then(() => { if (active) fetchAll(true); });
-    return () => { active = false; };
+    Promise.resolve().then(() => {
+      if (active) fetchAll(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   // 1. ADD NEW PRODUCT
@@ -128,32 +143,60 @@ export default function AdminDashboard() {
     e.preventDefault();
     setAddingProduct(true);
     try {
-      const primaryImg = newProduct.images?.[0] || newProduct.imageUrl || '';
+      const primaryImg = newProduct.images?.[0] || newProduct.imageUrl || "";
       const payload = {
         ...newProduct,
         price: parseFloat(newProduct.price),
         stockQuantity: parseInt(newProduct.stockQuantity, 10),
-        discountPrice: newProduct.discountPrice ? parseFloat(newProduct.discountPrice) : null,
+        discountPrice: newProduct.discountPrice
+          ? parseFloat(newProduct.discountPrice)
+          : null,
         status: newProduct.status || "ACTIVE",
         imageUrl: primaryImg,
-        images: JSON.stringify(newProduct.images || (primaryImg ? [primaryImg] : []))
+        images: JSON.stringify(
+          newProduct.images || (primaryImg ? [primaryImg] : []),
+        ),
       };
 
-      const res = await axios.post(`${API}/products`, payload, getAuthHeaders());
+      const res = await axios.post(
+        `${API}/products`,
+        payload,
+        getAuthHeaders(),
+      );
+      setAddingOpen(false);
 
-      setSnack({ open: true, msg: `Product "${newProduct.name}" added successfully! ✅`, severity: 'success' });
+      setSnack({
+        open: true,
+        msg: `Product "${newProduct.name}" added successfully.`,
+        severity: "success",
+      });
       setNewProduct({
-        name: '', brand: '', price: '', discountPrice: '', stockQuantity: '',
-        skinType: '', description: '', ingredients: '', status: 'ACTIVE',
-        imageUrl: '', images: []
+        name: "",
+        brand: "",
+        price: "",
+        discountPrice: "",
+        stockQuantity: "",
+        skinType: "",
+        description: "",
+        ingredients: "",
+        status: "ACTIVE",
+        imageUrl: "",
+        images: [],
       });
 
       if (res.data) {
-        setProducts(prev => [res.data, ...prev]);
+        setProducts((prev) => [res.data, ...prev]);
       }
       fetchAll(false);
     } catch (e) {
-      setSnack({ open: true, msg: e.response?.data?.message || e.response?.data || 'Failed to add product.', severity: 'error' });
+      setSnack({
+        open: true,
+        msg:
+          e.response?.data?.message ||
+          e.response?.data ||
+          "Failed to add product.",
+        severity: "error",
+      });
     } finally {
       setAddingProduct(false);
     }
@@ -164,9 +207,12 @@ export default function AdminDashboard() {
     let parsedImages = [];
     if (product.images) {
       try {
-        parsedImages = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+        parsedImages =
+          typeof product.images === "string"
+            ? JSON.parse(product.images)
+            : product.images;
       } catch {
-        parsedImages = product.images.split(',').filter(Boolean);
+        parsedImages = product.images.split(",").filter(Boolean);
       }
     } else if (product.imageUrl) {
       parsedImages = [product.imageUrl];
@@ -174,17 +220,17 @@ export default function AdminDashboard() {
 
     setEditingProduct(product);
     setEditForm({
-      name: product.name || '',
-      brand: product.brand || '',
-      price: product.price || '',
-      discountPrice: product.discountPrice || '',
-      stockQuantity: product.stockQuantity ?? '',
-      skinType: product.skinType || '',
-      description: product.description || '',
-      ingredients: product.ingredients || '',
-      status: product.status || 'ACTIVE',
-      imageUrl: product.imageUrl || (parsedImages[0] || ''),
-      images: parsedImages
+      name: product.name || "",
+      brand: product.brand || "",
+      price: product.price || "",
+      discountPrice: product.discountPrice || "",
+      stockQuantity: product.stockQuantity ?? "",
+      skinType: product.skinType || "",
+      description: product.description || "",
+      ingredients: product.ingredients || "",
+      status: product.status || "ACTIVE",
+      imageUrl: product.imageUrl || parsedImages[0] || "",
+      images: parsedImages,
     });
   };
 
@@ -194,32 +240,54 @@ export default function AdminDashboard() {
     if (!editingProduct) return;
     setSavingEdit(true);
     try {
-      const primaryImg = editForm.images?.[0] || editForm.imageUrl || '';
+      const primaryImg = editForm.images?.[0] || editForm.imageUrl || "";
       const payload = {
         name: editForm.name,
         brand: editForm.brand,
         price: parseFloat(editForm.price),
-        discountPrice: editForm.discountPrice ? parseFloat(editForm.discountPrice) : null,
+        discountPrice: editForm.discountPrice
+          ? parseFloat(editForm.discountPrice)
+          : null,
         stockQuantity: parseInt(editForm.stockQuantity, 10),
         skinType: editForm.skinType,
         description: editForm.description,
         ingredients: editForm.ingredients,
         status: editForm.status,
         imageUrl: primaryImg,
-        images: JSON.stringify(editForm.images || (primaryImg ? [primaryImg] : []))
+        images: JSON.stringify(
+          editForm.images || (primaryImg ? [primaryImg] : []),
+        ),
       };
 
-      const res = await axios.put(`${API}/products/${editingProduct.id}`, payload, getAuthHeaders());
+      const res = await axios.put(
+        `${API}/products/${editingProduct.id}`,
+        payload,
+        getAuthHeaders(),
+      );
 
       // Optimistic update: show new product values and image immediately without freezing UI
-      const updatedProduct = res.data || { ...editingProduct, ...payload, id: editingProduct.id };
-      setProducts(prev => prev.map(p => p.id === editingProduct.id ? updatedProduct : p));
+      const updatedProduct = res.data || {
+        ...editingProduct,
+        ...payload,
+        id: editingProduct.id,
+      };
+      setProducts((prev) =>
+        prev.map((p) => (p.id === editingProduct.id ? updatedProduct : p)),
+      );
 
-      setSnack({ open: true, msg: `Product #${editingProduct.id} updated successfully! ✅`, severity: 'success' });
+      setSnack({
+        open: true,
+        msg: `Product #${editingProduct.id} updated successfully.`,
+        severity: "success",
+      });
       setEditingProduct(null);
       fetchAll(false);
     } catch (err) {
-      setSnack({ open: true, msg: err.response?.data?.message || 'Failed to update product details.', severity: 'error' });
+      setSnack({
+        open: true,
+        msg: err.response?.data?.message || "Failed to update product details.",
+        severity: "error",
+      });
     } finally {
       setSavingEdit(false);
     }
@@ -227,26 +295,50 @@ export default function AdminDashboard() {
 
   // 4. QUICK STOCK ADJUSTMENT (+10 / -5 / custom)
   const handleQuickStockAdjust = async (product, change) => {
-    const newQty = Math.max(0, (product.stockQuantity || 0) + change);
+    if (stockPending.current) return;
+    stockPending.current = true;
+    setStockSaving(product.id);
+    const newQty = Math.max(0, Number(product.stockQuantity || 0) + change);
     try {
-      await axios.put(`${API}/products/${product.id}`, {
-        name: product.name,
-        brand: product.brand,
-        price: parseFloat(product.price),
-        discountPrice: product.discountPrice ? parseFloat(product.discountPrice) : null,
-        stockQuantity: newQty,
-        skinType: product.skinType,
-        description: product.description,
-        ingredients: product.ingredients,
-        status: product.status || 'ACTIVE',
-        imageUrl: product.imageUrl,
-        images: product.images
-      }, getAuthHeaders());
+      await axios.put(
+        `${API}/products/${product.id}`,
+        {
+          name: product.name,
+          brand: product.brand,
+          price: parseFloat(product.price),
+          discountPrice: product.discountPrice
+            ? parseFloat(product.discountPrice)
+            : null,
+          stockQuantity: newQty,
+          skinType: product.skinType,
+          description: product.description,
+          ingredients: product.ingredients,
+          status: product.status || "ACTIVE",
+          imageUrl: product.imageUrl,
+          images: product.images,
+        },
+        getAuthHeaders(),
+      );
 
-      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stockQuantity: newQty } : p));
-      setSnack({ open: true, msg: `Stock updated for ${product.name}: ${newQty} units`, severity: 'success' });
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === product.id ? { ...p, stockQuantity: newQty } : p,
+        ),
+      );
+      setSnack({
+        open: true,
+        msg: `Stock updated for ${product.name}: ${newQty} units`,
+        severity: "success",
+      });
     } catch {
-      setSnack({ open: true, msg: 'Quick stock update failed.', severity: 'error' });
+      setSnack({
+        open: true,
+        msg: "Quick stock update failed.",
+        severity: "error",
+      });
+    } finally {
+      stockPending.current = false;
+      setStockSaving(null);
     }
   };
 
@@ -255,789 +347,392 @@ export default function AdminDashboard() {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
     try {
       await axios.delete(`${API}/products/${id}`, getAuthHeaders());
-      setProducts(prev => prev.filter(p => p.id !== id));
-      setSnack({ open: true, msg: `Product "${name}" deleted.`, severity: 'info' });
-      fetchAll();
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+      setSnack({
+        open: true,
+        msg: `Product "${name}" deleted.`,
+        severity: "info",
+      });
+      fetchAll(false);
     } catch {
-      setSnack({ open: true, msg: 'Delete failed. Check if product is in active orders.', severity: 'error' });
+      setSnack({
+        open: true,
+        msg: "Delete failed. Check if product is in active orders.",
+        severity: "error",
+      });
     }
   };
 
   // 6. UPDATE ORDER STATUS
   const openOrderAction = (order, kind, status) => {
     setOrderAction({ order, kind, status });
-    setActionReference('');
-    setCollectionAmount(order.totalAmount != null ? Number(order.totalAmount).toFixed(2) : '');
+    setActionReference("");
+    setCollectionAmount(
+      order.totalAmount != null ? Number(order.totalAmount).toFixed(2) : "",
+    );
     setActionAttested(false);
-    setActionError('');
+    setActionError("");
   };
 
-  const submitOrderAction = async event => {
+  const submitOrderAction = async (event) => {
     event.preventDefault();
     if (!orderAction || actionPending.current || !actionAttested) return;
     const { order, kind, status } = orderAction;
-    if (kind !== 'status' && !actionReference.trim()) return;
-    if (kind === 'collection' && (!Number.isFinite(Number(collectionAmount)) || Number(collectionAmount) !== Number(order.totalAmount))) {
-      setActionError('The verified collection amount must equal the stored order total.');
+    if (kind !== "status" && !actionReference.trim()) return;
+    if (
+      kind === "collection" &&
+      (!Number.isFinite(Number(collectionAmount)) ||
+        Number(collectionAmount) !== Number(order.totalAmount))
+    ) {
+      setActionError(
+        "The verified collection amount must equal the stored order total.",
+      );
       return;
     }
     actionPending.current = true;
     setActionSaving(true);
-    setActionError('');
+    setActionError("");
     try {
-      if (kind === 'acceptance') await axios.post(`${API}/admin/orders/${order.id}/accept`, { reference: actionReference.trim() }, getAuthHeaders());
-      else if (kind === 'collection') await axios.post(`${API}/admin/orders/${order.id}/cod-collection`, { amount: Number(collectionAmount), reference: actionReference.trim() }, getAuthHeaders());
-      else await axios.patch(`${API}/orders/${order.id}/status`, { status }, getAuthHeaders());
+      if (kind === "acceptance")
+        await axios.post(
+          `${API}/admin/orders/${order.id}/accept`,
+          { reference: actionReference.trim() },
+          getAuthHeaders(),
+        );
+      else if (kind === "collection")
+        await axios.post(
+          `${API}/admin/orders/${order.id}/cod-collection`,
+          {
+            amount: Number(collectionAmount),
+            reference: actionReference.trim(),
+          },
+          getAuthHeaders(),
+        );
+      else
+        await axios.patch(
+          `${API}/orders/${order.id}/status`,
+          { status },
+          getAuthHeaders(),
+        );
       setOrderAction(null);
-      setSnack({ open: true, msg: `Order #${order.id} updated. Refreshing the saved record.`, severity: 'success' });
+      setSnack({
+        open: true,
+        msg: `Order #${order.id} updated. Refreshing the saved record.`,
+        severity: "success",
+      });
       await fetchAll(false);
     } catch (error) {
       const message = error.response?.data?.message || error.response?.data;
-      setActionError(typeof message === 'string' ? message : 'The result could not be confirmed. Refresh the saved order before retrying; no payment is assumed collected.');
+      setActionError(
+        typeof message === "string"
+          ? message
+          : "The result could not be confirmed. Refresh the saved order before retrying; no payment is assumed collected.",
+      );
     } finally {
       actionPending.current = false;
       setActionSaving(false);
     }
   };
 
-  // Calculated Inventory & Order Metrics
-  const totalStockUnits = products.reduce((acc, p) => acc + (p.stockQuantity || 0), 0);
-  const totalInventoryValue = products.reduce((acc, p) => acc + ((p.price || 0) * (p.stockQuantity || 0)), 0);
-  const outOfStockCount = products.filter(p => (p.stockQuantity || 0) <= 0).length;
-  const lowStockCount = products.filter(p => (p.stockQuantity || 0) > 0 && (p.stockQuantity || 0) <= 10).length;
-
-  const deliveredOrdersCount = orders.filter(o => o.status === 'DELIVERED').length;
-  const pendingOrdersCount = orders.filter(o => o.status === 'PENDING' || o.status === 'PROCESSING').length;
-
-  const filteredProducts = products.filter(p =>
-    p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
-    p.brand?.toLowerCase().includes(productSearch.toLowerCase()) ||
-    p.skinType?.toLowerCase().includes(productSearch.toLowerCase())
-  );
-
-  const filteredOrders = orders.filter(o => {
-    if (orderFilterStatus === 'ALL') return true;
-    return o.status === orderFilterStatus;
-  });
-
-  const STAT_CARDS = [
-    { label: 'Verified COD collections', value: `Rs. ${stats.totalRevenue?.toLocaleString() || 0}`, icon: <TrendingUp />, color: '#B5385C', bg: '#FDF0F4' },
-    { label: 'Total Orders', value: stats.totalOrders || orders.length, icon: <Receipt />, color: '#7B1F3A', bg: '#F5E6EA' },
-    { label: 'Total Catalog Items', value: products.length, icon: <Inventory />, color: '#C9956A', bg: '#FDF5EE' },
-    { label: 'Total Inventory Stock', value: `${totalStockUnits} units`, icon: <ShoppingBag />, color: '#2E7D32', bg: '#EDF7ED' },
-  ];
-
-  if (loading) {
-    return (
-      <Container sx={{ py: 6 }}>
-        <Stack spacing={2}>
-          <Skeleton variant="text" width={300} height={40} />
-          <Grid container spacing={3}>
-            {[1, 2, 3, 4].map(i => (
-              <Grid item xs={12} sm={6} md={3} key={i}>
-                <Skeleton variant="rectangular" height={130} sx={{ borderRadius: 3 }} />
-              </Grid>
-            ))}
-          </Grid>
-          <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 3 }} />
-        </Stack>
-      </Container>
-    );
-  }
-
   return (
-    <Container maxWidth="xl" sx={{ py: 5 }}>
-      {/* Header */}
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={2} mb={4}>
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <Box
-            component="img"
-            src="/logo.png"
-            alt="Sekkin.lk"
-            sx={{
-              width: 50,
-              height: 50,
-              borderRadius: '50%',
-              border: '2px solid #C9956A',
-              bgcolor: '#000000',
-              p: 0.2
-            }}
-          />
-          <Box>
-            <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: '-0.5px' }}>
-              Admin Management Portal
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Sekkin.lk • Product Catalog, Stock Reports & Order Management
-            </Typography>
-          </Box>
-        </Stack>
-        <Button startIcon={<Refresh />} onClick={fetchAll} variant="outlined" color="primary" sx={{ borderRadius: 2.5 }}>
-          Refresh Data
-        </Button>
-      </Stack>
-
-      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
-
-      {/* Top Stat Cards */}
-      <Grid container spacing={2.5} mb={4}>
-        {STAT_CARDS.map(card => (
-          <Grid item xs={12} sm={6} md={3} key={card.label}>
-            <Card elevation={0} sx={{ borderRadius: 3.5, border: '1px solid', borderColor: 'divider', overflow: 'hidden' }}>
-              <Box sx={{ height: 4, bgcolor: card.color }} />
-              <CardContent sx={{ p: 2.5 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                  <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600} textTransform="uppercase" letterSpacing={0.5}>
-                      {card.label}
-                    </Typography>
-                    <Typography variant="h4" fontWeight={800} sx={{ color: card.color, mt: 0.5 }}>
-                      {card.value}
-                    </Typography>
-                  </Box>
-                  <Avatar sx={{ bgcolor: card.bg, color: card.color, width: 48, height: 48 }}>
-                    {card.icon}
-                  </Avatar>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Main Navigation Tabs */}
-      <Tabs
-        value={tab}
-        onChange={(_, v) => setTab(v)}
-        sx={{
-          mb: 4,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          '& .MuiTab-root': { fontWeight: 700, fontSize: '0.95rem', py: 1.5 }
-        }}
-      >
-        <Tab icon={<Dashboard />} iconPosition="start" label="Overview" />
-        <Tab icon={<Inventory />} iconPosition="start" label={`Products (${products.length})`} />
-        <Tab icon={<Warning />} iconPosition="start" label={`Stock Report (${lowStockCount + outOfStockCount} Alerts)`} />
-        <Tab icon={<Receipt />} iconPosition="start" label={`Order Reports (${orders.length})`} />
-      </Tabs>
-
-      {/* ================= TAB 0: OVERVIEW & QUICK ACTIONS ================= */}
-      {tab === 0 && (
-        <Grid container spacing={3}>
-          {/* Inventory Health Card */}
-          <Grid item xs={12} md={6}>
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3.5 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Inventory color="primary" />
-                    <Typography variant="h6" fontWeight={700}>Inventory Stock Summary</Typography>
-                  </Stack>
-                  <Button size="small" onClick={() => setTab(2)}>View Full Stock</Button>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
-
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ p: 1.5, bgcolor: '#FDF0F4', borderRadius: 2, textAlign: 'center' }}>
-                      <Typography variant="caption" color="text.secondary">Total Value</Typography>
-                      <Typography variant="subtitle1" fontWeight={700} color="#B5385C">
-                        Rs. {(totalInventoryValue / 1000).toFixed(1)}k
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ p: 1.5, bgcolor: '#EDF7ED', borderRadius: 2, textAlign: 'center' }}>
-                      <Typography variant="caption" color="text.secondary">Total Units</Typography>
-                      <Typography variant="subtitle1" fontWeight={700} color="success.main">
-                        {totalStockUnits}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ p: 1.5, bgcolor: '#FFF8E1', borderRadius: 2, textAlign: 'center' }}>
-                      <Typography variant="caption" color="text.secondary">Low Stock</Typography>
-                      <Typography variant="subtitle1" fontWeight={700} color="warning.main">
-                        {lowStockCount}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ p: 1.5, bgcolor: '#FFEBEE', borderRadius: 2, textAlign: 'center' }}>
-                      <Typography variant="caption" color="text.secondary">Out of Stock</Typography>
-                      <Typography variant="subtitle1" fontWeight={700} color="error.main">
-                        {outOfStockCount}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-
-                {/* Low Stock Items preview */}
-                <Typography variant="subtitle2" fontWeight={700} sx={{ mt: 3, mb: 1.5 }}>
-                  Items Needing Attention:
-                </Typography>
-                {products.filter(p => (p.stockQuantity || 0) <= 10).slice(0, 4).map(p => (
-                  <Box key={p.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                    <Typography variant="body2" fontWeight={600}>{p.name}</Typography>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip
-                        label={p.stockQuantity === 0 ? "OUT OF STOCK" : `${p.stockQuantity} left`}
-                        color={p.stockQuantity === 0 ? "error" : "warning"}
-                        size="small"
-                      />
-                      <Button size="small" variant="outlined" onClick={() => handleQuickStockAdjust(p, 10)}>
-                        +10
-                      </Button>
-                    </Stack>
-                  </Box>
-                ))}
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Orders Activity Card */}
-          <Grid item xs={12} md={6}>
-            <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3.5 }}>
-              <CardContent sx={{ p: 3 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Receipt color="primary" />
-                    <Typography variant="h6" fontWeight={700}>Order Fulfillment Status</Typography>
-                  </Stack>
-                  <Button size="small" onClick={() => setTab(3)}>View All Orders</Button>
-                </Stack>
-                <Divider sx={{ mb: 2 }} />
-
-                <Stack direction="row" spacing={2} mb={3}>
-                  <Box sx={{ flex: 1, p: 2, bgcolor: '#E3F2FD', borderRadius: 2, textAlign: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">Pending / Processing</Typography>
-                    <Typography variant="h5" fontWeight={800} color="primary.main">{pendingOrdersCount}</Typography>
-                  </Box>
-                  <Box sx={{ flex: 1, p: 2, bgcolor: '#E8F5E9', borderRadius: 2, textAlign: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">Delivered Successfully</Typography>
-                    <Typography variant="h5" fontWeight={800} color="success.main">{deliveredOrdersCount}</Typography>
-                  </Box>
-                </Stack>
-
-                <Typography variant="subtitle2" fontWeight={700} mb={1}>Recent Customer Orders:</Typography>
-                {orders.slice(0, 5).map(o => (
-                  <Box key={o.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1.2, borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                    <Box>
-                      <Typography variant="body2" fontWeight={700} color="primary">Order #{o.id}</Typography>
-                      <Typography variant="caption" color="text.secondary">{o.customerEmail || o.user?.email || 'Guest'}</Typography>
-                    </Box>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Typography variant="body2" fontWeight={700}>Rs. {o.totalAmount?.toLocaleString()}</Typography>
-                      <Chip label={o.status} color={STATUS_COLORS[o.status] || 'default'} size="small" />
-                    </Stack>
-                  </Box>
-                ))}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {/* ================= TAB 1: PRODUCT LIST, DETAILS & CREATION ================= */}
-      {tab === 1 && (
-        <Box>
-          {/* Add New Product Section */}
-          <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3.5, mb: 4 }}>
-            <CardContent sx={{ p: 3.5 }}>
-              <Stack direction="row" alignItems="center" spacing={1.5} mb={2.5}>
-                <Avatar sx={{ bgcolor: 'primary.50', color: 'primary.main' }}>
-                  <Add />
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight={700}>Add New Product to Website</Typography>
-                  <Typography variant="caption" color="text.secondary">Add fresh cosmetic items with prices, discounts, and inventory</Typography>
-                </Box>
-              </Stack>
-              <Divider sx={{ mb: 3 }} />
-
-              <Box component="form" onSubmit={handleAddProduct}>
-                <Grid container spacing={2.5}>
-                  <Grid item xs={12}>
-                    <ImageSequenceManager
-                      images={newProduct.images || []}
-                      onChange={(updatedImages, primaryUrl) => {
-                        setNewProduct(p => ({ ...p, images: updatedImages, imageUrl: primaryUrl }));
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField fullWidth size="small" label="Product Name *" required
-                      value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField fullWidth size="small" label="Brand Name *" required
-                      value={newProduct.brand} onChange={e => setNewProduct(p => ({ ...p, brand: e.target.value }))} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField fullWidth size="small" label="Regular Price (Rs.) *" type="number" required
-                      value={newProduct.price} onChange={e => setNewProduct(p => ({ ...p, price: e.target.value }))} />
-                  </Grid>
-
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField fullWidth size="small" label="Discount / Sale Price (Rs.)" type="number"
-                      helperText="Leave empty if no discount"
-                      value={newProduct.discountPrice} onChange={e => setNewProduct(p => ({ ...p, discountPrice: e.target.value }))} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField fullWidth size="small" label="Stock Quantity *" type="number" required
-                      value={newProduct.stockQuantity} onChange={e => setNewProduct(p => ({ ...p, stockQuantity: e.target.value }))} />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={4}>
-                    <TextField fullWidth size="small" label="Skin Type (e.g. Oily, Dry, Sensitive)"
-                      value={newProduct.skinType} onChange={e => setNewProduct(p => ({ ...p, skinType: e.target.value }))} />
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <TextField fullWidth size="small" label="Product Description" multiline rows={2}
-                      value={newProduct.description} onChange={e => setNewProduct(p => ({ ...p, description: e.target.value }))} />
-                  </Grid>
-                  <Grid item xs={12} md={6}>
-                    <TextField fullWidth size="small" label="Key Ingredients" multiline rows={2}
-                      value={newProduct.ingredients} onChange={e => setNewProduct(p => ({ ...p, ingredients: e.target.value }))} />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      color="primary"
-                      disabled={addingProduct}
-                      startIcon={addingProduct ? <CircularProgress size={18} color="inherit" /> : <Add />}
-                      sx={{ px: 4, py: 1.2, borderRadius: 2.5, fontWeight: 700 }}
-                    >
-                      {addingProduct ? "Publishing Product..." : "Publish Product to Catalog"}
-                    </Button>
-                  </Grid>
-                </Grid>
-              </Box>
-            </CardContent>
-          </Card>
-
-          {/* Manage Existing Products Table */}
-          <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3.5 }}>
-            <Box sx={{ p: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-              <Typography variant="h6" fontWeight={700}>
-                Live Product Catalog ({filteredProducts.length} items)
-              </Typography>
-              <TextField
-                size="small"
-                placeholder="Search products by name or brand..."
-                value={productSearch}
-                onChange={e => setProductSearch(e.target.value)}
-                slotProps={{ input: {
-                  startAdornment: <InputAdornment position="start"><Search fontSize="small" /></InputAdornment>
-                } }}
-                sx={{ width: { xs: '100%', sm: 300 } }}
-              />
-            </Box>
-
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: '#FAF7F5' }}>
-                    {['ID', 'Name & Brand', 'Regular Price', 'Sale Price', 'Stock Level', 'Skin Type', 'Actions'].map(h => (
-                      <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', color: 'text.secondary' }}>
-                        {h}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredProducts.map(p => (
-                    <TableRow key={p.id} hover>
-                      <TableCell><Typography variant="caption" fontWeight={700}>#{p.id}</Typography></TableCell>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          {p.imageUrl ? (
-                            <Box
-                              component="img"
-                              src={resolveImageUrl(p.imageUrl)}
-                              alt={p.name}
-                              sx={{
-                                width: 44,
-                                height: 44,
-                                borderRadius: 2,
-                                objectFit: 'cover',
-                                bgcolor: '#FAF6F4',
-                                border: '1px solid rgba(201,149,106,0.2)'
-                              }}
-                            />
-                          ) : (
-                            <Avatar variant="rounded" sx={{ width: 44, height: 44, bgcolor: 'rgba(201,149,106,0.12)', color: '#C9956A' }}>
-                              <Spa fontSize="small" />
-                            </Avatar>
-                          )}
-                          <Box>
-                            <Typography variant="body2" fontWeight={700}>{p.name}</Typography>
-                            <Typography variant="caption" color="text.secondary">{p.brand || 'No Brand'}</Typography>
-                          </Box>
-                        </Box>
-                      </TableCell>
-                      <TableCell>Rs. {p.price?.toLocaleString()}</TableCell>
-                      <TableCell>
-                        {p.discountPrice && p.discountPrice < p.price ? (
-                          <Chip label={`Rs. ${p.discountPrice.toLocaleString()}`} color="success" size="small" sx={{ fontWeight: 700 }} />
-                        ) : '—'}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={`${p.stockQuantity ?? 0} in stock`}
-                          size="small"
-                          color={p.stockQuantity === 0 ? 'error' : p.stockQuantity <= 10 ? 'warning' : 'default'}
-                          sx={{ fontWeight: 600 }}
-                        />
-                      </TableCell>
-                      <TableCell>{p.skinType || '—'}</TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={0.5}>
-                          <Tooltip title="Edit Product Details">
-                            <IconButton size="small" color="primary" onClick={() => handleOpenEdit(p)}>
-                              <Edit fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete Product">
-                            <IconButton size="small" color="error" onClick={() => handleDelete(p.id, p.name)}>
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Card>
-        </Box>
-      )}
-
-      {/* ================= TAB 2: STOCK & INVENTORY REPORT ================= */}
-      {tab === 2 && (
-        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3.5 }}>
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={700} gutterBottom>
-              Stock & Inventory Report
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mb={3}>
-              Monitor real-time inventory counts, identify low-stock items, and perform quick restocks.
-            </Typography>
-
-            <Grid container spacing={3} mb={3}>
-              <Grid item xs={12} sm={4}>
-                <Box sx={{ p: 2, borderRadius: 3, bgcolor: '#EDF7ED', border: '1px solid rgba(46,125,50,0.2)' }}>
-                  <Typography variant="caption" fontWeight={700} color="success.dark">HEALTHY STOCK ITEMS</Typography>
-                  <Typography variant="h4" fontWeight={800} color="success.dark">
-                    {products.filter(p => (p.stockQuantity || 0) > 10).length}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Box sx={{ p: 2, borderRadius: 3, bgcolor: '#FFF8E1', border: '1px solid rgba(237,108,2,0.2)' }}>
-                  <Typography variant="caption" fontWeight={700} color="warning.dark">LOW STOCK ITEMS (&le; 10)</Typography>
-                  <Typography variant="h4" fontWeight={800} color="warning.dark">
-                    {lowStockCount}
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Box sx={{ p: 2, borderRadius: 3, bgcolor: '#FFEBEE', border: '1px solid rgba(211,47,47,0.2)' }}>
-                  <Typography variant="caption" fontWeight={700} color="error.dark">OUT OF STOCK (0 units)</Typography>
-                  <Typography variant="h4" fontWeight={800} color="error.dark">
-                    {outOfStockCount}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-
-            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid rgba(0,0,0,0.06)', borderRadius: 3 }}>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: '#FAF7F5' }}>
-                    {['Product Name', 'Brand', 'Unit Price', 'Current Stock', 'Stock Status', 'Quick Restock'].map(h => (
-                      <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', color: 'text.secondary' }}>
-                        {h}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {products.map(p => (
-                    <TableRow key={p.id} hover>
-                      <TableCell><Typography variant="body2" fontWeight={700}>{p.name}</Typography></TableCell>
-                      <TableCell>{p.brand || '—'}</TableCell>
-                      <TableCell>Rs. {p.price?.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Typography variant="body1" fontWeight={800}>
-                          {p.stockQuantity ?? 0}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {(p.stockQuantity || 0) <= 0 ? (
-                          <Chip label="OUT OF STOCK" color="error" size="small" sx={{ fontWeight: 700 }} />
-                        ) : (p.stockQuantity || 0) <= 10 ? (
-                          <Chip label="LOW STOCK ALERT" color="warning" size="small" sx={{ fontWeight: 700 }} />
-                        ) : (
-                          <Chip label="IN STOCK" color="success" size="small" sx={{ fontWeight: 700 }} />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <Button size="small" variant="outlined" color="primary" onClick={() => handleQuickStockAdjust(p, 10)}>
-                            +10 Units
-                          </Button>
-                          <Button size="small" variant="outlined" color="secondary" onClick={() => handleQuickStockAdjust(p, 50)}>
-                            +50 Units
-                          </Button>
-                          <IconButton size="small" onClick={() => handleOpenEdit(p)}>
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        </Card>
-      )}
-
-      {/* ================= TAB 3: ORDER REPORTS & STATUS UPDATER ================= */}
-      {tab === 3 && (
-        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3.5 }}>
-          <Box sx={{ p: 3 }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} gap={2} mb={3}>
-              <Box>
-                <Typography variant="h6" fontWeight={700}>Customer Order Reports</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Track orders, customer shipping addresses, total spent, and update shipping progress.
-                </Typography>
-              </Box>
-
-              {/* Status Filter */}
-              <FormControl size="small" sx={{ minWidth: 180 }}>
-                <InputLabel>Filter by Status</InputLabel>
-                <Select
-                  value={orderFilterStatus}
-                  label="Filter by Status"
-                  onChange={e => setOrderFilterStatus(e.target.value)}
-                >
-                  <MenuItem value="ALL">All Orders ({orders.length})</MenuItem>
-                  <MenuItem value="PENDING">Pending</MenuItem>
-                  <MenuItem value="PROCESSING">Processing</MenuItem>
-                  <MenuItem value="SHIPPED">Shipped</MenuItem>
-                  <MenuItem value="DELIVERED">Delivered</MenuItem>
-                  <MenuItem value="CANCELLED">Cancelled</MenuItem>
-                </Select>
-              </FormControl>
-            </Stack>
-
-            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid rgba(0,0,0,0.06)', borderRadius: 3 }}>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: '#FAF7F5' }}>
-                    {['Order ID', 'Customer', 'Shipping Address', 'Total Amount', 'Order & Payment Status', 'Order Actions'].map(h => (
-                      <TableCell key={h} sx={{ fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', color: 'text.secondary' }}>
-                        {h}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredOrders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
-                        No orders found for this status.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredOrders.map(order => (
-                      <TableRow key={order.id} hover>
-                        <TableCell>
-                          <Typography fontWeight={800} color="primary">#{order.id}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight={600}>
-                            {order.customerEmail || order.user?.email || 'Registered Customer'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ maxWidth: 220 }}>
-                          <Typography variant="body2" noWrap>
-                            {order.shippingAddress || 'Standard Delivery, Sri Lanka'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography fontWeight={800} color="#9B00A1">
-                            Rs. {order.totalAmount?.toLocaleString()}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">Delivery: {formatDeliveryCharge(order.deliveryCharge)}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={order.status}
-                            color={STATUS_COLORS[order.status] || 'default'}
-                            size="small"
-                            sx={{ fontWeight: 700 }}
-                          />
-                          <Typography variant="body2" sx={{ mt: 1 }}>{order.paymentMethod || 'Unrecorded method'} / {order.paymentStatus || 'Unrecorded payment status'}</Typography>
-                          {order.acceptanceReference && <Typography variant="caption" display="block">Acceptance: {order.acceptanceReference} · {order.acceptedAt}</Typography>}
-                          {order.codCollectionReference && <Typography variant="caption" display="block">Collection: {order.codCollectionReference} · {order.codCollectedAt}</Typography>}
-                          {order.inventoryReserved == null && <Typography variant="caption" color="warning.main" display="block">Legacy inventory review required</Typography>}
-                        </TableCell>
-                        <TableCell>
-                          <Stack spacing={1} sx={{ minWidth: 170 }}>
-                            {order.status === 'PENDING' && <Button variant="outlined" size="small" disabled={actionSaving || order.inventoryReserved !== true} onClick={() => openOrderAction(order, 'acceptance')}>Verify and accept request</Button>}
-                            {allowedOrderTransitions(order.status).length > 0 && <FormControl size="small">
-                              <Select aria-label={`Update order ${order.id} status`} value={order.status} onChange={e => openOrderAction(order, 'status', e.target.value)} disabled={actionSaving} sx={{ borderRadius: 2 }}>
-                                <MenuItem value={order.status}>{order.status}</MenuItem>
-                                {allowedOrderTransitions(order.status).map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
-                              </Select>
-                            </FormControl>}
-                            {canRecordCodCollection(order) && <Button variant="outlined" size="small" color="success" disabled={actionSaving} onClick={() => openOrderAction(order, 'collection')}>Record verified COD collection</Button>}
-                          </Stack>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        </Card>
-      )}
-
-      <Dialog open={Boolean(orderAction)} onClose={actionSaving ? undefined : () => setOrderAction(null)} maxWidth="sm" fullWidth>
-        <Box component="form" onSubmit={submitOrderAction}>
-          <DialogTitle>{orderAction?.kind === 'acceptance' ? 'Confirm order acceptance' : orderAction?.kind === 'collection' ? 'Record verified COD collection' : 'Confirm fulfilment update'} #{orderAction?.order.id}</DialogTitle>
-          <DialogContent dividers>
-            <Stack spacing={2}>
-              <Alert severity="info">Stored total: Rs. {Number(orderAction?.order.totalAmount || 0).toFixed(2)}. Delivery: {formatDeliveryCharge(orderAction?.order.deliveryCharge)}. A delivery update does not record payment.</Alert>
-              {orderAction?.kind === 'acceptance' && <Typography variant="body2">Verify the customer details and reserved stock, communicate acceptance to the customer, then record a nonsecret confirmation reference.</Typography>}
-              {orderAction?.kind === 'collection' && <>
-                <Typography variant="body2">Record COD collection only after verifying the actual courier settlement report and the exact stored order total. A delivered status or failed collection is insufficient.</Typography>
-                <TextField label="Verified collected amount (LKR)" required type="number" value={collectionAmount} onChange={event => setCollectionAmount(event.target.value)} disabled={actionSaving} slotProps={{ htmlInput: { min: 0, step: '0.01' } }} />
-              </>}
-              {orderAction?.kind !== 'status' && <TextField label={orderAction?.kind === 'acceptance' ? 'Acceptance confirmation reference' : 'Collection evidence reference'} required inputProps={{ maxLength: 120 }} value={actionReference} onChange={event => setActionReference(event.target.value)} disabled={actionSaving} helperText="Use a nonsecret operational reference. Do not enter card, banking, identity or customer secrets." />}
-              {orderAction?.kind === 'status' && <Typography>Change {orderAction.order.status} to {orderAction.status}. {orderAction.status === 'CANCELLED' ? 'Cancellation is available only before dispatch; reserved inventory is released by the server.' : 'Confirm the actual fulfilment event before recording it.'}</Typography>}
-              <FormControlLabel control={<Checkbox checked={actionAttested} onChange={event => setActionAttested(event.target.checked)} disabled={actionSaving} />} label={orderAction?.kind === 'acceptance' ? 'I verified the details and stock and communicated acceptance to the customer.' : orderAction?.kind === 'collection' ? 'I verified the actual courier settlement report, exact stored total and evidence reference.' : 'I verified this fulfilment event and understand it does not collect payment.'} />
-              {actionError && <Alert severity="error">{actionError}</Alert>}
-            </Stack>
-          </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={() => setOrderAction(null)} disabled={actionSaving}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={actionSaving || !actionAttested || (orderAction?.kind !== 'status' && !actionReference.trim())}>{actionSaving ? 'Saving…' : 'Save verified action'}</Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
-
-      {/* ================= EDIT PRODUCT DETAILS DIALOG ================= */}
+    <AdminWorkspace
+      stats={stats}
+      products={products}
+      orders={orders}
+      loading={loading}
+      refreshing={refreshing}
+      error={error}
+      lastUpdated={lastUpdated}
+      onRefresh={() => fetchAll(false)}
+      onAddProduct={() => setAddingOpen(true)}
+      onEditProduct={handleOpenEdit}
+      onDeleteProduct={handleDelete}
+      onRestock={handleQuickStockAdjust}
+      stockSaving={stockSaving}
+      onOrderAction={openOrderAction}
+      actionSaving={actionSaving}
+    >
       <Dialog
-        open={Boolean(editingProduct)}
-        onClose={() => setEditingProduct(null)}
+        open={addingOpen}
+        onClose={addingProduct ? undefined : () => setAddingOpen(false)}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3.5, p: 1 } }}
+        aria-labelledby="add-product-title"
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Edit color="primary" />
-            <Typography variant="h6" fontWeight={700}>
-              Edit Product Details (#{editingProduct?.id})
-            </Typography>
-          </Stack>
-          <IconButton size="small" onClick={() => setEditingProduct(null)}>
-            <Close />
-          </IconButton>
-        </DialogTitle>
-
-        <Box component="form" onSubmit={handleSaveEdit}>
+        <Box
+          component="form"
+          onSubmit={handleAddProduct}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            maxHeight: "inherit",
+          }}
+        >
+          <DialogTitle
+            id="add-product-title"
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            Add product
+            <IconButton
+              aria-label="Close add product"
+              onClick={() => setAddingOpen(false)}
+              disabled={addingProduct}
+            >
+              <Close fontSize="small" />
+            </IconButton>
+          </DialogTitle>
           <DialogContent dividers>
-            <Grid container spacing={2.5}>
-              <Grid item xs={12}>
-                <ImageSequenceManager
-                  images={editForm.images || []}
-                  onChange={(updatedImages, primaryUrl) => {
-                    setEditForm(f => ({ ...f, images: updatedImages, imageUrl: primaryUrl }));
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth size="small" label="Product Name *" required
-                  value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth size="small" label="Brand Name *" required
-                  value={editForm.brand} onChange={e => setEditForm(f => ({ ...f, brand: e.target.value }))} />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth size="small" label="Regular Price (Rs.) *" type="number" required
-                  value={editForm.price} onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth size="small" label="Discount Price (Rs.)" type="number"
-                  helperText="Leave empty if regular price only"
-                  value={editForm.discountPrice} onChange={e => setEditForm(f => ({ ...f, discountPrice: e.target.value }))} />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth size="small" label="Stock Quantity *" type="number" required
-                  value={editForm.stockQuantity} onChange={e => setEditForm(f => ({ ...f, stockQuantity: e.target.value }))} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth size="small" label="Skin Type"
-                  value={editForm.skinType} onChange={e => setEditForm(f => ({ ...f, skinType: e.target.value }))} />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField fullWidth size="small" label="Description" multiline rows={3}
-                  value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField fullWidth size="small" label="Key Ingredients" multiline rows={2}
-                  value={editForm.ingredients} onChange={e => setEditForm(f => ({ ...f, ingredients: e.target.value }))} />
-              </Grid>
-            </Grid>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Add the product details, pricing, and images for your store.
+            </Typography>
+            <ProductFormFields
+              value={newProduct}
+              onChange={setNewProduct}
+              disabled={addingProduct}
+            />
           </DialogContent>
-
-          <DialogActions sx={{ p: 2.5 }}>
-            <Button onClick={() => setEditingProduct(null)} disabled={savingEdit} color="inherit">
+          <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+            <Button
+              color="inherit"
+              onClick={() => setAddingOpen(false)}
+              disabled={addingProduct}
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="contained"
-              color="primary"
-              disabled={savingEdit}
-              startIcon={savingEdit ? <CircularProgress size={18} color="inherit" /> : <Save />}
-              sx={{ borderRadius: 2 }}
+              disabled={addingProduct}
+              startIcon={
+                addingProduct ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  <Add />
+                )
+              }
             >
-              {savingEdit ? "Saving Changes..." : "Save Changes"}
+              {addingProduct ? "Adding…" : "Add product"}
             </Button>
           </DialogActions>
         </Box>
       </Dialog>
 
-      {/* Snackbar Notifications */}
+      <Dialog
+        open={Boolean(editingProduct)}
+        onClose={savingEdit ? undefined : () => setEditingProduct(null)}
+        maxWidth="md"
+        fullWidth
+        aria-labelledby="edit-product-title"
+      >
+        <Box
+          component="form"
+          onSubmit={handleSaveEdit}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            maxHeight: "inherit",
+          }}
+        >
+          <DialogTitle
+            id="edit-product-title"
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            Edit product #{editingProduct?.id}
+            <IconButton
+              aria-label="Close edit product"
+              onClick={() => setEditingProduct(null)}
+              disabled={savingEdit}
+            >
+              <Close fontSize="small" />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <ProductFormFields
+              value={editForm}
+              onChange={setEditForm}
+              disabled={savingEdit}
+            />
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+            <Button
+              color="inherit"
+              onClick={() => setEditingProduct(null)}
+              disabled={savingEdit}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={savingEdit}
+              startIcon={
+                savingEdit ? (
+                  <CircularProgress size={18} color="inherit" />
+                ) : (
+                  <Save />
+                )
+              }
+            >
+              {savingEdit ? "Saving…" : "Save changes"}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(orderAction)}
+        onClose={actionSaving ? undefined : () => setOrderAction(null)}
+        maxWidth="sm"
+        fullWidth
+        aria-labelledby="order-action-title"
+      >
+        <Box
+          component="form"
+          onSubmit={submitOrderAction}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            maxHeight: "inherit",
+          }}
+        >
+          <DialogTitle id="order-action-title">
+            {orderAction?.kind === "acceptance"
+              ? "Confirm order acceptance"
+              : orderAction?.kind === "collection"
+                ? "Record verified COD collection"
+                : "Confirm fulfilment update"}{" "}
+            #{orderAction?.order.id}
+          </DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={2}>
+              <Alert severity="info">
+                Stored total: Rs.{" "}
+                {Number(orderAction?.order.totalAmount || 0).toFixed(2)}.
+                Delivery:{" "}
+                {formatDeliveryCharge(orderAction?.order.deliveryCharge)}. A
+                delivery update does not record payment.
+              </Alert>
+              {orderAction?.kind === "acceptance" && (
+                <Typography variant="body2">
+                  Verify the customer details and reserved stock, communicate
+                  acceptance to the customer, then record a nonsecret
+                  confirmation reference.
+                </Typography>
+              )}
+              {orderAction?.kind === "collection" && (
+                <>
+                  <Typography variant="body2">
+                    Record COD collection only after verifying the actual
+                    courier settlement report and the exact stored order total.
+                    A delivered status or failed collection is insufficient.
+                  </Typography>
+                  <TextField
+                    label="Verified collected amount (LKR)"
+                    required
+                    type="number"
+                    value={collectionAmount}
+                    onChange={(event) =>
+                      setCollectionAmount(event.target.value)
+                    }
+                    disabled={actionSaving}
+                    slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                  />
+                </>
+              )}
+              {orderAction?.kind !== "status" && (
+                <TextField
+                  label={
+                    orderAction?.kind === "acceptance"
+                      ? "Acceptance confirmation reference"
+                      : "Collection evidence reference"
+                  }
+                  required
+                  slotProps={{ htmlInput: { maxLength: 120 } }}
+                  value={actionReference}
+                  onChange={(event) => setActionReference(event.target.value)}
+                  disabled={actionSaving}
+                  helperText="Use a nonsecret operational reference. Do not enter card, banking, identity or customer secrets."
+                />
+              )}
+              {orderAction?.kind === "status" && (
+                <Typography variant="body2">
+                  Change {orderAction.order.status} to {orderAction.status}.{" "}
+                  {orderAction.status === "CANCELLED"
+                    ? "Cancellation is available only before dispatch; reserved inventory is released by the server."
+                    : "Confirm the actual fulfilment event before recording it."}
+                </Typography>
+              )}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={actionAttested}
+                    onChange={(event) =>
+                      setActionAttested(event.target.checked)
+                    }
+                    disabled={actionSaving}
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    {orderAction?.kind === "acceptance"
+                      ? "I verified the details and stock and communicated acceptance to the customer."
+                      : orderAction?.kind === "collection"
+                        ? "I verified the actual courier settlement report, exact stored total and evidence reference."
+                        : "I verified this fulfilment event and understand it does not collect payment."}
+                  </Typography>
+                }
+              />
+              {actionError && <Alert severity="error">{actionError}</Alert>}
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button
+              color="inherit"
+              onClick={() => setOrderAction(null)}
+              disabled={actionSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={
+                actionSaving ||
+                !actionAttested ||
+                (orderAction?.kind !== "status" && !actionReference.trim())
+              }
+            >
+              {actionSaving ? "Saving…" : "Save verified action"}
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
       <Snackbar
         open={snack.open}
-        autoHideDuration={3500}
-        onClose={() => setSnack(s => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        autoHideDuration={4000}
+        onClose={() => setSnack((previous) => ({ ...previous, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity={snack.severity} sx={{ borderRadius: 2, fontWeight: 600 }}>
+        <Alert
+          severity={snack.severity}
+          onClose={() => setSnack((previous) => ({ ...previous, open: false }))}
+          sx={{ width: "100%" }}
+        >
           {snack.msg}
         </Alert>
       </Snackbar>
-    </Container>
+    </AdminWorkspace>
   );
 }
