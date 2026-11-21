@@ -1,5 +1,6 @@
 import business from './business.json' with { type: 'json' };
 import { getReadinessIssues, getDraftContentIssues } from './readiness.js';
+import { privacyPolicy } from './privacyPolicy.js';
 const review = (value, instruction) => value || `REVIEW REQUIRED — ${instruction}`;
 const section = (id, title, ...body) => ({ id, title, body });
 const contact = 'Use the Contact us page for the business details available for review. The support email and full postal address must be confirmed before publication.';
@@ -21,22 +22,7 @@ export const businessPages = {
       section('rights', 'Customer rights', review(business.refund.consumerRights, 'Obtain Sri Lankan legal review of applicable customer rights. Final terms must preserve rights that cannot lawfully be excluded.')),
     ],
   },
-  'privacy-policy': {
-    title: 'Privacy Policy', category: 'Your information',
-    description: 'How the current sekkinLK application handles account, order, review and browser information.',
-    intro: 'This draft describes the reviewed application and highlights the privacy decisions that still need confirmation.',
-    sections: [
-      section('controller', 'Who is responsible for your information', `The business name supplied by the owner is ${business.businessName}.`, review(business.privacy.controller, 'Confirm the responsible legal entity and privacy contact.'), contact),
-      section('information', 'Information used by the website', 'Registration collects a name, email address and password. Login uses email and password. The backend uses password hashing and issues a login token.', 'The cart checkout collects a delivery address and optional coupon. Direct COD checkout also collects customer name, phone number, email and an optional postal code. Orders record products, quantities, prices, delivery details and order/payment status.', 'Product reviews include a rating, written comment, date and account identifier. The current review API returns the reviewer email; minimising public account information is a required privacy review item.'),
-      section('purpose', 'How information is used', 'The application uses account information to sign customers in and associate their cart, orders and reviews. Delivery information supports fulfilment; order information supports order administration and customer enquiries. Operational support procedures still need approval.'),
-      section('services', 'Storage, hosting & service providers', 'The project uses Supabase PostgreSQL for application records, Render for the backend, Vercel for the website, and Cloudinary for product images. Loading hosted images and pages sends connection requests to those services. Following an external social or WhatsApp link opens that service.', review(business.privacy.processingLocations, 'Confirm service operators, processing locations, support access, transfers and relevant contractual arrangements. Do not assume all data stays in Sri Lanka.')),
-      section('payments', 'Payment information', 'The updated direct checkout uses cash on delivery and does not ask for card numbers, expiry dates or security codes. No live PayHere integration is active. Future card payments must use an authorised payment provider. Never send card credentials to customer support.', 'REVIEW REQUIRED — confirm the payment-data policy and review historical records and logs from the earlier simulated payment flow. No card fields were found in the Order database entity; this is not a claim that sensitive information was never collected in the past.'),
-      section('browser', 'Cookies & browser storage', 'The reviewed application stores the login token in localStorage. Direct checkout may read an optional saved user profile from localStorage to prefill delivery fields. Signing out removes the login token; browser storage can also be cleared using browser settings.', 'No application analytics or marketing-cookie integration was identified in the reviewed source. Hosting/provider logging and any additional tracking must be checked before this policy is approved.'),
-      section('retention', 'Retention', review(business.privacy.retention, 'Define retention periods and deletion/backup treatment for accounts, orders, reviews, support correspondence and logs. No automatic deletion schedule has been verified.')),
-      section('rights', 'Privacy enquiries & requests', review(business.privacy.rightsProcedure, 'Confirm applicable access, correction, deletion and other rights, identity checks, contact channel and response process. No self-service account deletion feature was found.')),
-      section('updates', 'Policy updates', 'This is a draft, not an effective published privacy policy.', review(business.terms.updates, 'Approve an effective date, version process and how material policy changes will be communicated.')),
-    ],
-  },
+  'privacy-policy': privacyPolicy,
   'terms-and-conditions': {
     title: 'Terms & Conditions', category: 'Shopping with us',
     description: 'Proposed website, account, product, ordering and support terms for sekkinLK.',

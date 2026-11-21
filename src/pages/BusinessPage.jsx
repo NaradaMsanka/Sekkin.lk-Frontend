@@ -6,7 +6,7 @@ import business from '../content/business.json';
 import { businessPages, isBusinessReady, publicBusinessLinks } from '../content/businessPages';
 
 const card = { border: '1px solid #E6DBD3', borderRadius: '20px', bgcolor: '#FFFDFC', minWidth: 0 };
-function usePageMetadata(title, description, path, noindex) {
+function usePageMetadata(title, description, path, noindex, canonicalUrl) {
   useEffect(() => {
     const previousTitle = document.title;
     document.title = `${title} | SEKKIN.LK`;
@@ -14,7 +14,7 @@ function usePageMetadata(title, description, path, noindex) {
     for (const [selector, attributes] of [
       ['meta[name="description"]', { name: 'description', content: description }],
       ['meta[name="robots"]', { name: 'robots', content: noindex ? 'noindex, follow' : 'index, follow' }],
-      ['link[rel="canonical"]', { rel: 'canonical', href: `${business.siteUrl}${path}` }],
+      ['link[rel="canonical"]', { rel: 'canonical', href: canonicalUrl || `${business.siteUrl}${path}` }],
     ]) {
       const existing = document.head.querySelector(selector);
       const node = existing || document.createElement(selector.startsWith('link') ? 'link' : 'meta');
@@ -24,7 +24,7 @@ function usePageMetadata(title, description, path, noindex) {
       restorers.push(() => { if (!existing) node.remove(); else for (const [key, value] of Object.entries(oldValues)) { if (value === null) node.removeAttribute(key); else node.setAttribute(key, value); } });
     }
     return () => { document.title = previousTitle; restorers.forEach(restore => restore()); };
-  }, [title, description, path, noindex]);
+  }, [title, description, path, noindex, canonicalUrl]);
 }
 
 function BusinessDetails() {
@@ -47,27 +47,35 @@ function BusinessDetails() {
 
 export default function BusinessPage({ pageKey }) {
   const page = businessPages[pageKey];
+  const pageApproved = page.approved === true || isBusinessReady;
+  const paragraph = (text, index) => {
+    const href = page.contact && (text === page.contact.phone ? page.contact.phoneHref : text === page.contact.email ? `mailto:${page.contact.email}` : undefined);
+    return <Typography key={index} component={href ? 'a' : 'p'} href={href} sx={{ display: 'block', color: text.startsWith('REVIEW REQUIRED') ? '#846038' : 'text.secondary', fontSize: page.approved ? '1rem' : '.86rem', lineHeight: 1.95, overflowWrap: 'anywhere', ...(href && { color: 'primary.main', textUnderlineOffset: 4, width: 'fit-content' }) }}>{text}</Typography>;
+  };
   const contents = page.sections.map(item => <Typography component="a" key={item.id} href={`#${item.id}`} sx={{ color: 'text.secondary', textDecoration: 'none', minHeight: 44, py: 1, fontSize: '.8rem', lineHeight: 1.6, '&:hover': { color: 'primary.main' } }}>{item.title}</Typography>);
-  usePageMetadata(`${isBusinessReady ? '' : 'Draft — '}${page.title}`, page.description, `/${pageKey}`, !isBusinessReady);
+  usePageMetadata(`${pageApproved ? '' : 'Draft — '}${page.title}`, page.description, `/${pageKey}`, !pageApproved, page.canonicalUrl);
   return <Container maxWidth="xl" sx={{ px: { xs: 2, sm: 3, lg: 6 }, pt: { xs: 3, md: 5 }, pb: 7 }}>
     <Button component={Link} to="/" color="inherit" startIcon={<ArrowBack sx={{ fontSize: 18 }} />} sx={{ px: 0, mb: 4, color: 'text.secondary' }}>Back to shop</Button>
     <Box className="store-entrance" sx={{ maxWidth: 800, mb: 4 }}>
       <Typography sx={{ color: '#886044', fontSize: '.65rem', letterSpacing: '.17em', textTransform: 'uppercase', mb: 1 }}>{page.category}</Typography>
       <Typography component="h1" sx={{ fontFamily: 'Georgia, serif', fontWeight: 400, fontSize: { xs: '2.1rem', sm: '2.8rem', md: '3.2rem' }, lineHeight: 1.15, overflowWrap: 'anywhere', mb: 2 }}>{page.title}</Typography>
-      <Typography color="text.secondary" sx={{ fontSize: '.9rem', lineHeight: 1.9 }}>{page.intro}</Typography>
+      <Typography sx={{ color: 'text.secondary', fontSize: page.approved ? '1rem' : '.9rem', lineHeight: 1.9 }}>{page.intro}</Typography>
     </Box>
-    {!isBusinessReady && <Alert severity="warning" sx={{ mb: 4, borderRadius: '12px', alignItems: 'start' }}><strong>Draft for business review — REVIEW REQUIRED.</strong> Business details and policy decisions are incomplete. This is not a final published policy or confirmation of PayHere approval.</Alert>}
+    {!pageApproved && <Alert severity="warning" sx={{ mb: 4, borderRadius: '12px', alignItems: 'start' }}><strong>Draft for business review — REVIEW REQUIRED.</strong> Business details and policy decisions are incomplete. This is not a final published policy or confirmation of PayHere approval.</Alert>}
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: '260px minmax(0, 1fr)' }, gap: { xs: 3, md: 5 }, alignItems: 'start' }}>
       <Box component="nav" aria-label="On this page" sx={{ ...card, p: 2.5, position: { md: 'sticky' }, top: 108 }}>
         <Box sx={{ display: { xs: 'none', md: 'block' } }}><Typography sx={{ fontSize: '.65rem', letterSpacing: '.13em', textTransform: 'uppercase', color: '#886044', mb: 1.5 }}>On this page</Typography><Stack spacing={.5}>{contents}</Stack></Box>
         <Box component="details" sx={{ display: { xs: 'block', md: 'none' } }}><Box component="summary" sx={{ minHeight: 44, py: 1, fontSize: '.82rem', color: 'primary.main', cursor: 'pointer' }}>On this page</Box><Stack spacing={.5}>{contents}</Stack></Box>
-        <Divider sx={{ my: 2 }} /><Typography variant="caption" color="text.secondary">Draft reviewed {business.reviewDate}. Effective date awaits approval.</Typography>
+        {!pageApproved && <><Divider sx={{ my: 2 }} /><Typography variant="caption" color="text.secondary">Draft reviewed {business.reviewDate}. Effective date awaits approval.</Typography></>}
+        {page.revisionDate && <><Divider sx={{ my: 2 }} /><Typography variant="caption" sx={{ color: 'text.secondary' }}>Last updated {page.revisionDate}</Typography></>}
       </Box>
       <Box sx={{ minWidth: 0, maxWidth: 900 }}>
         {pageKey === 'contact' && <BusinessDetails />}
         <Stack spacing={2.5}>{page.sections.map(item => <Box component="section" key={item.id} id={item.id} aria-labelledby={`${pageKey}-${item.id}`} sx={{ ...card, p: { xs: 2.5, sm: 3.5 }, scrollMarginTop: 110 }}>
           <Typography id={`${pageKey}-${item.id}`} component="h2" sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: '1.4rem', sm: '1.65rem' }, lineHeight: 1.35, mb: 2 }}>{item.title}</Typography>
-          <Stack spacing={1.5}>{item.body.map((text, index) => <Typography key={index} sx={{ color: text.startsWith('REVIEW REQUIRED') ? '#846038' : 'text.secondary', fontSize: '.86rem', lineHeight: 1.95, overflowWrap: 'anywhere' }}>{text}</Typography>)}</Stack>
+          {item.subtitle && <Typography component="h3" sx={{ fontSize: '1rem', fontWeight: 600, mb: 1.5 }}>{item.subtitle}</Typography>}
+          <Stack spacing={1.5}>{(item.bulleted ? item.body.slice(0, 1) : item.body).map(paragraph)}</Stack>
+          {item.bulleted && <Box component="ul" sx={{ pl: 2.5, mb: 0, mt: 1.5, color: 'text.secondary', '& li + li': { mt: 1.5 }, '& li': { fontSize: '1rem', lineHeight: 1.95, overflowWrap: 'anywhere' } }}>{item.body.slice(1).map((text, index) => <Box component="li" key={index}>{text}</Box>)}</Box>}
         </Box>)}</Stack>
         <Box sx={{ ...card, p: { xs: 2.5, sm: 3.5 }, mt: 3, bgcolor: '#F8F1EC' }}>
           <Typography component="h2" sx={{ fontFamily: 'Georgia, serif', fontSize: '1.5rem', mb: 2 }}>More information</Typography>
