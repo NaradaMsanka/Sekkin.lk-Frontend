@@ -4,6 +4,8 @@ import { Navbar, Footer, SupportButton } from './components/SiteChrome';
 import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
@@ -24,6 +26,8 @@ export default function App() {
 function AppLayout() {
   const { pathname } = useLocation();
   const isAdminPage = pathname === '/admin' || pathname === '/admin/';
+  const isRecoveryPage = /^\/(?:forgot-password|reset-password)\/?$/.test(pathname);
+  const showStorefront = !isAdminPage && !isRecoveryPage;
 
   return (
     <>
@@ -36,12 +40,14 @@ function AppLayout() {
         }}>
           Skip to content
         </Box>
-        {!isAdminPage && <Navbar />}
+        {showStorefront && <Navbar />}
         <Box component="main" id="main-content" tabIndex={-1} sx={{ outline: 'none' }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
@@ -51,8 +57,8 @@ function AppLayout() {
             <Route path="*" element={<BusinessNotFound />} />
           </Routes>
         </Box>
-        {!isAdminPage && <Footer />}
-        {!isAdminPage && <SupportButton />}
+        {showStorefront && <Footer />}
+        {showStorefront && <SupportButton />}
       </Box>
     </>
   );
