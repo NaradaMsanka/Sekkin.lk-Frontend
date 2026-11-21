@@ -1,44 +1,176 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Box, Typography, Button, Slider, Stack, IconButton,
-  Tooltip, CircularProgress, Chip, Divider, Paper
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Slider,
+  Stack,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import {
-  RotateRight, RotateLeft, Flip, ZoomIn,
-  RestartAlt, CheckCircle, Close, PhotoCamera,
-  Brightness6, Contrast
+  Check,
+  Close,
+  CropSquareOutlined,
+  Flip,
+  ImageOutlined,
+  OpenWithOutlined,
+  RestartAlt,
+  RotateLeft,
+  RotateRight,
+  UploadOutlined,
 } from "@mui/icons-material";
 import api, { resolveImageUrl } from "../services/api";
 
-export default function ImageEditorModal(props) {
-  return props.open && props.imageSrc ? <ImageEditorContent key={props.imageSrc} {...props} /> : null;
+const PREVIEW_SIZE = 340;
+const PRESETS = [
+  {
+    id: "normal",
+    label: "Original",
+    description: "Natural colours",
+    values: [100, 100, 100],
+  },
+  {
+    id: "studio",
+    label: "Bright studio",
+    description: "Light and balanced",
+    values: [108, 112, 110],
+  },
+  {
+    id: "warm",
+    label: "Warm",
+    description: "A softer finish",
+    values: [104, 105, 118],
+  },
+  {
+    id: "crisp",
+    label: "High clarity",
+    description: "More defined detail",
+    values: [102, 122, 100],
+  },
+];
+
+// Share the drawing operation so the 800px export matches the preview.
+function paintImage(
+  canvas,
+  image,
+  { scale, rotation, flipH, pan, brightness, contrast, saturation },
+) {
+  const context = canvas?.getContext("2d");
+  if (!context || !image) return false;
+  const size = canvas.width;
+  context.clearRect(0, 0, size, size);
+  context.fillStyle = "#FFFFFF";
+  context.fillRect(0, 0, size, size);
+  context.save();
+  context.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+  const ratio = size / PREVIEW_SIZE;
+  context.translate(size / 2 + pan.x * ratio, size / 2 + pan.y * ratio);
+  context.rotate((rotation * Math.PI) / 180);
+  context.scale(flipH ? -1 : 1, 1);
+  context.scale(scale, scale);
+  const fit = size / Math.max(image.width, image.height);
+  const width = image.width * fit;
+  const height = image.height * fit;
+  context.drawImage(image, -width / 2, -height / 2, width, height);
+  context.restore();
+  return true;
 }
 
-function ImageEditorContent({
-  open,
-  imageSrc,
-  onApply,
-  onClose
+function AdjustmentSlider({
+  id,
+  label,
+  value,
+  readout,
+  min,
+  max,
+  step = 1,
+  onChange,
+  disabled,
 }) {
+  return (
+    <Box>
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 1,
+          mb: 0.5,
+        }}
+      >
+        <Typography id={id} variant="body2" sx={{ fontWeight: 500 }}>
+          {label}
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{
+            minWidth: 58,
+            textAlign: "right",
+            fontVariantNumeric: "tabular-nums",
+            color: "text.secondary",
+          }}
+        >
+          {readout}
+        </Typography>
+      </Stack>
+      <Box sx={{ px: 1 }}>
+        <Slider
+          aria-labelledby={id}
+          value={value}
+          min={min}
+          max={max}
+          step={step}
+          getAriaValueText={(number) =>
+            label === "Zoom"
+              ? `${number.toFixed(2)} times`
+              : `${number} percent`
+          }
+          onChange={(_, number) => onChange(number)}
+          disabled={disabled}
+          size="small"
+          sx={{
+            py: 1.5,
+            "& .MuiSlider-rail": { opacity: 1, bgcolor: "#E8EBEF" },
+            "& .MuiSlider-thumb": { width: 14, height: 14 },
+          }}
+        />
+      </Box>
+    </Box>
+  );
+}
+
+export default function ImageEditorModal(props) {
+  return props.open && props.imageSrc ? (
+    <ImageEditorContent key={props.imageSrc} {...props} />
+  ) : null;
+}
+
+function ImageEditorContent({ open, imageSrc, onApply, onClose }) {
   const canvasRef = useRef(null);
   const imageObjRef = useRef(null);
-
-  // Transformations
+  const dragRef = useRef(null);
+  const uploadPending = useRef(false);
   const [scale, setScale] = useState(1);
-  const [rotation, setRotation] = useState(0); // in degrees: 0, 90, 180, 270
+  const [rotation, setRotation] = useState(0);
   const [flipH, setFlipH] = useState(false);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-
-  // Filters & Adjustments
-  const [brightness, setBrightness] = useState(100); // 100% is normal
-  const [contrast, setContrast] = useState(100);   // 100% is normal
-  const [saturation, setSaturation] = useState(100); // 100% is normal
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [saturation, setSaturation] = useState(100);
   const [activePreset, setActivePreset] = useState("normal");
   const [uploading, setUploading] = useState(false);
   const [imageReady, setImageReady] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const disabled = uploading || !imageReady;
 
   const handleReset = useCallback(() => {
     setScale(1);
@@ -51,201 +183,166 @@ function ImageEditorContent({
     setActivePreset("normal");
   }, []);
 
-  // Each opened source mounts a fresh editor; load callbacks update readiness.
   useEffect(() => {
-    if (!imageSrc || !open) return;
     imageObjRef.current = null;
-    const img = new Image();
-    // Only set crossOrigin on remote http/https URLs; data URLs or blobs can fail or taint canvas
-    if (typeof imageSrc === "string" && (imageSrc.startsWith("http://") || imageSrc.startsWith("https://"))) {
-      img.crossOrigin = "anonymous";
-    }
-    img.onload = () => {
-      imageObjRef.current = img;
+    const image = new Image();
+    if (/^https?:\/\//.test(imageSrc)) image.crossOrigin = "anonymous";
+    image.onload = () => {
+      imageObjRef.current = image;
       handleReset();
       setImageReady(true);
     };
-    img.onerror = () => alert("This image could not be loaded. Please choose a local image to replace it.");
-    img.src = resolveImageUrl(imageSrc);
-    return () => { img.onload = null; img.onerror = null; };
-  }, [imageSrc, open, handleReset]);
-
-  // Draw on Canvas
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    const img = imageObjRef.current;
-    if (!canvas || !img) return;
-
-    const ctx = canvas.getContext("2d");
-    const width = canvas.width;
-    const height = canvas.height;
-
-    // Clear background with crisp clean white (standard for cosmetics)
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, width, height);
-
-    ctx.save();
-
-    // Filters
-    ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-
-    // Move to center of canvas
-    ctx.translate(width / 2 + pan.x, height / 2 + pan.y);
-
-    // Rotate
-    ctx.rotate((rotation * Math.PI) / 180);
-
-    // Flip Horizontal
-    ctx.scale(flipH ? -1 : 1, 1);
-
-    // Scale / Zoom
-    ctx.scale(scale, scale);
-
-    // Calculate image draw dimensions to maintain aspect ratio
-    const imgRatio = img.width / img.height;
-    let drawW, drawH;
-    if (imgRatio > 1) {
-      drawW = width;
-      drawH = width / imgRatio;
-    } else {
-      drawH = height;
-      drawW = height * imgRatio;
-    }
-
-    ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-    ctx.restore();
-  }, [scale, rotation, flipH, pan, brightness, contrast, saturation]);
+    image.onerror = () =>
+      setLoadError(
+        "This image could not be loaded. Close the editor and choose a local image to replace it.",
+      );
+    image.src = resolveImageUrl(imageSrc);
+    return () => {
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, [imageSrc, handleReset]);
 
   useEffect(() => {
-    draw();
-  }, [draw, imageReady]);
+    paintImage(canvasRef.current, imageObjRef.current, {
+      scale,
+      rotation,
+      flipH,
+      pan,
+      brightness,
+      contrast,
+      saturation,
+    });
+  }, [
+    scale,
+    rotation,
+    flipH,
+    pan,
+    brightness,
+    contrast,
+    saturation,
+    imageReady,
+  ]);
 
-  // Drag / Pan handlers
-  const handleMouseDown = (e) => {
+  const stopDragging = () => {
+    dragRef.current = null;
+    setIsDragging(false);
+  };
+
+  const handlePointerDown = (event) => {
+    if (disabled || event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.focus({ preventScroll: true });
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      pan,
+      pointerId: event.pointerId,
+    };
     setIsDragging(true);
-    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
   };
 
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
+  const handlePointerMove = (event) => {
+    const start = dragRef.current;
+    if (!start || event.pointerId !== start.pointerId || disabled) return;
+    const ratio =
+      PREVIEW_SIZE / canvasRef.current.getBoundingClientRect().width;
     setPan({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
+      x: start.pan.x + (event.clientX - start.x) * ratio,
+      y: start.pan.y + (event.clientY - start.y) * ratio,
     });
   };
 
-  const handleMouseUp = () => setIsDragging(false);
-
-  // Touch handlers for mobile
-  const handleTouchStart = (e) => {
-    if (e.touches.length === 1) {
-      setIsDragging(true);
-      setDragStart({
-        x: e.touches[0].clientX - pan.x,
-        y: e.touches[0].clientY - pan.y
-      });
-    }
+  const handlePreviewKeyDown = (event) => {
+    if (
+      disabled ||
+      !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)
+    )
+      return;
+    event.preventDefault();
+    const step =
+      ((event.shiftKey ? 20 : 5) * PREVIEW_SIZE) /
+      canvasRef.current.getBoundingClientRect().width;
+    setPan((previous) => ({
+      x:
+        previous.x +
+        (event.key === "ArrowLeft"
+          ? -step
+          : event.key === "ArrowRight"
+            ? step
+            : 0),
+      y:
+        previous.y +
+        (event.key === "ArrowUp"
+          ? -step
+          : event.key === "ArrowDown"
+            ? step
+            : 0),
+    }));
   };
 
-  const handleTouchMove = (e) => {
-    if (!isDragging || e.touches.length !== 1) return;
-    setPan({
-      x: e.touches[0].clientX - dragStart.x,
-      y: e.touches[0].clientY - dragStart.y
-    });
-  };
-
-  const handleTouchEnd = () => setIsDragging(false);
-
-  // Presets
   const applyPreset = (preset) => {
-    setActivePreset(preset);
-    if (preset === "normal") {
-      setBrightness(100);
-      setContrast(100);
-      setSaturation(100);
-    } else if (preset === "studio") {
-      // Crisp white background & vivid colors
-      setBrightness(108);
-      setContrast(112);
-      setSaturation(110);
-    } else if (preset === "warm") {
-      // Warm elegance for skincare
-      setBrightness(104);
-      setContrast(105);
-      setSaturation(118);
-    } else if (preset === "crisp") {
-      // High detail for labels & ingredients
-      setBrightness(102);
-      setContrast(122);
-      setSaturation(100);
-    }
+    setActivePreset(preset.id);
+    setBrightness(preset.values[0]);
+    setContrast(preset.values[1]);
+    setSaturation(preset.values[2]);
   };
 
-  // Confirm and Export Image
   const handleApply = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !imageReady || !imageObjRef.current) return;
-
+    if (disabled || uploadPending.current || !imageObjRef.current) return;
+    uploadPending.current = true;
     setUploading(true);
-
+    setUploadError("");
     try {
-      // 1. High resolution render canvas (800x800 square for ecommerce)
       const exportCanvas = document.createElement("canvas");
       exportCanvas.width = 800;
       exportCanvas.height = 800;
-      const expCtx = exportCanvas.getContext("2d");
-      const img = imageObjRef.current;
-
-      expCtx.fillStyle = "#FFFFFF";
-      expCtx.fillRect(0, 0, 800, 800);
-      expCtx.save();
-      expCtx.filter = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-
-      // Scale pan relative to 800x800
-      const canvasDisplayW = canvas.width;
-      const ratio = 800 / canvasDisplayW;
-
-      expCtx.translate(400 + pan.x * ratio, 400 + pan.y * ratio);
-      expCtx.rotate((rotation * Math.PI) / 180);
-      expCtx.scale(flipH ? -1 : 1, 1);
-      expCtx.scale(scale, scale);
-
-      const imgRatio = img.width / img.height;
-      let drawW, drawH;
-      if (imgRatio > 1) {
-        drawW = 800;
-        drawH = 800 / imgRatio;
-      } else {
-        drawH = 800;
-        drawW = 800 * imgRatio;
+      if (
+        !paintImage(exportCanvas, imageObjRef.current, {
+          scale,
+          rotation,
+          flipH,
+          pan,
+          brightness,
+          contrast,
+          saturation,
+        })
+      ) {
+        throw new Error("Could not prepare the image. Please try again.");
       }
-
-      expCtx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
-      expCtx.restore();
-
-      const blob = await new Promise((resolve) => exportCanvas.toBlob(resolve, "image/webp", 0.90));
-      if (!blob) throw new Error("Could not prepare the image. Please try again.");
+      const blob = await new Promise((resolve) =>
+        exportCanvas.toBlob(resolve, "image/webp", 0.9),
+      );
+      if (!blob)
+        throw new Error("Could not prepare the image. Please try again.");
       const formData = new FormData();
       const extension = blob.type === "image/webp" ? "webp" : "png";
       formData.append("file", blob, `prod-${Date.now()}.${extension}`);
-      const res = await api.post('/api/upload', formData, {
-        // Clear the shared JSON header so the browser supplies the multipart boundary.
-        headers: { 'Content-Type': undefined },
-        timeout: 120000
+      const response = await api.post("/api/upload", formData, {
+        headers: { "Content-Type": undefined },
+        timeout: 120000,
       });
-      if (!res.data?.url?.startsWith('https://res.cloudinary.com/')) {
-        throw new Error("The server did not return a Cloudinary image URL. Please update the backend.");
+      if (!response.data?.url?.startsWith("https://res.cloudinary.com/")) {
+        throw new Error(
+          "The server did not return a valid image URL. Please try again or contact support.",
+        );
       }
-      onApply(res.data.url);
+      onApply(response.data.url);
       onClose();
-    } catch (err) {
-      const unauthorized = err.response?.status === 401 || err.response?.status === 403;
-      alert(unauthorized
-        ? "Image upload requires an active Admin session. Please sign in again as Admin."
-        : err.response?.data?.error || err.message || "Image upload failed. Please try again.");
+    } catch (error) {
+      const status = error.response?.status;
+      const serverMessage =
+        error.response?.data?.message || error.response?.data?.error;
+      setUploadError(
+        status === 401 || status === 403
+          ? "Image upload requires an active Admin session. Please sign in again as Admin."
+          : typeof serverMessage === "string"
+            ? serverMessage
+            : "We couldn’t upload this image. Your edits are still here. Please try again.",
+      );
     } finally {
+      uploadPending.current = false;
       setUploading(false);
     }
   };
@@ -256,245 +353,524 @@ function ImageEditorContent({
       onClose={uploading ? undefined : onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3.5,
-          bgcolor: "#FAF8F5",
-          overflow: "hidden"
-        }
+      aria-labelledby="image-editor-title"
+      aria-describedby="image-editor-description"
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: "12px",
+            bgcolor: "background.paper",
+            backgroundImage: "none",
+            maxHeight: "calc(100dvh - 32px)",
+            m: 2,
+            width: "calc(100% - 32px)",
+            overflow: "hidden",
+          },
+        },
       }}
     >
-      <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", bgcolor: "#FFFFFF", borderBottom: "1px solid rgba(0,0,0,0.06)", py: 1.8 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <PhotoCamera sx={{ color: "primary.main" }} />
-          <Typography variant="h6" fontWeight={800}>
-            Product Image Studio & Editor
-          </Typography>
-        </Box>
-        <IconButton onClick={onClose} size="small" disabled={uploading} aria-label="Close">
-          <Close />
-        </IconButton>
+      <DialogTitle
+        id="image-editor-header"
+        component="div"
+        sx={{
+          px: { xs: 2, sm: 3 },
+          py: 2.5,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Stack
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 1.5,
+          }}
+        >
+          <Stack direction="row" sx={{ alignItems: "flex-start", gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                display: { xs: "none", sm: "grid" },
+                placeItems: "center",
+                bgcolor: "#F8EEF1",
+                color: "primary.main",
+                borderRadius: 1,
+                flexShrink: 0,
+              }}
+            >
+              <ImageOutlined sx={{ fontSize: 22 }} />
+            </Box>
+            <Box>
+              <Typography
+                component="h2"
+                id="image-editor-title"
+                sx={{ fontSize: "1.125rem", fontWeight: 600, lineHeight: 1.5 }}
+              >
+                Edit product image
+              </Typography>
+              <Typography
+                id="image-editor-description"
+                variant="body2"
+                sx={{ color: "text.secondary", mt: 0.25 }}
+              >
+                Adjust the crop and appearance before uploading.
+              </Typography>
+            </Box>
+          </Stack>
+          <IconButton
+            aria-label="Close image editor"
+            onClick={onClose}
+            disabled={uploading}
+            size="small"
+            sx={{ color: "text.secondary", mt: -0.5, mr: -0.75 }}
+          >
+            <Close fontSize="small" />
+          </IconButton>
+        </Stack>
       </DialogTitle>
 
-      <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
-        <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems="center">
-          {/* Left Canvas Preview Area */}
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <Paper
-              elevation={3}
+      <DialogContent
+        sx={{ p: { xs: 2, sm: 3 }, "&.MuiDialogContent-root": { pt: 3 } }}
+        aria-busy={uploading}
+      >
+        {(loadError || uploadError) && (
+          <Alert severity="error" sx={{ mb: 2.5 }}>
+            {loadError || uploadError}
+          </Alert>
+        )}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "minmax(0, 1fr)",
+              sm: "minmax(0, 1fr) minmax(0, 1fr)",
+            },
+            gap: { xs: 3, sm: 3.5 },
+            alignItems: "start",
+          }}
+        >
+          <Box
+            sx={{
+              p: { xs: 2, sm: 2.5 },
+              borderRadius: 1.5,
+              bgcolor: "#F6F7F9",
+              border: "1px solid",
+              borderColor: "divider",
+              minWidth: 0,
+            }}
+          >
+            <Stack
+              direction="row"
               sx={{
-                width: { xs: 280, sm: 340 },
-                height: { xs: 280, sm: 340 },
-                borderRadius: 3,
-                overflow: "hidden",
-                border: "2px solid #C9956A",
-                cursor: isDragging ? "grabbing" : "grab",
-                position: "relative",
-                bgcolor: "#FFFFFF",
-                boxShadow: "0 8px 24px rgba(201,149,106,0.2)"
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+                mb: 2,
               }}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                Image preview
+              </Typography>
+              <Stack
+                direction="row"
+                sx={{ alignItems: "center", gap: 0.5, color: "text.secondary" }}
+              >
+                <CropSquareOutlined sx={{ fontSize: 17 }} />
+                <Typography variant="caption">1:1</Typography>
+              </Stack>
+            </Stack>
+            <Box
+              role="group"
+              tabIndex={disabled ? -1 : 0}
+              aria-label="Image position"
+              aria-describedby="image-position-help"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={stopDragging}
+              onPointerCancel={stopDragging}
+              onLostPointerCapture={stopDragging}
+              onKeyDown={handlePreviewKeyDown}
+              sx={{
+                width: "100%",
+                aspectRatio: "1",
+                bgcolor: "#FFF",
+                border: "1px solid #DADEE5",
+                borderRadius: 1,
+                overflow: "hidden",
+                position: "relative",
+                touchAction: "none",
+                cursor: disabled ? "default" : isDragging ? "grabbing" : "grab",
+              }}
             >
               <canvas
                 ref={canvasRef}
-                width={340}
-                height={340}
-                style={{ width: "100%", height: "100%", display: "block" }}
-              />
-
-              {/* Helper text overlay */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  bottom: 8,
-                  left: 8,
-                  right: 8,
-                  bgcolor: "rgba(0,0,0,0.65)",
-                  color: "white",
-                  py: 0.4,
-                  px: 1,
-                  borderRadius: 1.5,
-                  fontSize: "0.72rem",
-                  textAlign: "center",
-                  pointerEvents: "none"
-                }}
+                width={PREVIEW_SIZE}
+                height={PREVIEW_SIZE}
+                style={{ display: "block", width: "100%", height: "100%" }}
               >
-                Drag to reposition • Use zoom to fit product
-              </Box>
-            </Paper>
-
-            <Typography variant="caption" sx={{ mt: 1, color: "text.secondary", fontWeight: 600 }}>
-              1:1 Square Cosmetic Aspect Ratio
-            </Typography>
+                Preview of the edited product image.
+              </canvas>
+              {!imageReady && (
+                <Stack
+                  role="status"
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 1.5,
+                    bgcolor: "#FFF",
+                    color: "text.secondary",
+                  }}
+                >
+                  {loadError ? (
+                    <ImageOutlined />
+                  ) : (
+                    <CircularProgress size={24} />
+                  )}
+                  <Typography variant="body2">
+                    {loadError ? "Image unavailable" : "Loading image…"}
+                  </Typography>
+                </Stack>
+              )}
+            </Box>
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "flex-start",
+                gap: 1,
+                mt: 2,
+                color: "text.secondary",
+              }}
+            >
+              <OpenWithOutlined
+                sx={{ fontSize: 17, mt: 0.25, flexShrink: 0 }}
+              />
+              <Typography id="image-position-help" variant="caption">
+                Drag or use the arrow keys to position the image. Use zoom to
+                adjust the crop.
+              </Typography>
+            </Stack>
+            <Stack
+              direction="row"
+              sx={{
+                justifyContent: "space-between",
+                gap: 1,
+                mt: 2,
+                pt: 1.5,
+                borderTop: "1px solid",
+                borderColor: "divider",
+                color: "text.secondary",
+              }}
+            >
+              <Typography variant="caption">Square image</Typography>
+              <Typography variant="caption">800 × 800 px</Typography>
+            </Stack>
           </Box>
 
-          {/* Right Editing Controls */}
-          <Box sx={{ flex: 1, width: "100%" }}>
-            {/* Quick Presets */}
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, color: "#8C7568", textTransform: "uppercase", fontSize: "0.75rem", letterSpacing: "1px" }}>
-              Beauty Presets
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ mb: 2.5, flexWrap: "wrap", gap: 0.8 }}>
-              {[
-                { id: "normal", label: "Original" },
-                { id: "studio", label: "Studio White ✨" },
-                { id: "warm", label: "Warm Glow 🌸" },
-                { id: "crisp", label: "High Clarity 🔍" },
-              ].map((p) => (
-                <Chip
-                  key={p.id}
-                  label={p.label}
-                  clickable
-                  color={activePreset === p.id ? "primary" : "default"}
-                  variant={activePreset === p.id ? "filled" : "outlined"}
-                  onClick={() => applyPreset(p.id)}
+          <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+            <Box role="group" aria-labelledby="image-appearance-label">
+              <Stack
+                direction="row"
+                sx={{
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 1.5,
+                }}
+              >
+                <Typography
+                  id="image-appearance-label"
+                  component="h3"
+                  variant="body2"
                   sx={{ fontWeight: 600 }}
-                />
-              ))}
-            </Stack>
-
-            <Divider sx={{ my: 1.5 }} />
-
-            {/* Rotation & Flip Controls */}
-            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, color: "#8C7568", textTransform: "uppercase", fontSize: "0.75rem", letterSpacing: "1px" }}>
-              Orientation & Flip
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ mb: 2.5 }}>
-              <Tooltip title="Rotate 90° Counter-Clockwise">
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<RotateLeft />}
-                  onClick={() => setRotation((r) => (r - 90 + 360) % 360)}
                 >
-                  -90°
-                </Button>
-              </Tooltip>
-              <Tooltip title="Rotate 90° Clockwise">
+                  Appearance
+                </Typography>
+                {activePreset === "custom" && (
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
+                    Custom
+                  </Typography>
+                )}
+              </Stack>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: 1,
+                }}
+              >
+                {PRESETS.map((preset) => (
+                  <Button
+                    key={preset.id}
+                    variant="outlined"
+                    color="inherit"
+                    aria-pressed={activePreset === preset.id}
+                    onClick={() => applyPreset(preset)}
+                    disabled={disabled}
+                    sx={{
+                      textAlign: "left",
+                      justifyContent: "space-between",
+                      px: 1.5,
+                      py: 1,
+                      minHeight: 64,
+                      gap: 0.5,
+                      borderColor:
+                        activePreset === preset.id ? "primary.main" : "#DADEE5",
+                      bgcolor:
+                        activePreset === preset.id
+                          ? "#F8EEF1"
+                          : "background.paper",
+                      color:
+                        activePreset === preset.id
+                          ? "primary.main"
+                          : "text.primary",
+                      "&:hover": {
+                        bgcolor: "#F8EEF1",
+                        borderColor: "primary.main",
+                      },
+                    }}
+                  >
+                    <Box component="span">
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{ display: "block", fontWeight: 500 }}
+                      >
+                        {preset.label}
+                      </Typography>
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          color: "text.secondary",
+                          mt: 0.25,
+                        }}
+                      >
+                        {preset.description}
+                      </Typography>
+                    </Box>
+                    <Check
+                      sx={{
+                        fontSize: 17,
+                        flexShrink: 0,
+                        visibility:
+                          activePreset === preset.id ? "visible" : "hidden",
+                      }}
+                    />
+                  </Button>
+                ))}
+              </Box>
+            </Box>
+
+            <Box
+              role="group"
+              aria-labelledby="image-orientation-label"
+              sx={{ pt: 2.5, borderTop: "1px solid", borderColor: "divider" }}
+            >
+              <Typography
+                id="image-orientation-label"
+                component="h3"
+                variant="body2"
+                sx={{ fontWeight: 600, mb: 1.5 }}
+              >
+                Rotate & flip
+              </Typography>
+              <Stack direction="row" sx={{ gap: 1, flexWrap: "wrap" }}>
+                <Tooltip title="Rotate left 90 degrees">
+                  <Button
+                    variant="outlined"
+                    color="inherit"
+                    size="small"
+                    aria-label="Rotate left 90 degrees"
+                    startIcon={<RotateLeft />}
+                    onClick={() =>
+                      setRotation((previous) => (previous - 90 + 360) % 360)
+                    }
+                    disabled={disabled}
+                    sx={{ borderColor: "#DADEE5", px: 1.25 }}
+                  >
+                    −90°
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Rotate right 90 degrees">
+                  <Button
+                    variant="outlined"
+                    color="inherit"
+                    size="small"
+                    aria-label="Rotate right 90 degrees"
+                    startIcon={<RotateRight />}
+                    onClick={() =>
+                      setRotation((previous) => (previous + 90) % 360)
+                    }
+                    disabled={disabled}
+                    sx={{ borderColor: "#DADEE5", px: 1.25 }}
+                  >
+                    +90°
+                  </Button>
+                </Tooltip>
                 <Button
                   variant="outlined"
-                  size="small"
-                  startIcon={<RotateRight />}
-                  onClick={() => setRotation((r) => (r + 90) % 360)}
-                >
-                  +90°
-                </Button>
-              </Tooltip>
-              <Tooltip title="Flip Horizontal">
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Flip />}
-                  onClick={() => setFlipH((f) => !f)}
                   color={flipH ? "primary" : "inherit"}
+                  size="small"
+                  aria-label="Flip horizontally"
+                  aria-pressed={flipH}
+                  startIcon={<Flip />}
+                  onClick={() => setFlipH((previous) => !previous)}
+                  disabled={disabled}
+                  sx={{
+                    borderColor: flipH ? "primary.main" : "#DADEE5",
+                    bgcolor: flipH ? "#F8EEF1" : "transparent",
+                    px: 1.25,
+                  }}
                 >
                   Flip
                 </Button>
-              </Tooltip>
-              <Tooltip title="Reset all adjustments">
-                <IconButton onClick={handleReset} size="small" color="inherit">
-                  <RestartAlt />
-                </IconButton>
-              </Tooltip>
-            </Stack>
-
-            <Divider sx={{ my: 1.5 }} />
-
-            {/* Zoom / Scale Slider */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
-                <Typography variant="body2" fontWeight={600} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <ZoomIn fontSize="small" sx={{ color: "primary.main" }} /> Zoom / Scale
-                </Typography>
-                <Typography variant="caption" fontWeight={700} color="primary.main">
-                  {scale.toFixed(1)}x
-                </Typography>
-              </Box>
-              <Slider
-                value={scale}
-                min={0.8}
-                max={3}
-                step={0.05}
-                onChange={(e, val) => setScale(val)}
-                size="small"
-              />
+              </Stack>
             </Box>
 
-            {/* Brightness Slider */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
-                <Typography variant="body2" fontWeight={600} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Brightness6 fontSize="small" sx={{ color: "#C9956A" }} /> Brightness
-                </Typography>
-                <Typography variant="caption" fontWeight={700}>
-                  {brightness}%
-                </Typography>
-              </Box>
-              <Slider
-                value={brightness}
-                min={60}
-                max={150}
-                step={1}
-                onChange={(e, val) => {
-                  setBrightness(val);
-                  setActivePreset("custom");
+            <Box
+              role="group"
+              aria-labelledby="image-adjustments-label"
+              sx={{ pt: 2, borderTop: "1px solid", borderColor: "divider" }}
+            >
+              <Stack
+                direction="row"
+                sx={{
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                  mb: 1.5,
                 }}
-                size="small"
-              />
-            </Box>
-
-            {/* Contrast Slider */}
-            <Box sx={{ mb: 1 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.5 }}>
-                <Typography variant="body2" fontWeight={600} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  <Contrast fontSize="small" sx={{ color: "#8C7568" }} /> Contrast
+              >
+                <Typography
+                  id="image-adjustments-label"
+                  component="h3"
+                  variant="body2"
+                  sx={{ fontWeight: 600 }}
+                >
+                  Adjustments
                 </Typography>
-                <Typography variant="caption" fontWeight={700}>
-                  {contrast}%
-                </Typography>
-              </Box>
-              <Slider
-                value={contrast}
-                min={60}
-                max={150}
-                step={1}
-                onChange={(e, val) => {
-                  setContrast(val);
-                  setActivePreset("custom");
-                }}
-                size="small"
-              />
+                <Button
+                  size="small"
+                  startIcon={<RestartAlt sx={{ fontSize: 17 }} />}
+                  onClick={handleReset}
+                  disabled={disabled}
+                  sx={{ minHeight: 32, px: 0.75 }}
+                >
+                  Reset edits
+                </Button>
+              </Stack>
+              <Stack spacing={1.5}>
+                <AdjustmentSlider
+                  id="image-zoom"
+                  label="Zoom"
+                  value={scale}
+                  readout={`${scale.toFixed(2)}×`}
+                  min={0.8}
+                  max={3}
+                  step={0.05}
+                  onChange={setScale}
+                  disabled={disabled}
+                />
+                <AdjustmentSlider
+                  id="image-brightness"
+                  label="Brightness"
+                  value={brightness}
+                  readout={`${brightness}%`}
+                  min={60}
+                  max={150}
+                  onChange={(value) => {
+                    setBrightness(value);
+                    setActivePreset("custom");
+                  }}
+                  disabled={disabled}
+                />
+                <AdjustmentSlider
+                  id="image-contrast"
+                  label="Contrast"
+                  value={contrast}
+                  readout={`${contrast}%`}
+                  min={60}
+                  max={150}
+                  onChange={(value) => {
+                    setContrast(value);
+                    setActivePreset("custom");
+                  }}
+                  disabled={disabled}
+                />
+              </Stack>
             </Box>
-          </Box>
-        </Stack>
+          </Stack>
+        </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, bgcolor: "#FFFFFF", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-        <Button onClick={onClose} disabled={uploading} color="inherit">
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleApply}
-          disabled={uploading || !imageReady}
-          startIcon={uploading ? <CircularProgress size={18} color="inherit" /> : <CheckCircle />}
+      <DialogActions
+        sx={{
+          borderTop: "1px solid",
+          borderColor: "divider",
+          px: { xs: 2, sm: 3 },
+          py: 2,
+          gap: 1.25,
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          bgcolor: "background.paper",
+        }}
+      >
+        <Typography
+          variant="caption"
           sx={{
-            background: "linear-gradient(45deg, #B5385C, #C9956A)",
-            color: "white",
-            fontWeight: 700,
-            px: 3,
-            borderRadius: 2.5,
-            boxShadow: "0 4px 14px rgba(181,56,92,0.3)"
+            color: "text.secondary",
+            maxWidth: { xs: "100%", sm: 290 },
+            flexBasis: { xs: "100%", sm: "auto" },
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          {uploading
+            ? "Uploading your edited image. Please keep this window open."
+            : "After uploading, save the product to publish your image changes."}
+        </Typography>
+        <Stack
+          direction="row"
+          sx={{
+            gap: 1,
+            ml: "auto",
+            width: { xs: "100%", sm: "auto" },
+            "& > .MuiButton-root": { minWidth: 0 },
           }}
         >
-          {uploading ? "Optimizing & Saving..." : "✓ Apply & Set Image"}
-        </Button>
+          <Button onClick={onClose} disabled={uploading} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleApply}
+            disabled={disabled}
+            startIcon={
+              uploading ? (
+                <CircularProgress size={17} color="inherit" />
+              ) : (
+                <UploadOutlined />
+              )
+            }
+            sx={{
+              px: { xs: 2, sm: 2.5 },
+              flex: { xs: 1, sm: "initial" },
+              borderRadius: 1,
+              boxShadow: "none",
+              "&:hover": { boxShadow: "none" },
+            }}
+          >
+            {uploading ? "Uploading…" : "Apply & upload"}
+          </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );

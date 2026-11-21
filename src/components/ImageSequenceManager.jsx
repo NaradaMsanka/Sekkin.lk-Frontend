@@ -1,11 +1,19 @@
 import { useState, useRef } from "react";
 import {
-  Box, Typography, Stack, IconButton,
-  Tooltip, Paper
+  Alert,
+  Box,
+  Button,
+  Chip,
+  IconButton,
+  Stack,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import {
-  ArrowBack, ArrowForward, Star, StarBorder,
-  Delete, Edit, PhotoLibrary, AddPhotoAlternate
+  AddPhotoAlternateOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  StarBorderOutlined,
 } from "@mui/icons-material";
 import ImageEditorModal from "./ImageEditorModal";
 import { resolveImageUrl } from "../services/api";
@@ -13,302 +21,312 @@ import { resolveImageUrl } from "../services/api";
 export default function ImageSequenceManager({
   images = [],
   onChange,
-  maxImages = 6
+  maxImages = 6,
 }) {
   const fileInputRef = useRef(null);
-
-  // Editor Modal State
   const [editorOpen, setEditorOpen] = useState(false);
   const [currentImageSrc, setCurrentImageSrc] = useState(null);
-  const [editingIndex, setEditingIndex] = useState(null); // null = new image, number = re-editing existing index
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [fileError, setFileError] = useState("");
 
-  // Trigger File Picker
-  const handleSelectFile = (e) => {
-    const file = e.target.files?.[0];
+  const handleSelectFile = (event) => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 15 * 1024 * 1024) {
-      alert('Choose a JPEG, PNG, WebP, or GIF image up to 15 MB.');
-      e.target.value = '';
+    event.target.value = "";
+    if (
+      !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(
+        file.type,
+      ) ||
+      file.size > 15 * 1024 * 1024
+    ) {
+      setFileError("Choose a JPEG, PNG, WebP, or GIF image up to 15 MB.");
       return;
     }
-
+    if (images.length >= maxImages) return;
+    setFileError("");
     const reader = new FileReader();
     reader.onload = () => {
       setCurrentImageSrc(reader.result);
-      setEditingIndex(null); // new image
+      setEditingIndex(null);
       setEditorOpen(true);
     };
+    reader.onerror = () =>
+      setFileError(
+        "This file could not be opened. Please choose another image.",
+      );
     reader.readAsDataURL(file);
-
-    // Reset input so same file can be picked again if needed
-    e.target.value = "";
   };
 
-  // When image editor confirms the edited image
-  const handleEditorApply = (savedUrl) => {
-    let updated;
-    if (editingIndex !== null && editingIndex >= 0 && editingIndex < images.length) {
-      // Replaced existing image at that exact sequence index
-      updated = [...images];
-      updated[editingIndex] = savedUrl;
-    } else {
-      // Add as new image in sequence
-      updated = [...images, savedUrl];
-    }
-
-    const primaryUrl = updated.length > 0 ? updated[0] : "";
-    onChange(updated, primaryUrl);
+  const handleEditorApply = (url) => {
+    const updated = [...images];
+    if (
+      editingIndex !== null &&
+      editingIndex >= 0 &&
+      editingIndex < images.length
+    )
+      updated[editingIndex] = url;
+    else updated.push(url);
+    onChange(updated, updated[0] || "");
   };
 
-  // Re-edit an existing image
   const handleReEdit = (index) => {
+    setFileError("");
     setCurrentImageSrc(images[index]);
     setEditingIndex(index);
     setEditorOpen(true);
   };
 
-  // Reordering Sequence: Move Earlier
-  const handleMoveEarlier = (index) => {
-    if (index === 0) return;
+  const moveImage = (index, change) => {
+    const target = index + change;
+    if (target < 0 || target >= images.length) return;
     const updated = [...images];
-    const temp = updated[index];
-    updated[index] = updated[index - 1];
-    updated[index - 1] = temp;
+    [updated[index], updated[target]] = [updated[target], updated[index]];
     onChange(updated, updated[0]);
   };
 
-  // Reordering Sequence: Move Later
-  const handleMoveLater = (index) => {
-    if (index >= images.length - 1) return;
-    const updated = [...images];
-    const temp = updated[index];
-    updated[index] = updated[index + 1];
-    updated[index + 1] = temp;
-    onChange(updated, updated[0]);
-  };
-
-  // Set as Primary (index 0)
-  const handleMakePrimary = (index) => {
-    if (index === 0) return;
+  const makeCover = (index) => {
     const updated = [...images];
     const [selected] = updated.splice(index, 1);
-    updated.unshift(selected); // Put at index 0
+    updated.unshift(selected);
     onChange(updated, updated[0]);
   };
 
-  // Delete from sequence
-  const handleDelete = (index) => {
-    const updated = images.filter((_, i) => i !== index);
-    onChange(updated, updated.length > 0 ? updated[0] : "");
+  const removeImage = (index) => {
+    const updated = images.filter((_, imageIndex) => imageIndex !== index);
+    onChange(updated, updated[0] || "");
   };
 
   return (
-    <Box sx={{ width: "100%" }}>
-      {/* Hidden File Input */}
+    <Box sx={{ width: "100%", minWidth: 0 }}>
       <input
         type="file"
         ref={fileInputRef}
-        accept="image/*"
-        style={{ display: "none" }}
+        accept="image/jpeg,image/png,image/webp,image/gif"
         onChange={handleSelectFile}
+        style={{ display: "none" }}
+        aria-label="Choose product image"
       />
-
-      {/* Header Info */}
-      <Box sx={{ display: "flex", flexDirection: { xs: 'column', sm: 'row' }, justifyContent: "space-between", alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1, mb: 1.5 }}>
-        <Typography variant="subtitle2" fontWeight={700} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <PhotoLibrary fontSize="small" sx={{ color: "primary.main" }} />
-          Product Image Sequence ({images.length} / {maxImages})
+      <Stack
+        direction="row"
+        sx={{
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 1,
+          mb: 0.75,
+        }}
+      >
+        <Typography component="h3" variant="body2" sx={{ fontWeight: 600 }}>
+          Product images
         </Typography>
-        <Typography variant="caption" color="text.secondary">
-          First image (#1) is the main store display cover
-        </Typography>
-      </Box>
-
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-        Save the product to apply image changes. Removing or replacing a saved image deletes it from Cloudinary after saving, unless another product uses it.
+        <Chip
+          label={`${images.length} / ${maxImages}`}
+          size="small"
+          sx={{ bgcolor: "#F1F3F6", color: "text.secondary", height: 25 }}
+        />
+      </Stack>
+      <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+        The first image is your product cover. Save the product to publish
+        gallery changes.
       </Typography>
+      {fileError && (
+        <Alert severity="error" onClose={() => setFileError("")} sx={{ mb: 2 }}>
+          {fileError}
+        </Alert>
+      )}
 
-      {/* Sequence Gallery Grid */}
-      <Stack direction="row" spacing={1.5} sx={{ overflowX: "auto", pb: 1.5, minHeight: 140, alignItems: "flex-start" }}>
-        {images.map((imgUrl, idx) => {
-          const isPrimary = idx === 0;
-
-          return (
-            <Paper
-              key={`${imgUrl}-${idx}`}
-              elevation={isPrimary ? 3 : 1}
-              sx={{
-                width: 130,
-                minWidth: 130,
-                borderRadius: 3,
-                overflow: "hidden",
-                border: "2px solid",
-                borderColor: isPrimary ? "#C9956A" : "rgba(0,0,0,0.1)",
-                bgcolor: "#FFFFFF",
-                position: "relative",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  boxShadow: "0 6px 18px rgba(0,0,0,0.12)",
-                  borderColor: isPrimary ? "#C9956A" : "primary.main"
-                }
-              }}
-            >
-              {/* Sequence Badge */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 6,
-                  left: 6,
-                  bgcolor: isPrimary ? "#C9956A" : "rgba(0,0,0,0.65)",
-                  color: "white",
-                  px: 0.8,
-                  py: 0.2,
-                  borderRadius: 1.5,
-                  fontSize: "0.68rem",
-                  fontWeight: 800,
-                  zIndex: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.3
-                }}
-              >
-                {isPrimary && <Star sx={{ fontSize: 12, color: "#FFE87C" }} />}
-                #{idx + 1} {isPrimary ? "MAIN" : ""}
-              </Box>
-
-              {/* Image Thumbnail */}
+      <Box
+        sx={{
+          display: "flex",
+          gap: 1.5,
+          overflowX: "auto",
+          py: 0.75,
+          px: 0.5,
+          mx: -0.5,
+        }}
+        aria-label="Product image gallery"
+      >
+        {images.map((url, index) => (
+          <Box
+            key={`${url}-${index}`}
+            sx={{
+              width: 180,
+              flexShrink: 0,
+              border: "1px solid",
+              borderColor: index === 0 ? "#D7B4BF" : "divider",
+              borderRadius: 1.5,
+              overflow: "hidden",
+              bgcolor: "background.paper",
+            }}
+          >
+            <Box sx={{ position: "relative", height: 144, p: 1 }}>
               <Box
                 component="img"
-                src={resolveImageUrl(imgUrl)}
-                alt={`Product angle ${idx + 1}`}
-                sx={{
-                  width: "100%",
-                  height: 100,
-                  objectFit: "contain",
-                  bgcolor: "#FFFFFF",
-                  p: 0.5,
-                  display: "block"
-                }}
+                src={resolveImageUrl(url)}
+                alt={`Product image ${index + 1}${index === 0 ? ", cover image" : ""}`}
+                sx={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
-
-              {/* Sequence Controls Bar */}
-              <Box
-                sx={{
-                  bgcolor: "#FAF8F5",
-                  borderTop: "1px solid rgba(0,0,0,0.06)",
-                  display: "flex",
-                  justifyContent: "space-around",
-                  alignItems: "center",
-                  py: 0.5,
-                  px: 0.5
-                }}
+              {index === 0 && (
+                <Chip
+                  label="Cover image"
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    left: 8,
+                    top: 8,
+                    bgcolor: "#F8EEF1",
+                    color: "primary.main",
+                    height: 24,
+                  }}
+                />
+              )}
+            </Box>
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 0.25,
+                px: 0.75,
+                py: 0.5,
+                borderTop: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Button
+                size="small"
+                startIcon={<EditOutlined sx={{ fontSize: 17 }} />}
+                onClick={() => handleReEdit(index)}
+                aria-label={`Edit product image ${index + 1}`}
+                sx={{ px: 1, minWidth: 0 }}
               >
-                {/* Move Left */}
-                <Tooltip title="Move Earlier in Sequence">
-                  <span>
+                Edit
+              </Button>
+              <Box sx={{ display: "flex" }}>
+                {index !== 0 && (
+                  <Tooltip title="Set as cover">
                     <IconButton
                       size="small"
-                      disabled={idx === 0}
-                      onClick={() => handleMoveEarlier(idx)}
-                      sx={{ p: 0.4 }}
+                      onClick={() => makeCover(index)}
+                      aria-label={`Set image ${index + 1} as cover`}
+                      sx={{ color: "text.secondary" }}
                     >
-                      <ArrowBack sx={{ fontSize: 15 }} />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-
-                {/* Edit in Studio */}
-                <Tooltip title="Edit / Re-crop Image">
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => handleReEdit(idx)}
-                    sx={{ p: 0.4 }}
-                  >
-                    <Edit sx={{ fontSize: 15 }} />
-                  </IconButton>
-                </Tooltip>
-
-                {/* Set as Primary */}
-                {!isPrimary && (
-                  <Tooltip title="Set as Main Cover Image">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleMakePrimary(idx)}
-                      sx={{ p: 0.4, color: "#C9956A" }}
-                    >
-                      <StarBorder sx={{ fontSize: 16 }} />
+                      <StarBorderOutlined sx={{ fontSize: 19 }} />
                     </IconButton>
                   </Tooltip>
                 )}
-
-                {/* Move Right */}
-                <Tooltip title="Move Later in Sequence">
-                  <span>
-                    <IconButton
-                      size="small"
-                      disabled={idx >= images.length - 1}
-                      onClick={() => handleMoveLater(idx)}
-                      sx={{ p: 0.4 }}
-                    >
-                      <ArrowForward sx={{ fontSize: 15 }} />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-
-                {/* Delete */}
-                <Tooltip title="Delete Image">
+                <Tooltip title="Remove from gallery">
                   <IconButton
                     size="small"
-                    color="error"
-                    onClick={() => handleDelete(idx)}
-                    sx={{ p: 0.4 }}
+                    onClick={() => removeImage(index)}
+                    aria-label={`Remove product image ${index + 1}`}
+                    sx={{
+                      color: "text.secondary",
+                      "&:hover": { color: "error.main", bgcolor: "#FCEEF0" },
+                    }}
                   >
-                    <Delete sx={{ fontSize: 15 }} />
+                    <DeleteOutlined sx={{ fontSize: 19 }} />
                   </IconButton>
                 </Tooltip>
               </Box>
-            </Paper>
-          );
-        })}
-
-        {/* Upload Button Box */}
+            </Stack>
+            <Stack
+              direction="row"
+              sx={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 0.25,
+                px: 0.5,
+                py: 0.5,
+                bgcolor: "#FAFBFC",
+                borderTop: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Button
+                size="small"
+                color="inherit"
+                disabled={index === 0}
+                onClick={() => moveImage(index, -1)}
+                aria-label={`Move image ${index + 1} earlier`}
+                sx={{ minWidth: 0, px: 0.75, fontSize: "0.8125rem" }}
+              >
+                Earlier
+              </Button>
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                {index + 1}
+              </Typography>
+              <Button
+                size="small"
+                color="inherit"
+                disabled={index === images.length - 1}
+                onClick={() => moveImage(index, 1)}
+                aria-label={`Move image ${index + 1} later`}
+                sx={{ minWidth: 0, px: 0.75, fontSize: "0.8125rem" }}
+              >
+                Later
+              </Button>
+            </Stack>
+          </Box>
+        ))}
         {images.length < maxImages && (
-          <Paper
-            elevation={0}
+          <Button
+            variant="outlined"
+            color="inherit"
             onClick={() => fileInputRef.current?.click()}
+            aria-label="Add product image"
             sx={{
-              width: 130,
-              minWidth: 130,
-              height: 135,
-              borderRadius: 3,
-              border: "2px dashed rgba(201,149,106,0.5)",
-              bgcolor: "rgba(201,149,106,0.04)",
+              width: images.length ? 180 : "100%",
+              flexShrink: 0,
+              minHeight: images.length ? 240 : 160,
+              p: 2,
+              border: "1px dashed #C9CFD9",
+              borderRadius: 1.5,
+              bgcolor: "#FAFBFC",
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              "&:hover": {
-                bgcolor: "rgba(201,149,106,0.12)",
-                borderColor: "#C9956A",
-                transform: "translateY(-2px)"
-              }
+              gap: 1,
+              "&:hover": { bgcolor: "#F8EEF1", borderColor: "primary.main" },
             }}
           >
-            <AddPhotoAlternate sx={{ fontSize: 36, color: "primary.main", mb: 0.5 }} />
-            <Typography variant="caption" fontWeight={700} sx={{ color: "primary.main", textAlign: "center", px: 1 }}>
-              + Add Image & Edit
+            <Box
+              component="span"
+              sx={{
+                display: "grid",
+                placeItems: "center",
+                width: 44,
+                height: 44,
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 1,
+                bgcolor: "background.paper",
+                color: "primary.main",
+              }}
+            >
+              <AddPhotoAlternateOutlined />
+            </Box>
+            <Typography
+              component="span"
+              variant="body2"
+              sx={{ fontWeight: 500 }}
+            >
+              {images.length ? "Add image" : "Add product image"}
             </Typography>
-            <Typography variant="caption" sx={{ color: "text.secondary", fontSize: "0.62rem" }}>
-              PNG, JPG, WEBP
+            <Typography
+              component="span"
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                textAlign: "center",
+                fontWeight: 400,
+              }}
+            >
+              JPEG, PNG, WebP or GIF
+              <br />
+              Up to 15 MB per image
             </Typography>
-          </Paper>
+          </Button>
         )}
-      </Stack>
-
-      {/* Interactive Image Editor Modal */}
+      </Box>
       <ImageEditorModal
         open={editorOpen}
         imageSrc={currentImageSrc}
