@@ -1,3 +1,5 @@
+import { supportPhoneHref } from './businessContacts.js';
+
 // Official policy supplied by the website owner. No effective date was supplied.
 export const privacyPolicy = {
   title: 'Privacy Policy',
@@ -8,7 +10,7 @@ export const privacyPolicy = {
   intro: "We are committed to protecting the privacy and security of our customers' personal information. This Privacy Policy describes how Sekkin lk collects, uses, and shares your personal information when you visit our website, located at sekkin.lk. By accessing or using our website, you consent to the practices described in this Privacy Policy.",
   contact: {
     phone: '078 8153473',
-    phoneHref: 'tel:+94788153473',
+    phoneHref: supportPhoneHref,
     email: 'lksekkin@gmail.com',
   },
   sections: [

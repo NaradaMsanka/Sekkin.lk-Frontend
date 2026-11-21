@@ -20,7 +20,8 @@ export function getDraftContentIssues(pages) {
   for (const [route, page] of Object.entries(pages)) {
     if (/\bdrafts?\b|REVIEW REQUIRED/i.test(page.intro)) issues.push(`Approve final introduction: /${route}`);
     for (const section of page.sections) {
-      if (section.body.some(text => /\bdrafts?\b|REVIEW REQUIRED/i.test(text))) issues.push(`Approve final policy text: /${route}#${section.id}`);
+      const text = [...section.body, ...(section.after || []), ...(section.steps || []).flatMap(step => [step.text, ...(step.details || [])])];
+      if (text.some(value => /\bdrafts?\b|REVIEW REQUIRED/i.test(value))) issues.push(`Approve final policy text: /${route}#${section.id}`);
     }
   }
   return issues;

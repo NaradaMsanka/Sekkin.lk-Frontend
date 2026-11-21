@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import PolicyLinks from './PolicyLinks';
 import business from '../content/business.json';
-import { supportEmailHref, supportPhoneHref } from '../content/businessContacts';
+import { supportEmailHref, supportPhoneHref, supportWhatsAppLabel } from '../content/businessContacts';
 import { estimateOrderTotals, formatDeliveryCharge } from '../content/delivery';
 import DeliveryPricingNotice from './DeliveryPricingNotice';
 import axios from 'axios';
@@ -243,6 +243,11 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
     if (!rawReceipt) return;
     const escapeText = value => value.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const receipt = Object.fromEntries(Object.entries(rawReceipt).map(([key, value]) => [key, typeof value === 'string' ? escapeText(value) : value]));
+    const supportDetails = [
+      supportEmailHref && `<a href="${escapeText(supportEmailHref)}">${escapeText(business.supportEmail)}</a>`,
+      supportPhoneHref && `<a href="${escapeText(supportPhoneHref)}" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">${escapeText(supportWhatsAppLabel)}</a>`,
+      business.contactsConfirmed && business.postalAddress && escapeText(business.postalAddress),
+    ].filter(Boolean).join(' &middot; ');
     const dateStr = receipt.orderDate ? new Date(receipt.orderDate).toLocaleString() : receiptDate || 'Date unavailable';
     const paymentBadge = `Cash on Delivery (${receipt.paymentStatus}) — not proof of payment`;
 
@@ -452,7 +457,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
 
       <div class="footer">
         <p style="margin: 0; font-weight: 600;">Thank you for your purchase with Sekkin.lk! ✨</p>
-        <p style="margin: 4px 0 0 0;">${supportEmailHref || supportPhoneHref ? escapeText(`${business.supportEmail} · ${business.supportPhone} · ${business.postalAddress}`) : 'Support details await business confirmation.'}</p>
+        <p style="margin: 4px 0 0 0;">${supportDetails || 'Support details await business confirmation.'}</p>
         <button class="print-btn no-print" onclick="window.print()">🖨️ Print Slip / Save as PDF</button>
       </div>
     </div>

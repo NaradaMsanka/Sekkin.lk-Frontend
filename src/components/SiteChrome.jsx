@@ -13,8 +13,9 @@ import {
 import api from '../services/api';
 import BusinessFooter from './BusinessFooter';
 import business from '../content/business.json';
+import { supportWhatsAppHref } from '../content/businessContacts';
 
-const WHATSAPP_URL = business.contactsConfirmed && business.whatsappNumber ? 'https://wa.me/' + business.whatsappNumber.replace(/\D/g, '') : null;
+const WHATSAPP_URL = supportWhatsAppHref;
 const SUPPORT_LINK_PROPS = WHATSAPP_URL ? { component: 'a', href: WHATSAPP_URL, target: '_blank', rel: 'noopener noreferrer' } : { component: Link, to: '/contact' };
 const SOCIAL_LINKS = business.socialLinks.filter(link => /^https:\/\//.test(link.href)).map(link => ({ ...link, icon: { Instagram, Facebook, TikTok: TikTokIcon }[link.label] || WhatsApp }));
 const NAV_LINKS = [

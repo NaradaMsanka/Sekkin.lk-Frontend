@@ -9,8 +9,9 @@ const internationalNumber = value => {
 };
 
 export const supportEmailHref = isContactFieldConfirmed('supportEmail') && business.supportEmail ? `mailto:${business.supportEmail}` : null;
-export const supportPhoneHref = isContactFieldConfirmed('supportPhone') && business.supportPhone ? `tel:+${internationalNumber(business.supportPhone)}` : null;
+export const supportPhoneHref = isContactFieldConfirmed('supportPhone') && business.supportPhone ? `https://wa.me/${internationalNumber(business.supportPhone)}` : null;
 export const supportWhatsAppHref = isContactFieldConfirmed('whatsappNumber') && business.whatsappNumber ? `https://wa.me/${internationalNumber(business.whatsappNumber)}` : null;
+export const supportWhatsAppLabel = 'Connect via WhatsApp';
 
 export function whatsappProductHref(productName) {
   return supportWhatsAppHref ? `${supportWhatsAppHref}?text=${encodeURIComponent(`Hello ${business.brand}, I have a question about ${productName}`)}` : '/contact';

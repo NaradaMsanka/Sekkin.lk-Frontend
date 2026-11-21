@@ -11,6 +11,7 @@
   "postalAddress": null,
   "businessHours": "Mon–Sat, 9 AM–7 PM",
   "contactsConfirmed": false,
+  "confirmedContactFields": ["supportPhone", "whatsappNumber"],
   "socialLinks": [],
   "policiesApproved": false,
   "catalogReviewed": false,

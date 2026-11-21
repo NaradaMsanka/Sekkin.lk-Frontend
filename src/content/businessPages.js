@@ -1,48 +1,16 @@
 import business from './business.json' with { type: 'json' };
 import { getReadinessIssues, getDraftContentIssues } from './readiness.js';
 import { privacyPolicy } from './privacyPolicy.js';
+import { refundPolicy } from './refundPolicy.js';
+import { termsAndConditions } from './termsAndConditions.js';
 const review = (value, instruction) => value || `REVIEW REQUIRED — ${instruction}`;
 const section = (id, title, ...body) => ({ id, title, body });
 const contact = 'Use the Contact us page for the business details available for review. The support email and full postal address must be confirmed before publication.';
 
 export const businessPages = {
-  'refund-policy': {
-    title: 'Refund & Return Policy', category: 'Customer care',
-    description: 'Review the proposed sekkinLK return, refund, cancellation and exchange policy.',
-    intro: 'Clear guidance for when something is not quite right with your order. Business-specific terms below are awaiting owner approval.',
-    sections: [
-      section('eligibility', 'Return eligibility & time limits', review(business.refund.eligibility, 'Confirm which purchases qualify for a return.'), review(business.refund.returnWindow, 'Set the return request period and when that period starts. No return window has been approved.')),
-      section('damaged-items', 'Damaged, defective or incorrect products', review(business.refund.damagedItems, 'Confirm how customers should report damage, missing items or an incorrect product, the evidence needed, and the remedies offered.')),
-      section('condition', 'Product condition, packaging & hygiene', review(business.refund.condition, 'Confirm product condition and packaging requirements.'), review(business.refund.hygieneRestrictions, 'Confirm any cosmetics/skincare hygiene restrictions and exceptions for faulty or incorrect goods. No blanket exclusion has been approved.')),
-      section('request', 'How to request a return', review(business.refund.requestProcedure, 'Approve the request steps, required order information, authorisation process and return address.'), contact),
-      section('return-shipping', 'Return shipping', review(business.refund.returnShipping, 'Confirm who arranges and pays return shipping for each accepted reason, including business errors.')),
-      section('refunds', 'Refund procedure & timing', review(business.refund.refundMethod, 'Confirm inspection, approval/decline communication and the refund method for each payment type.'), review(business.refund.refundTimeline, 'Confirm processing periods, when they begin, and any payment-provider delays. No refund timeline has been approved.')),
-      section('cancellations', 'Order cancellations', review(business.refund.cancellations, 'Confirm cancellation requests before and after dispatch, eligibility and any applicable costs.')),
-      section('exchanges', 'Exchanges', review(business.refund.exchanges, 'Confirm whether exchanges are offered and, if so, the availability, process and costs.')),
-      section('rights', 'Customer rights', review(business.refund.consumerRights, 'Obtain Sri Lankan legal review of applicable customer rights. Final terms must preserve rights that cannot lawfully be excluded.')),
-    ],
-  },
+  'refund-policy': refundPolicy,
   'privacy-policy': privacyPolicy,
-  'terms-and-conditions': {
-    title: 'Terms & Conditions', category: 'Shopping with us',
-    description: 'Proposed website, account, product, ordering and support terms for sekkinLK.',
-    intro: 'Please review these draft terms together with the returns, privacy and shipping pages. Unconfirmed terms are marked below.',
-    sections: [
-      section('identity', 'Business & website', `${business.brand} is the website brand for ${business.businessName}, focused on cosmetics, skincare and beauty products.`, review(business.registeredName, 'Confirm the registered/legal business name and how it relates to the trading name.'), contact),
-      section('accounts', 'Website use & customer accounts', 'Use the website for lawful shopping and provide accurate account and delivery information. Keep login credentials private. Contact the business if you believe your account has been accessed without permission. Accounts associate shopping carts, orders and product reviews.'),
-      section('products', 'Product information & availability', 'Listings display product details, prices and recorded stock. Ingredients, brand or skin-type information appear where supplied. Check the listing before ordering. The business must verify product authenticity, descriptions, variations and inventory; no certification or medical benefit is promised by this draft.'),
-      section('prices', 'Prices & charges', 'Prices are displayed in Sri Lankan rupees (LKR). Cart and checkout display item totals; coupon estimates are confirmed when an order is created.', review(business.terms.pricesAndTaxes, 'Approve how taxes, price changes, errors and other applicable charges are handled.')),
-      section('orders', 'Orders & confirmation', 'Submitting checkout creates an order record when the backend accepts it. An order confirmation is not evidence of verified online payment.', review(business.terms.orderAcceptance, 'Confirm when an order is legally accepted, how stock/price errors are handled and how customers are notified.')),
-      section('payments', 'Payment methods', 'Cash on delivery is the retained order flow. CARD and KOKO are unavailable in this checkout. PayHere is not connected and the website is not PayHere-approved.', review(business.terms.paymentMethods, 'Approve supported payment methods and payment/fulfilment procedures. Order confirmation is not proof of payment.')),
-      section('delivery', 'Shipping & delivery', 'Read the Shipping & Delivery Policy for the delivery decisions awaiting confirmation. Do not treat unconfirmed time estimates or earlier hard-coded charges as an approved business promise.'),
-      section('returns', 'Cancellations, returns & refunds', 'Read the Refund & Return Policy for the proposed procedure and outstanding conditions. No return period, refund period or hygiene exclusion is approved by this draft.'),
-      section('ownership', 'Intellectual property', review(business.terms.intellectualProperty, 'Confirm rights to the brand, logo, website assets, product photographs and supplier descriptions, and approve lawful usage terms.')),
-      section('liability', 'Liability & customer rights', review(business.terms.liability, 'Obtain legal review of reasonable liability terms and applicable mandatory consumer protections. No blanket waiver or exclusion is approved.')),
-      section('complaints', 'Support & complaints', review(business.terms.complaints, 'Confirm complaint contact, acknowledgement, escalation and resolution procedures.'), contact),
-      section('law', 'Governing law', review(business.terms.governingLaw, 'Confirm the applicable Sri Lankan governing-law and dispute provisions with qualified legal advice.')),
-      section('changes', 'Updates', review(business.terms.updates, 'Approve the effective date, version process and customer notices for policy changes.')),
-    ],
-  },
+  'terms-and-conditions': termsAndConditions,
   'shipping-policy': {
     title: 'Shipping & Delivery', category: 'Customer care',
     description: 'Delivery coverage, charges, processing, tracking and support decisions for sekkinLK.',

@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Box, Button, Container, Divider, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import business from '../content/business.json';
+import { supportEmailHref, supportPhoneHref, supportWhatsAppLabel } from '../content/businessContacts';
 import { businessPages, isBusinessReady, publicBusinessLinks } from '../content/businessPages';
 import Reveal from './storefront/Reveal';
 
@@ -20,14 +21,15 @@ export default function BusinessFooter({ brand, socialLinks }) {
         {[['Customer support', publicBusinessLinks.slice(0, 3)], ['Company', publicBusinessLinks.slice(3)]].map(([label, links]) => <Box component="nav" aria-label={label} key={label} sx={{ minWidth: 0 }}><Typography component="h2" sx={labelStyle}>{label}</Typography>{links.map(link => <Typography component={Link} key={link.to} to={link.to} sx={linkStyle}>{link.label}</Typography>)}</Box>)}
         <Box sx={{ minWidth: 0 }}><Typography component="h2" sx={labelStyle}>Business information</Typography><Typography sx={{ fontSize: '.9rem', fontWeight: 500, mb: 1 }}>{business.businessName}</Typography>
           {pageContact ? <>
-            <Typography component="a" href={pageContact.phoneHref} sx={{ ...linkStyle, mt: 1 }}>{pageContact.phone}</Typography>
+            <Typography component="a" href={pageContact.phoneHref} target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp (opens a new tab)" sx={{ ...linkStyle, mt: 1, textDecoration: 'underline', textUnderlineOffset: 4 }}>{supportWhatsAppLabel}</Typography>
             <Typography component="a" href={`mailto:${pageContact.email}`} sx={{ ...linkStyle, overflowWrap: 'anywhere' }}>{pageContact.email}</Typography>
-          </> : business.contactsConfirmed ? <>
-            <Typography variant="body2" sx={{ color: '#CBBAB9', lineHeight: 1.9, overflowWrap: 'anywhere' }}>{business.registeredName}<br />{business.postalAddress}</Typography>
-            {business.supportPhone && <Typography component="a" href={`tel:${business.supportPhone.replace(/[^+\d]/g, '')}`} sx={{ ...linkStyle, mt: 1 }}>{business.supportPhone}</Typography>}
-            {business.supportEmail && <Typography component="a" href={`mailto:${business.supportEmail}`} sx={{ ...linkStyle, overflowWrap: 'anywhere' }}>{business.supportEmail}</Typography>}
-            {business.businessHours && <Typography variant="caption" sx={{ display: 'block', color: '#CBBAB9', mt: 1 }}>{business.businessHours}</Typography>}
-          </> : <Typography variant="body2" sx={{ color: '#E1BC9C', fontSize: '.78rem', lineHeight: 1.9 }}>REVIEW REQUIRED — registered details, support contacts and business hours await owner confirmation.</Typography>}
+          </> : <>
+            {business.contactsConfirmed && <Typography variant="body2" sx={{ color: '#CBBAB9', lineHeight: 1.9, overflowWrap: 'anywhere' }}>{business.registeredName}<br />{business.postalAddress}</Typography>}
+            {supportPhoneHref && <Typography component="a" href={supportPhoneHref} target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp (opens a new tab)" sx={{ ...linkStyle, mt: 1, textDecoration: 'underline', textUnderlineOffset: 4 }}>{supportWhatsAppLabel}</Typography>}
+            {supportEmailHref && <Typography component="a" href={supportEmailHref} sx={{ ...linkStyle, overflowWrap: 'anywhere' }}>{business.supportEmail}</Typography>}
+            {business.contactsConfirmed && business.businessHours && <Typography variant="caption" sx={{ display: 'block', color: '#CBBAB9', mt: 1 }}>{business.businessHours}</Typography>}
+            {!business.contactsConfirmed && <Typography variant="body2" sx={{ color: '#E1BC9C', fontSize: '.78rem', lineHeight: 1.9 }}>REVIEW REQUIRED — registered details, other support contacts and business hours await owner confirmation.</Typography>}
+          </>}
           <Button component={Link} to="/contact" variant="outlined" sx={{ mt: 2, borderColor: '#E1BC9C66', color: '#E1BC9C', fontSize: '.78rem', minHeight: 44 }}>Contact information</Button>
         </Box>
       </Box>
