@@ -24,12 +24,21 @@ The backend repository's `docs/DEMO_SUBMISSION.md` contains the presentation wal
 | `/` | Responsive catalog, search/filter controls and product quick view |
 | `/product/:id` | Product details, reviews and direct COD checkout |
 | `/register`, `/login` | Customer accounts |
+| `/forgot-password`, `/reset-password` | Email-based password recovery |
 | `/cart`, `/checkout` | Cart quantities, coupons, delivery estimates and COD orders |
 | `/orders` | Customer order history |
 | `/admin` | Products/stock, reporting and order operations |
 | `/about`, `/contact` and policy routes | Business information; unresolved content is visibly marked as draft |
 
-The demo supports cash on delivery. Online payments, automated email/courier integrations and final merchant policies remain future work. Cloudinary uploads need separately configured backend credentials.
+The demo supports cash on delivery. Online payments, courier integrations and remaining merchant sign-offs require separate work. Cloudinary uploads need separately configured backend credentials. Password recovery email requires the backend SMTP configuration described below.
+
+## Password recovery
+
+The login page links to `/forgot-password`. Recovery requests use the existing Axios API client and public `VITE_API_BASE_URL`, without attaching a saved JWT. No additional frontend secrets or dependencies are needed. Configure Resend SMTP and apply the backend migration before enabling the feature in production; see the [backend password reset and deployment guide](../../Backend/docs/PASSWORD_RESET.md).
+
+Email reset links open `/reset-password#token=...`. The page removes the token from the address bar immediately and keeps it only in component memory. Refreshing the cleaned page requires opening the email link again. Password reset does not sign the customer in; it clears the old browser session and returns to login with a success message. Both recovery pages omit storefront navigation, footer and support content. The HTML sets `no-referrer`, and Vercel applies `no-store`, `no-referrer` and `noindex` headers to the recovery routes.
+
+Deploy the backend and migration first, then deploy this frontend through the existing Vercel project. Keep the current `VITE_API_BASE_URL` pointing to the deployed backend and verify direct visits to both recovery routes. Verify a real email and password reset with a designated test account after runtime SMTP configuration; automated tests use mocks and do not demonstrate real email delivery.
 
 ## Checks and normal development
 
@@ -39,7 +48,7 @@ npm test
 npm run build
 ```
 
-`npm test` runs all existing delivery, order retry and business-readiness tests. `npm run test:readiness` runs only the readiness tests. A successful build does not approve merchant content.
+`npm test` runs delivery, order retry, business-readiness and password recovery validation/token-handling tests. `npm run test:readiness` runs only the readiness tests. A successful build does not approve merchant content.
 
 For ordinary development, configure the public `VITE_API_BASE_URL` from `.env.example`, then run `npm run dev`. Restart Vite after environment changes. Never put backend secrets in `VITE_*` variables.
 

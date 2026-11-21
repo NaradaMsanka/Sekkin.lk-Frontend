@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Box, Container, Card, CardContent, TextField, Button,
   Typography, InputAdornment, IconButton, Alert, Divider
@@ -17,6 +17,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -84,6 +85,7 @@ export default function Login() {
             </Typography>
 
             {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+            {location.state?.passwordReset && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>Your password has been reset. Sign in with your new password.</Alert>}
 
             <Box component="form" onSubmit={handleLogin}>
               <TextField fullWidth label="Email Address" type="email" required
@@ -103,7 +105,11 @@ export default function Login() {
                     </InputAdornment>
                   )
                 } }}
-                sx={{ mb: 3 }} />
+                sx={{ mb: 1 }} />
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2.5 }}>
+                <Button component={Link} to="/forgot-password" size="small" sx={{ fontSize: '0.875rem' }}>Forgot password?</Button>
+              </Box>
 
               <Button fullWidth type="submit" variant="contained" size="large"
                 disabled={loading} startIcon={<LoginIcon />}

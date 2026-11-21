@@ -32,6 +32,16 @@ const api = axios.create({
 // ➡ Request Interceptor: සෑම request එකටම Token auto-attach
 api.interceptors.request.use(
     (config) => {
+        // Public account recovery must work even when a browser has an expired
+        // JWT. Remove any inherited header without reading browser storage.
+        if (config.skipAuth) {
+            if (typeof config.headers?.delete === 'function') config.headers.delete('Authorization');
+            else if (config.headers) {
+                delete config.headers.Authorization;
+                delete config.headers.authorization;
+            }
+            return config;
+        }
         const token = localStorage.getItem('token');
         if (token && token !== 'undefined' && token !== 'null') {
             const cleanToken = token.trim().replace(/^"|"$/g, '');
@@ -54,6 +64,7 @@ api.interceptors.request.use(
 // ⬅ Response Interceptor: Network/CORS logging
 api.interceptors.response.use(
     (response) => {
+        if (response.config?.skipAuth) return response;
         // Reuse actual cart responses to keep navigation feedback current without polling.
         const currentToken = localStorage.getItem('token')?.trim().replace(/^"|"$/g, '');
         if (currentToken && response.config?.headers?.Authorization === `Bearer ${currentToken}` &&
