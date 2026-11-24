@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Alert, Box, Button, CircularProgress, Container, Divider,
-  Skeleton, Stack, TextField, Typography,
+  Skeleton, Stack, Typography,
 } from '@mui/material';
 import { ArrowBack, ArrowForward, CheckCircleOutlined, LocalOfferOutlined, LocationOnOutlined, ShoppingCartOutlined } from '@mui/icons-material';
 import ProductMedia from '../components/storefront/ProductMedia';
@@ -14,6 +14,8 @@ import { orderRequests, validateOrderReceipt } from '../services/orderRequest';
 import { getSessionToken } from '../services/checkoutAuth';
 import usePromotion from '../services/usePromotion';
 import PromoCodeField from '../components/PromoCodeField';
+import DeliveryDetailsFields from '../components/DeliveryDetailsFields';
+import { deliveryAddress, readCheckoutDetails, validateCheckoutDetails } from '../services/checkoutDetails';
 
 const panel = { border: '1px solid #E6DBD3', borderRadius: '20px', bgcolor: '#FFFDFC', minWidth: 0 };
 const formatter = new Intl.NumberFormat('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -35,8 +37,7 @@ function CheckoutSection({ id, icon, title, description, children }) {
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const [address, setAddress] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [details, setDetails] = useState(readCheckoutDetails);
   const [cart, setCart] = useState(null);
   const [cartLoading, setCartLoading] = useState(true);
   const [slowLoading, setSlowLoading] = useState(false);
@@ -87,23 +88,31 @@ export default function Checkout() {
 
   const handleCheckout = async event => {
     event.preventDefault();
-    if (orderPending.current || cartLoading || priceChanged || !items.length || !address.trim() || !customerPhone.trim()) return;
+    if (orderPending.current || cartLoading || priceChanged || !items.length) return;
+    const validationError = validateCheckoutDetails(details);
+    if (validationError) { setOrderError(validationError); return; }
     const token = getSessionToken();
     if (!token) { navigate('/login', { replace: true, state: { from: '/checkout', loginRequired: true } }); return; }
     promotion.cancelCheck();
     orderPending.current = true; setSubmitting(true); setOrderError(''); setUncertainOrder(false);
     let requestSent = false;
     try {
+      const delivery = {
+        shippingAddress: deliveryAddress(details),
+        customerName: details.name.trim(),
+        customerPhone: details.phoneNumber.trim(),
+        customerEmail: details.email.trim(),
+        postalCode: details.postalCode.trim() || null,
+      };
       const retry = await orderRequests.get('cart', {
         account: token,
         items: items.map(item => ({ productId: item.product.id, quantity: Number(item.quantity) })).sort((a, b) => Number(a.productId) - Number(b.productId)),
-        shippingAddress: address.trim(), customerPhone: customerPhone.trim(), couponCode: code || null, expectedTotal: estimatedTotal,
+        ...delivery, couponCode: code || null, expectedTotal: estimatedTotal,
       }, { newPurchase: true });
       setRetryWarning(retry.warning);
       requestSent = true;
       const { data } = await api.post('/api/orders', {
-        shippingAddress: address.trim(),
-        customerPhone: customerPhone.trim(),
+        ...delivery,
         couponCode: code || null,
         expectedTotal: estimatedTotal,
         cartItems: items.map(item => ({ productId: item.product.id, quantity: Number(item.quantity) })),
@@ -152,8 +161,7 @@ export default function Checkout() {
       </Box> : <Box component="form" id="cart-checkout-form" onSubmit={handleCheckout} aria-busy={submitting} sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) 340px', lg: 'minmax(0, 1fr) 380px' }, gap: { xs: 3, lg: 4 }, alignItems: 'start' }}>
         <Stack spacing={3} sx={{ minWidth: 0 }}>
           <CheckoutSection id="checkout-delivery-heading" icon={<LocationOnOutlined sx={{ fontSize: 21 }} />} title="01. Delivery details" description="Let us know where your order should arrive.">
-            <TextField id="checkout-phone" label="Delivery phone number" type="tel" fullWidth required autoComplete="tel" value={customerPhone} onChange={event => setCustomerPhone(event.target.value)} disabled={submitting} slotProps={{ htmlInput: { maxLength: 40 } }} helperText="A reachable number for order confirmation and delivery." sx={{ mb: 2.5 }} />
-            <TextField id="checkout-address" label="Full delivery address" fullWidth required multiline minRows={4} maxRows={8} autoComplete="street-address" value={address} onChange={event => setAddress(event.target.value)} disabled={submitting} placeholder="House number, street, city, province and postal code" helperText="Include your complete address so we can find you easily." />
+            <DeliveryDetailsFields value={details} onChange={setDetails} disabled={submitting} idPrefix="cart-checkout" />
           </CheckoutSection>
           <CheckoutSection id="checkout-coupon-heading" icon={<LocalOfferOutlined sx={{ fontSize: 21 }} />} title="02. Have a promo code?" description="Offers apply only to eligible products. Delivery charges stay unchanged.">
             <PromoCodeField promotion={promotion} disabled={submitting} />
@@ -183,7 +191,7 @@ export default function Checkout() {
           {retryWarning && <Alert severity="warning" sx={{ mb: 2 }}>{retryWarning}</Alert>}
           {orderError && <Alert severity="error" sx={{ mb: 2 }}>{orderError}{uncertainOrder && <Button component={Link} to="/orders" color="inherit" size="small" sx={{ display: 'flex', mt: 1, px: 0 }}>Check my orders</Button>}</Alert>}
           {priceChanged && <Button type="button" variant="outlined" fullWidth onClick={retryCart} sx={{ mb: 2 }}>Refresh summary and review total</Button>}
-          <Button type="submit" fullWidth variant="contained" disabled={submitting || priceChanged || !address.trim() || !customerPhone.trim()} aria-busy={submitting} endIcon={submitting ? <CircularProgress size={17} color="inherit" /> : <ArrowForward />} className="store-primary-action" sx={{ minHeight: 50 }}>{submitting ? 'Sending your request…' : 'Place order'}</Button>
+          <Button type="submit" fullWidth variant="contained" disabled={submitting || priceChanged} aria-busy={submitting} endIcon={submitting ? <CircularProgress size={17} color="inherit" /> : <ArrowForward />} className="store-primary-action" sx={{ minHeight: 50 }}>{submitting ? 'Sending your request…' : 'Place order'}</Button>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2, lineHeight: 1.8 }}>Checkout submits an order request. Staff confirm acceptance after checking your details and availability. COD is collected on delivery.</Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2, lineHeight: 1.8 }}>{submitting ? 'Please keep this page open while we confirm your order.' : 'Your order confirmation will appear here.'}</Typography>
         </Box>

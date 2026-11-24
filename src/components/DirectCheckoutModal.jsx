@@ -3,6 +3,8 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { checkoutLoginState, getSessionToken } from '../services/checkoutAuth';
 import usePromotion from '../services/usePromotion';
 import PromoCodeField from './PromoCodeField';
+import DeliveryDetailsFields from './DeliveryDetailsFields';
+import { deliveryAddress, readCheckoutDetails, validateCheckoutDetails } from '../services/checkoutDetails';
 import PolicyLinks from './PolicyLinks';
 import business from '../content/business.json';
 import { supportEmailHref, supportPhoneHref, supportWhatsAppLabel } from '../content/businessContacts';
@@ -12,7 +14,7 @@ import axios from 'axios';
 import { orderRequests, validateOrderReceipt } from '../services/orderRequest';
 import {
   Dialog, DialogContent, DialogActions, Box, Typography,
-  TextField, Button, Grid, Divider, Stack, Chip,
+  Button, Grid, Divider, Stack, Chip,
   IconButton, Alert, CircularProgress,
   useMediaQuery
 } from '@mui/material';
@@ -41,14 +43,6 @@ const ROSE = '#8F344D';
 const BORDER = '#E9DFDA';
 const panelSx = { p: { xs: 2, sm: 3 }, border: `1px solid ${BORDER}`, borderRadius: 3, bgcolor: 'white' };
 
-function readSavedCustomer() {
-  try {
-    return JSON.parse(localStorage.getItem('user') || 'null') || {};
-  } catch {
-    return {};
-  }
-}
-
 function SummaryRow({ label, children, highlight = false }) {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, fontSize: '.82rem', color: highlight ? '#386749' : '#726661' }}>
@@ -69,18 +63,13 @@ export default function DirectCheckoutModal(props) {
 function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty = 1 }) {
   const navigate = useNavigate();
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
-  const [savedCustomer] = useState(readSavedCustomer);
   const [product, setProduct] = useState(suppliedProduct);
 
   // Quantity
   const [qty, setQty] = useState(initialQty);
 
   // Form Details
-  const [name, setName] = useState(savedCustomer.name || '');
-  const [phoneNumber, setPhoneNumber] = useState(savedCustomer.phone || '');
-  const [email, setEmail] = useState(savedCustomer.email || '');
-  const [address, setAddress] = useState(savedCustomer.address || '');
-  const [postalCode, setPostalCode] = useState('');
+  const [details, setDetails] = useState(readCheckoutDetails);
 
   const paymentMethod = 'COD';
   const orderPending = useRef(false);
@@ -101,11 +90,8 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
     setPreviousSession({ open, initialQty, product: suppliedProduct });
     if (previousSession.product !== suppliedProduct) setProduct(suppliedProduct);
     if (previousSession.open !== open) {
-      const customer = readSavedCustomer();
-      if (!name && customer.name) setName(customer.name);
-      if (!email && customer.email) setEmail(customer.email);
-      if (!phoneNumber && customer.phone) setPhoneNumber(customer.phone);
-      if (!address && customer.address) setAddress(customer.address);
+      const customer = readCheckoutDetails();
+      setDetails(current => Object.fromEntries(Object.keys(current).map(key => [key, current[key] || customer[key]])));
     }
     if (open) {
       setQty(initialQty || 1);
@@ -133,20 +119,9 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
     setErrorMessage('');
 
     // Form validations
-    if (!name.trim()) {
-      setErrorMessage('Please enter your full name.');
-      return;
-    }
-    if (!phoneNumber.trim()) {
-      setErrorMessage('Please enter your phone number for delivery coordination.');
-      return;
-    }
-    if (!email.trim() || !email.includes('@')) {
-      setErrorMessage('Please enter a valid email address for your order.');
-      return;
-    }
-    if (!address.trim()) {
-      setErrorMessage('Please enter your complete delivery address.');
+    const validationError = validateCheckoutDetails(details);
+    if (validationError) {
+      setErrorMessage(validationError);
       return;
     }
 
@@ -159,11 +134,11 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
       const payload = {
         productId: product.id,
         quantity: qty,
-        name: name.trim(),
-        phoneNumber: phoneNumber.trim(),
-        address: address.trim(),
-        postalCode: postalCode.trim() || null,
-        email: email.trim(),
+        name: details.name.trim(),
+        phoneNumber: details.phoneNumber.trim(),
+        address: deliveryAddress(details),
+        postalCode: details.postalCode.trim() || null,
+        email: details.email.trim(),
         paymentMethod: paymentMethod,
         couponCode: promotion.quote?.couponCode || null,
         expectedTotal: grandTotal,
@@ -600,23 +575,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
                 <Box component="section" aria-labelledby="checkout-delivery-heading" sx={panelSx}>
                   <Typography id="checkout-delivery-heading" component="h3" sx={{ fontSize: '1rem', fontWeight: 600, mb: .5 }}>01. Delivery details</Typography>
                   <Typography sx={{ fontSize: '.76rem', color: '#726661', mb: 3 }}>Let us know where your order should arrive.</Typography>
-                  <Grid container spacing={2.5}>
-                    <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-                      <TextField fullWidth size="small" label="Full name" autoComplete="name" required value={name} onChange={e => setName(e.target.value)} />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 12 }}>
-                      <TextField fullWidth size="small" label="Phone number" type="tel" autoComplete="tel" required value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} helperText="For delivery updates" />
-                    </Grid>
-                    <Grid size={12}>
-                      <TextField fullWidth size="small" label="Email address" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} helperText="Your order and receipt details" />
-                    </Grid>
-                    <Grid size={12}>
-                      <TextField fullWidth size="small" label="Delivery address" autoComplete="street-address" required multiline rows={2} value={address} onChange={e => setAddress(e.target.value)} placeholder="House number, street, city, province" />
-                    </Grid>
-                    <Grid size={12}>
-                      <TextField fullWidth size="small" label="Postal code (optional)" autoComplete="postal-code" value={postalCode} onChange={e => setPostalCode(e.target.value)} slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
-                    </Grid>
-                  </Grid>
+                  <DeliveryDetailsFields value={details} onChange={setDetails} disabled={loading} idPrefix="direct-checkout" />
                 </Box>
 
                 <Box component="section" aria-labelledby="checkout-payment-heading" sx={panelSx}>
