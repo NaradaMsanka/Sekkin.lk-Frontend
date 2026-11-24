@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { getSessionToken, readCheckoutIntent } from '../services/checkoutAuth';
 import { Alert, Box, Button, Chip, CircularProgress, Container, Divider, IconButton, Rating, Skeleton, Snackbar, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { Add, ArrowBack, ArrowForward, Check, Favorite, FavoriteBorder, Remove, ShoppingCart } from '@mui/icons-material';
 import DirectCheckoutModal from '../components/DirectCheckoutModal';
@@ -15,6 +16,9 @@ export default function ProductDetail() {
 
 function ProductDetailContent({ id }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const checkoutIntent = readCheckoutIntent(location.state?.checkout);
+  const resumeCheckout = checkoutIntent?.productId === Number(id) && Boolean(getSessionToken());
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,8 +28,8 @@ function ProductDetailContent({ id }) {
   const [reviewsError, setReviewsError] = useState('');
   const [reviewRequest, setReviewRequest] = useState(0);
   const [tab, setTab] = useState(0);
-  const [qty, setQty] = useState(1);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [qty, setQty] = useState(resumeCheckout ? checkoutIntent.quantity : 1);
+  const [checkoutOpen, setCheckoutOpen] = useState(resumeCheckout);
   const [wishlisted, setWishlisted] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [cartBusy, setCartBusy] = useState(false);
@@ -40,7 +44,11 @@ function ProductDetailContent({ id }) {
         return response.json();
       })
       .then(data => {
-        if (!controller.signal.aborted) setProduct({ ...data, price: Number(data.price), discountPrice: data.discountPrice != null ? Number(data.discountPrice) : null });
+        if (!controller.signal.aborted) {
+          setProduct({ ...data, price: Number(data.price), discountPrice: data.discountPrice != null ? Number(data.discountPrice) : null });
+          setQty(value => Math.min(value, Math.max(1, Number(data.stockQuantity) || 0)));
+          if (!(data.stockQuantity > 0)) setCheckoutOpen(false);
+        }
       })
       .catch(err => { if (!controller.signal.aborted) setError(err.message || 'This product could not be loaded.'); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });

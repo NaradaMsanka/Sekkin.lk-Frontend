@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { getLoginReturn } from '../services/checkoutAuth';
 import {
   Box, Container, Card, CardContent, TextField, Button,
   Typography, InputAdornment, IconButton, Alert, Divider
@@ -32,7 +33,8 @@ export default function Login() {
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem("token", data.token);
-        navigate("/");
+        const destination = getLoginReturn(location.state);
+        navigate(destination.to, { replace: true, state: destination.state });
       } else {
         setError("Invalid email or password. Please try again.");
       }
@@ -85,6 +87,7 @@ export default function Login() {
             </Typography>
 
             {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+            {location.state?.loginRequired && <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }}>Please sign in to place your order. You can continue checkout after signing in.</Alert>}
             {location.state?.passwordReset && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>Your password has been reset. Sign in with your new password.</Alert>}
 
             <Box component="form" onSubmit={handleLogin}>
@@ -120,7 +123,7 @@ export default function Login() {
 
             <Divider sx={{ my: 2 }}><Typography variant="caption" color="text.secondary">New here?</Typography></Divider>
 
-            <Button fullWidth variant="outlined" color="primary" component={Link} to="/register" size="large">
+            <Button fullWidth variant="outlined" color="primary" component={Link} to="/register" state={location.state} size="large">
               Create an Account
             </Button>
           </CardContent>

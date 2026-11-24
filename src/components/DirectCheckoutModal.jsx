@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { checkoutLoginState, getSessionToken } from '../services/checkoutAuth';
 import PolicyLinks from './PolicyLinks';
 import business from '../content/business.json';
 import { supportEmailHref, supportPhoneHref, supportWhatsAppLabel } from '../content/businessContacts';
@@ -62,10 +64,14 @@ function SummaryRow({ label, children, highlight = false }) {
 
 // Mount the form only when a product exists, keeping hook order consistent.
 export default function DirectCheckoutModal(props) {
+  if (props.open && props.product && !getSessionToken()) {
+    return <Navigate to="/login" replace state={checkoutLoginState(props.product, props.initialQty || 1)} />;
+  }
   return props.product ? <CheckoutContent {...props} /> : null;
 }
 
 function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty = 1 }) {
+  const navigate = useNavigate();
   const reduceMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [savedCustomer] = useState(readSavedCustomer);
   const [product, setProduct] = useState(suppliedProduct);
@@ -149,6 +155,8 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
     if (orderPending.current || priceChanged) return;
+    const token = getSessionToken();
+    if (!token) { navigate('/login', { replace: true, state: checkoutLoginState(product, qty) }); return; }
     setErrorMessage('');
 
     // Form validations
@@ -187,14 +195,11 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
         expectedTotal: grandTotal,
       };
 
-      const token = localStorage.getItem('token');
-      const retry = await orderRequests.get('direct', { ...payload, account: token || 'guest' }, { newPurchase: true });
+      const retry = await orderRequests.get('direct', { ...payload, account: token }, { newPurchase: true });
       setRetryWarning(retry.warning);
       const headers = { 'Content-Type': 'application/json' };
       headers['Idempotency-Key'] = retry.key;
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      headers['Authorization'] = `Bearer ${token}`;
 
       requestSent = true;
       const res = await axios.post(`${API_BASE_URL}/api/orders/direct`, payload, { headers });
@@ -207,6 +212,11 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
       // Auto-download order confirmation directly to customer's device
       generateAndDownloadSlip(res.data);
     } catch (err) {
+      if (err.response?.status === 401) {
+        if (getSessionToken() === token) localStorage.removeItem('token');
+        navigate('/login', { replace: true, state: checkoutLoginState(product, qty) });
+        return;
+      }
       console.error('Direct order could not be confirmed.');
       const uncertain = requestSent && (!err.response || err.response.status >= 500);
       setUncertainRequest(uncertain);
