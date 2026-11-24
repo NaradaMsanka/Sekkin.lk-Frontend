@@ -20,6 +20,7 @@ import {
   ReceiptLongOutlined,
   StorefrontOutlined,
   WarehouseOutlined,
+  LocalOfferOutlined,
 } from "@mui/icons-material";
 
 const adminTheme = createTheme({
@@ -119,6 +120,7 @@ const sections = [
   { label: "Products", icon: Inventory2Outlined },
   { label: "Inventory", icon: WarehouseOutlined },
   { label: "Orders", icon: ReceiptLongOutlined },
+  { label: "Promo codes", icon: LocalOfferOutlined },
 ];
 
 function AdminNavigation({ tab, onChange, counts, mobile = false }) {

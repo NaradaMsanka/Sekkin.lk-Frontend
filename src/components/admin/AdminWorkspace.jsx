@@ -32,6 +32,7 @@ import {
   ShoppingBagOutlined,
 } from "@mui/icons-material";
 import AdminLayout from "./AdminLayout";
+import AdminPromotions from './AdminPromotions';
 import {
   EmptyState,
   Pagination,
@@ -52,6 +53,7 @@ const pageDetails = [
   ["Products", "Manage your catalog, pricing, and product details."],
   ["Inventory", "Keep track of stock levels and restock with confidence."],
   ["Orders", "Review customer requests, fulfilment, and verified collections."],
+  ["Promo codes", "Manage percentage offers for selected products."],
 ];
 const orderStatuses = [
   "PENDING",
@@ -306,7 +308,7 @@ export default function AdminWorkspace({
     <AdminLayout
       tab={tab}
       onTabChange={setTab}
-      counts={[0, products.length, needsAttention.length, orders.length]}
+      counts={[0, products.length, needsAttention.length, orders.length, 0]}
       title={pageDetails[tab][0]}
       description={pageDetails[tab][1]}
       actions={
@@ -1227,6 +1229,7 @@ export default function AdminWorkspace({
             </>
           )}
 
+          {tab === 4 && <AdminPromotions products={products} refreshKey={lastUpdated?.getTime()} />}
           {tab === 3 && (
             <Card>
               <SectionHeading
@@ -1367,6 +1370,10 @@ export default function AdminWorkspace({
                               Delivery:{" "}
                               {formatDeliveryCharge(order.deliveryCharge)}
                             </Typography>
+                            {order.couponCode && <Typography variant="caption" sx={{ display: 'block', color: 'success.main', mt: 1 }}>
+                              Promo: {order.couponCode}{order.couponPercentage != null ? ` (${order.couponPercentage}%)` : ''}
+                              {order.couponDiscount != null ? ` · saved ${formatMoney(order.couponDiscount)}` : ''}
+                            </Typography>}
                           </TableCell>
                           <TableCell
                             sx={{
