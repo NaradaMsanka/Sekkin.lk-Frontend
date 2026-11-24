@@ -14,8 +14,8 @@ export default function PromoCodeField({ promotion, disabled = false }) {
     {promotion.quote && <Alert severity="success" sx={{ mt: 1.5 }} onClose={disabled ? undefined : promotion.remove}>
       {promotion.quote.couponCode}: {promotion.quote.couponPercentage}% off eligible products. You saved Rs. {promotion.quote.couponDiscount.toFixed(2)}.
     </Alert>}
-    {!promotion.quote && !promotion.error && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-      {promotion.needsApply ? 'Apply or clear this code before placing your order.' : 'Enter a promo code to check offers for your selected products.'}
+    {!promotion.quote && <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+      {promotion.checking ? 'Checking your code. You can still check out at the regular price.' : 'Promo codes are optional. Without an applied offer, you can check out at the regular price.'}
     </Typography>}
   </Box>;
 }

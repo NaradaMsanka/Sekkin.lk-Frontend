@@ -87,9 +87,10 @@ export default function Checkout() {
 
   const handleCheckout = async event => {
     event.preventDefault();
-    if (orderPending.current || cartLoading || priceChanged || promotion.checking || promotion.needsApply || !items.length || !address.trim() || !customerPhone.trim()) return;
+    if (orderPending.current || cartLoading || priceChanged || !items.length || !address.trim() || !customerPhone.trim()) return;
     const token = getSessionToken();
     if (!token) { navigate('/login', { replace: true, state: { from: '/checkout', loginRequired: true } }); return; }
+    promotion.cancelCheck();
     orderPending.current = true; setSubmitting(true); setOrderError(''); setUncertainOrder(false);
     let requestSent = false;
     try {
@@ -182,7 +183,7 @@ export default function Checkout() {
           {retryWarning && <Alert severity="warning" sx={{ mb: 2 }}>{retryWarning}</Alert>}
           {orderError && <Alert severity="error" sx={{ mb: 2 }}>{orderError}{uncertainOrder && <Button component={Link} to="/orders" color="inherit" size="small" sx={{ display: 'flex', mt: 1, px: 0 }}>Check my orders</Button>}</Alert>}
           {priceChanged && <Button type="button" variant="outlined" fullWidth onClick={retryCart} sx={{ mb: 2 }}>Refresh summary and review total</Button>}
-          <Button type="submit" fullWidth variant="contained" disabled={submitting || priceChanged || promotion.checking || promotion.needsApply || !address.trim() || !customerPhone.trim()} aria-busy={submitting} endIcon={submitting ? <CircularProgress size={17} color="inherit" /> : <ArrowForward />} className="store-primary-action" sx={{ minHeight: 50 }}>{submitting ? 'Sending your request…' : 'Place order'}</Button>
+          <Button type="submit" fullWidth variant="contained" disabled={submitting || priceChanged || !address.trim() || !customerPhone.trim()} aria-busy={submitting} endIcon={submitting ? <CircularProgress size={17} color="inherit" /> : <ArrowForward />} className="store-primary-action" sx={{ minHeight: 50 }}>{submitting ? 'Sending your request…' : 'Place order'}</Button>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2, lineHeight: 1.8 }}>Checkout submits an order request. Staff confirm acceptance after checking your details and availability. COD is collected on delivery.</Typography>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 2, lineHeight: 1.8 }}>{submitting ? 'Please keep this page open while we confirm your order.' : 'Your order confirmation will appear here.'}</Typography>
         </Box>

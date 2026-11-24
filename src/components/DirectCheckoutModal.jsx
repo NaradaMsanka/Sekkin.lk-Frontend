@@ -127,7 +127,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
-    if (orderPending.current || priceChanged || promotion.checking || promotion.needsApply) return;
+    if (orderPending.current || priceChanged) return;
     const token = getSessionToken();
     if (!token) { navigate('/login', { replace: true, state: checkoutLoginState(product, qty) }); return; }
     setErrorMessage('');
@@ -150,6 +150,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
       return;
     }
 
+    promotion.cancelCheck();
     orderPending.current = true;
     setLoading(true);
     let requestSent = false;
@@ -662,7 +663,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
             <Button
               type="submit"
               variant="contained"
-              disabled={loading || priceChanged || promotion.checking || promotion.needsApply}
+              disabled={loading || priceChanged}
               aria-busy={loading}
               startIcon={loading ? <CircularProgress size={17} color="inherit" /> : undefined}
               endIcon={!loading ? <ArrowForward sx={{ fontSize: 18 }} /> : undefined}

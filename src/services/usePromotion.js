@@ -1,6 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from './api';
+
+function promoErrorMessage(error) {
+  const data = error.response?.data;
+  const message = typeof data?.message === 'string' ? data.message : typeof data === 'string' ? data : '';
+  if (error.response?.status === 400 && message === 'Promo code is invalid or inactive.') {
+    return 'Invalid or inactive promo code. Please check it and try again.';
+  }
+  if (error.response?.status === 400 && message === 'This promo code does not apply to any products in your order.') {
+    return 'This promo code does not apply to these products. Please try another code.';
+  }
+  if ([400, 409].includes(error.response?.status) && message) return message;
+  if (!error.isAxiosError && !error.response && error.message) return error.message;
+  return 'We could not check this promo code. Please try again.';
+}
 
 export default function usePromotion(items, authState, onPricesChanged) {
   const navigate = useNavigate();
@@ -12,12 +26,17 @@ export default function usePromotion(items, authState, onPricesChanged) {
   useEffect(() => () => { sequence.current += 1; }, []);
   const key = JSON.stringify(items.map(item => [Number(item.productId), Number(item.quantity), Number(item.unitPrice)]).sort((a, b) => a[0] - b[0]));
   const currentKey = useRef(key);
-  currentKey.current = key;
+  useLayoutEffect(() => { currentKey.current = key; }, [key]);
   const quote = result?.key === key && result?.code === code.trim().toUpperCase() ? result.quote : null;
   const error = problem?.key === key ? problem.message : '';
-  const changeCode = value => {
+  const cancelCheck = () => {
+    // Freeze the displayed total when checkout starts; ignore any late promo response.
     sequence.current += 1;
-    setCode(value.toUpperCase()); setResult(null); setProblem(null); setChecking(false);
+    setChecking(false);
+  };
+  const changeCode = value => {
+    cancelCheck();
+    setCode(value.toUpperCase()); setResult(null); setProblem(null);
   };
   const apply = async () => {
     const submittedCode = code.trim().toUpperCase();
@@ -44,9 +63,8 @@ export default function usePromotion(items, authState, onPricesChanged) {
       if (error.response?.status === 401) {
         localStorage.removeItem('token'); navigate('/login', { replace: true, state: authState }); return;
       }
-      const data = error.response?.data;
-      setProblem({ key, message: typeof data?.message === 'string' ? data.message : typeof data === 'string' ? data : error.message || 'Promo code could not be checked. Try again.' });
+      setProblem({ key, message: promoErrorMessage(error) });
     } finally { if (attempt === sequence.current) setChecking(false); }
   };
-  return { code, quote, error, checking, changeCode, apply, remove: () => changeCode(''), needsApply: Boolean(code.trim()) && !quote };
+  return { code, quote, error, checking, changeCode, apply, cancelCheck, remove: () => changeCode('') };
 }
