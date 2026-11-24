@@ -11,6 +11,7 @@ import PolicyLinks from '../components/PolicyLinks';
 import DeliveryPricingNotice from '../components/DeliveryPricingNotice';
 import { estimateOrderTotals, formatDeliveryCharge } from '../content/delivery';
 import { orderRequests, validateOrderReceipt } from '../services/orderRequest';
+import { getSessionToken } from '../services/checkoutAuth';
 
 const panel = { border: '1px solid #E6DBD3', borderRadius: '20px', bgcolor: '#FFFDFC', minWidth: 0 };
 const formatter = new Intl.NumberFormat('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -54,8 +55,8 @@ export default function Checkout() {
   const orderPending = useRef(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token || ['undefined', 'null'].includes(token)) { navigate('/login', { replace: true }); return; }
+    const token = getSessionToken();
+    if (!token) { navigate('/login', { replace: true, state: { from: '/checkout', loginRequired: true } }); return; }
     const controller = new AbortController();
     const timer = setTimeout(() => { if (!controller.signal.aborted) setSlowLoading(true); }, 8000);
     api.get('/api/cart', { signal: controller.signal, timeout: 120000 })
@@ -66,7 +67,7 @@ export default function Checkout() {
       })
       .catch(err => {
         if (controller.signal.aborted) return;
-        if (err.response?.status === 401) { localStorage.removeItem('token'); navigate('/login', { replace: true }); return; }
+        if (err.response?.status === 401) { localStorage.removeItem('token'); navigate('/login', { replace: true, state: { from: '/checkout', loginRequired: true } }); return; }
         setCartError(errorMessage(err, 'We couldn’t load your order summary. Please try again.'));
       })
       .finally(() => { clearTimeout(timer); if (!controller.signal.aborted) { setCartLoading(false); setSlowLoading(false); } });
@@ -94,8 +95,8 @@ export default function Checkout() {
   const handleCheckout = async event => {
     event.preventDefault();
     if (orderPending.current || cartLoading || priceChanged || !items.length || !address.trim() || !customerPhone.trim()) return;
-    const token = localStorage.getItem('token');
-    if (!token || ['undefined', 'null'].includes(token)) { navigate('/login', { replace: true }); return; }
+    const token = getSessionToken();
+    if (!token) { navigate('/login', { replace: true, state: { from: '/checkout', loginRequired: true } }); return; }
     orderPending.current = true; setSubmitting(true); setOrderError(''); setUncertainOrder(false);
     let requestSent = false;
     try {
@@ -119,7 +120,7 @@ export default function Checkout() {
       // This endpoint clears the cart after the order is successfully created.
       window.dispatchEvent(new CustomEvent('sekkin:cart-updated', { detail: { items: [] } }));
     } catch (err) {
-      if (err.response?.status === 401) { localStorage.removeItem('token'); navigate('/login', { replace: true }); return; }
+      if (err.response?.status === 401) { localStorage.removeItem('token'); navigate('/login', { replace: true, state: { from: '/checkout', loginRequired: true } }); return; }
       const uncertain = requestSent && (!err.response || err.response.status >= 500);
       setUncertainOrder(uncertain);
       setPriceChanged(err.response?.status === 409);

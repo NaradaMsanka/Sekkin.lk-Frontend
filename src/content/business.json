@@ -1,22 +1,27 @@
 {
   "brand": "SEKKIN.LK",
-  "businessName": "sekkinLK",
-  "registeredName": null,
+  "businessName": "Sekkin.lk",
+  "registeredName": "SEKKIN LK",
   "category": "Cosmetics, skincare and beauty products",
   "country": "Sri Lanka",
-  "siteUrl": "https://sekkin-lk-frontend.vercel.app",
+  "siteUrl": "https://www.sekkin.lk",
   "supportPhone": "+94 78 815 3473",
   "whatsappNumber": "94788153473",
-  "supportEmail": null,
-  "postalAddress": null,
-  "businessHours": "Mon–Sat, 9 AM–7 PM",
-  "contactsConfirmed": false,
-  "confirmedContactFields": ["supportPhone", "whatsappNumber"],
-  "socialLinks": [],
+  "supportEmail": "lksekkin@gmail.com",
+  "postalAddress": "Batapola, Sri Lanka",
+  "businessHours": "Monday – Saturday, 9:00 AM – 9:00 PM",
+  "contactsConfirmed": true,
+  "confirmedContactFields": ["registeredName", "supportPhone", "whatsappNumber", "supportEmail", "postalAddress", "businessHours"],
+  "socialHandle": "@sekkin.lk",
+  "socialLinks": [
+    { "label": "Instagram", "href": "https://www.instagram.com/sekkin.lk/" },
+    { "label": "Facebook", "href": "https://www.facebook.com/profile.php?id=61581694319859" },
+    { "label": "TikTok", "href": "https://www.tiktok.com/@sekkin.lk" }
+  ],
   "policiesApproved": false,
   "catalogReviewed": false,
   "paymentSafetyReviewed": false,
-  "reviewDate": "2026-11-09",
+  "reviewDate": "2026-11-24",
   "refund": {
     "eligibility": null, "returnWindow": null, "damagedItems": null,
     "condition": null, "requestProcedure": null, "returnShipping": null,
@@ -24,9 +29,14 @@
     "exchanges": null, "hygieneRestrictions": null, "consumerRights": null
   },
   "shipping": {
-    "coverage": null, "processing": null, "deliveryEstimate": null,
-    "charges": "A fixed delivery charge of LKR 350 applies to every order. The delivery charge is displayed at checkout before you confirm your order.", "partners": null, "tracking": null,
-    "delays": null, "failedDelivery": null
+    "coverage": "We offer islandwide delivery across Sri Lanka through Koombiyoo Delivery, reaching all major cities, suburbs, and outstation areas.",
+    "processing": "All orders are processed and dispatched within 1 working day (Monday to Friday, excluding public and mercantile holidays) after order confirmation. Orders placed on weekends or public holidays will be processed on the next working day.",
+    "deliveryEstimate": "Once dispatched, standard delivery takes 1–5 working days, depending on your location.",
+    "charges": "A flat delivery fee of Rs. 400 applies to all islandwide orders. Any applicable shipping promotions or free-delivery thresholds will be displayed clearly at checkout.",
+    "partners": "Koombiyoo Delivery",
+    "tracking": "Once your package is handed over to our courier partner, you will receive a tracking number and status updates via SMS, WhatsApp, or email so you can monitor your delivery in real time.",
+    "delays": "While we work closely with our courier partners to ensure timely delivery, unforeseen circumstances such as extreme weather, road closures, peak holiday seasons, or courier operational disruptions may occasionally cause delays. If your order is significantly delayed, our team will proactively assist you with courier follow-ups.",
+    "failedDelivery": "Please ensure your delivery address and contact number are accurate at checkout and that someone is available to receive the package. If a delivery attempt fails because the recipient is unreachable or unavailable, the courier will typically attempt re-delivery on the next working day. Orders returned to us due to 3 failed delivery attempts, unanswered phone calls, incorrect addresses, or refusal to accept a confirmed Cash-on-Delivery (COD) parcel may require an additional re-delivery fee before being dispatched again."
   },
   "privacy": {
     "controller": null, "processingLocations": null,

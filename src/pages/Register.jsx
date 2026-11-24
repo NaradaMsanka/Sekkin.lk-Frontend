@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { getLoginReturn } from '../services/checkoutAuth';
 import {
   Box, Container, Card, CardContent, TextField, Button,
   Typography, InputAdornment, IconButton, Alert, Divider
@@ -18,6 +19,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -43,13 +45,14 @@ export default function Register() {
           if (loginRes.ok) {
             const loginData = await loginRes.json();
             localStorage.setItem("token", loginData.token);
-            setTimeout(() => navigate("/"), 1200);
+            const destination = getLoginReturn(location.state);
+            setTimeout(() => navigate(destination.to, { replace: true, state: destination.state }), 1200);
             return;
           }
         } catch {
           console.warn("Automatic sign-in could not complete.");
         }
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/login", { replace: true, state: location.state }), 1500);
       } else {
         setError(text || "Registration failed. Email may already be in use.");
       }
@@ -143,7 +146,7 @@ export default function Register() {
             </Box>
 
             <Divider sx={{ my: 2 }}><Typography variant="caption" color="text.secondary">Already have an account?</Typography></Divider>
-            <Button fullWidth variant="outlined" color="primary" component={Link} to="/login" size="large">Sign In</Button>
+            <Button fullWidth variant="outlined" color="primary" component={Link} to="/login" state={location.state} size="large">Sign In</Button>
           </CardContent>
         </Card>
       </Container>

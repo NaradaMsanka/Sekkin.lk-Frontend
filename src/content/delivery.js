@@ -1,6 +1,6 @@
 // Display estimates mirror the confirmed rule. OrderService calculates and stores final amounts.
-export const fixedDeliveryCharge = 350;
-export const deliveryPricingNotice = 'A fixed delivery charge of LKR 350 applies once per order, islandwide.';
+export const fixedDeliveryCharge = 400;
+export const deliveryPricingNotice = 'A flat delivery fee of Rs. 400 applies once per order, islandwide.';
 const money = value => Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 
 export function estimateOrderTotals(subtotal, couponCode = '', hasItems = true) {

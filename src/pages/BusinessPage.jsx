@@ -31,9 +31,10 @@ function usePageMetadata(title, description, path, noindex, canonicalUrl) {
 
 function BusinessDetails() {
   const fields = [
-    ['Business name', business.businessName], ['Registered business name', business.registeredName],
+    ['Business name', business.businessName], ['Registered business name', business.registeredName, null, 'registeredName'],
     ['Business phone', business.supportPhone, supportPhoneHref, 'supportPhone'], ['Support email', business.supportEmail, supportEmailHref, 'supportEmail'],
-    ['Business postal address', business.postalAddress], ['Business hours', business.businessHours], ['WhatsApp', business.whatsappNumber, supportWhatsAppHref, 'whatsappNumber'],
+    ['Business address', business.postalAddress, null, 'postalAddress'], ['Business hours', business.businessHours, null, 'businessHours'],
+    ['WhatsApp', business.supportPhone, supportWhatsAppHref, 'whatsappNumber'], ['Website', business.siteUrl.replace('https://', ''), business.siteUrl],
   ];
   return <Box sx={{ ...card, p: { xs: 2.5, sm: 3.5 }, mb: 3 }}>
     <Typography component="h2" sx={{ fontFamily: 'Georgia, serif', fontSize: '1.6rem', mb: 2 }}>Business details</Typography>
@@ -41,11 +42,17 @@ function BusinessDetails() {
       {fields.map(([label, value, href, contactField]) => <Box key={label} sx={{ display: 'contents' }}>
         <Typography component="dt" variant="body2" color="text.secondary">{label}</Typography>
         <Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere', lineHeight: 1.8 }}>
-          {href ? <Box component="a" href={href} target="_blank" rel="noopener noreferrer" title={contactField === 'supportEmail' ? 'Email support' : 'Chat on WhatsApp (opens a new tab)'} sx={{ color: 'primary.main', textUnderlineOffset: 4 }}>{contactField === 'supportPhone' || contactField === 'whatsappNumber' ? supportWhatsAppLabel : value}</Box> : value || 'REVIEW REQUIRED — details to be supplied.'}
-          {value && label !== 'Business name' && !isContactFieldConfirmed(contactField) && <Typography component="span" variant="caption" sx={{ display: 'block', color: '#846038' }}>REVIEW REQUIRED — confirm this existing detail.</Typography>}
+          {href ? <Box component="a" href={href} target={href.startsWith('https://') ? '_blank' : undefined} rel={href.startsWith('https://') ? 'noopener noreferrer' : undefined} title={contactField === 'supportEmail' ? 'Email support' : href.startsWith('https://wa.me/') ? 'Chat on WhatsApp (opens a new tab)' : 'Visit our website (opens a new tab)'} sx={{ color: 'primary.main', textUnderlineOffset: 4 }}>{contactField === 'whatsappNumber' ? supportWhatsAppLabel : value}</Box> : value || 'REVIEW REQUIRED — details to be supplied.'}
+          {value && contactField && !isContactFieldConfirmed(contactField) && <Typography component="span" variant="caption" sx={{ display: 'block', color: '#846038' }}>REVIEW REQUIRED — confirm this existing detail.</Typography>}
         </Typography>
       </Box>)}
     </Box>
+    {business.socialLinks.length > 0 && <Box sx={{ mt: 3 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Social media · {business.socialHandle}</Typography>
+      <Stack direction="row" useFlexGap spacing={2} sx={{ flexWrap: 'wrap' }}>
+        {business.socialLinks.map(({ label, href }) => <Box component="a" key={label} href={href} target="_blank" rel="noopener noreferrer" sx={{ color: 'primary.main', py: 1, textUnderlineOffset: 4 }}>{label}</Box>)}
+      </Stack>
+    </Box>}
     {(supportEmailHref || supportPhoneHref) && <Stack direction="row" useFlexGap spacing={1.5} sx={{ flexWrap: 'wrap', mt: 3 }}>
       {supportEmailHref && <Button component="a" href={supportEmailHref} variant="contained" startIcon={<MailOutlined />}>Email support</Button>}
       {supportPhoneHref && <Button component="a" href={supportPhoneHref} target="_blank" rel="noopener noreferrer" variant="outlined" startIcon={<WhatsApp />}>Chat on WhatsApp</Button>}

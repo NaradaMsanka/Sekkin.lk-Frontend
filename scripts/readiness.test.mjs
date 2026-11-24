@@ -14,12 +14,12 @@ const completeFixture = () => {
   return data;
 };
 
-test('current missing business decisions block readiness', () => {
+test('confirmed contact and shipping details preserve remaining readiness checks', () => {
   const issues = getReadinessIssues(draft);
-  assert.ok(issues.includes('Confirm business.registeredName'));
-  assert.ok(issues.includes('Confirm business.supportEmail'));
+  assert.ok(!issues.some(issue => issue.startsWith('Confirm business.')));
+  assert.ok(!issues.some(issue => issue.startsWith('Review shipping.')));
   assert.ok(issues.includes('Review refund.returnWindow'));
-  assert.ok(issues.includes('Review shipping.partners'));
+  assert.ok(issues.includes('Owner/technical sign-off required: catalogReviewed'));
 });
 test('complete business values still require every sign-off', () => {
   const data = completeFixture(); assert.deepEqual(getReadinessIssues(data), []);
@@ -34,7 +34,8 @@ test('invalid email and placeholder decisions cannot pass as final values', () =
 });
 test('filling configuration alone cannot publish draft policy copy', () => {
   assert.deepEqual(getReadinessIssues(completeFixture()), []);
-  assert.ok(getDraftContentIssues(businessPages).length > 0);
+  assert.ok(getDraftContentIssues({ example: { intro: 'Draft for review.', sections: [{ id: 'pending', body: ['REVIEW REQUIRED — confirm the policy.'] }] } }).length > 0);
+  assert.deepEqual(getDraftContentIssues(businessPages), []);
   assert.deepEqual(getDraftContentIssues({ example: { intro: 'Confirmed information.', sections: [{ id: 'approved', body: ['Approved information.'] }] } }), []);
 });
 function runPreflight(args, variables = {}) {
