@@ -123,6 +123,7 @@ export default function OrderHistory() {
                     <TableCell>
                       <Typography variant="body2" fontWeight={700}>Rs. {order.totalAmount?.toFixed(2)}</Typography>
                       <Typography variant="caption" color="text.secondary">Delivery: {formatDeliveryCharge(order.deliveryCharge)}</Typography>
+                      {order.couponCode && <Typography variant="caption" sx={{ display: 'block', color: 'success.main' }}>Promo: {order.couponCode}{order.couponPercentage != null ? ` (${order.couponPercentage}%)` : ''}{order.couponDiscount != null ? ` · saved Rs. ${order.couponDiscount.toFixed(2)}` : ''}</Typography>}
                     </TableCell>
                     <TableCell>
                       <Chip label={s.label} color={s.color} size="small" sx={{ fontWeight: 600 }} />

@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { checkoutLoginState, getSessionToken } from '../services/checkoutAuth';
+import usePromotion from '../services/usePromotion';
+import PromoCodeField from './PromoCodeField';
 import PolicyLinks from './PolicyLinks';
 import business from '../content/business.json';
 import { supportEmailHref, supportPhoneHref, supportWhatsAppLabel } from '../content/businessContacts';
@@ -33,12 +35,6 @@ const resolveImageUrl = (imgUrl) => {
     return `${API_BASE_URL}${imgUrl}`;
   }
   return imgUrl;
-};
-
-const VALID_COUPONS = {
-  GLOW10: { desc: '10% OFF Storewide', rate: 0.10, flat: 0, min: 0 },
-  WELCOME10: { desc: '10% Welcome Discount', rate: 0.10, flat: 0, min: 0 },
-  SAVE500: { desc: 'Rs. 500 OFF (Min. Rs. 2,500)', rate: 0, flat: 500, min: 2500 }
 };
 
 const ROSE = '#8F344D';
@@ -89,11 +85,6 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
   const paymentMethod = 'COD';
   const orderPending = useRef(false);
 
-  // Coupon
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState('');
-  const [couponError, setCouponError] = useState('');
-
   // States
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -131,26 +122,8 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
 
   const subtotal = unitPrice * qty;
 
-  const { couponDiscount, deliveryCharge, total: grandTotal } = estimateOrderTotals(subtotal, appliedCoupon);
-
-  const handleApplyCoupon = () => {
-    setCouponError('');
-    const code = couponCode.trim().toUpperCase();
-    if (!code) {
-      setAppliedCoupon('');
-      return;
-    }
-    if (!VALID_COUPONS[code]) {
-      setCouponError('Invalid coupon code. Try GLOW10 or SAVE500');
-      return;
-    }
-    const rule = VALID_COUPONS[code];
-    if (rule.min > 0 && subtotal < rule.min) {
-      setCouponError(`Minimum order amount of Rs. ${rule.min} required for this coupon.`);
-      return;
-    }
-    setAppliedCoupon(code);
-  };
+  const promotion = usePromotion([{ productId: product.id, quantity: qty, unitPrice }], checkoutLoginState(product, qty), () => setPriceChanged(true));
+  const { couponDiscount, deliveryCharge, total: grandTotal } = promotion.quote || estimateOrderTotals(subtotal);
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
@@ -177,6 +150,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
       return;
     }
 
+    promotion.cancelCheck();
     orderPending.current = true;
     setLoading(true);
     let requestSent = false;
@@ -191,7 +165,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
         postalCode: postalCode.trim() || null,
         email: email.trim(),
         paymentMethod: paymentMethod,
-        couponCode: appliedCoupon || null,
+        couponCode: promotion.quote?.couponCode || null,
         expectedTotal: grandTotal,
       };
 
@@ -217,6 +191,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
         navigate('/login', { replace: true, state: checkoutLoginState(product, qty) });
         return;
       }
+      if (err.response?.status === 400 && promotion.quote) promotion.changeCode(promotion.code);
       console.error('Direct order could not be confirmed.');
       const uncertain = requestSent && (!err.response || err.response.status >= 500);
       setUncertainRequest(uncertain);
@@ -460,7 +435,8 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
       <div class="summary-box">
         <div class="summary-row"><span>Subtotal:</span><span>Rs. ${(receipt.subtotal || 0).toFixed(2)}</span></div>
         <div class="summary-row"><span>Delivery Charge:</span><span>${formatDeliveryCharge(receipt.deliveryCharge)}</span></div>
-        ${receipt.couponDiscount > 0 ? '<div class="summary-row"><span>Coupon savings:</span><span>− Rs. ' + receipt.couponDiscount.toFixed(2) + '</span></div>' : ''}
+        ${receipt.couponCode ? '<div class="summary-row"><span>Promo code:</span><span>' + receipt.couponCode + (receipt.couponPercentage != null ? ' (' + receipt.couponPercentage + '%)' : '') + '</span></div>' : ''}
+        ${receipt.couponDiscount > 0 ? '<div class="summary-row"><span>Promo savings:</span><span>− Rs. ' + receipt.couponDiscount.toFixed(2) + '</span></div>' : ''}
         <div class="total-row"><span>Grand Total:</span><span>Rs. ${(receipt.totalAmount || 0).toFixed(2)}</span></div>
         ${receipt.discountAmount > 0 ? '<div class="summary-row" style="color: #2E7D32; font-weight: 600; margin-top: 12px;"><span>Savings included:</span><span>Rs. ' + receipt.discountAmount.toFixed(2) + '</span></div><p style="font-size: 12px; color: #555;">Product and coupon savings are already reflected in your total.</p>' : ''}
       </div>
@@ -579,7 +555,8 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
             <Stack spacing={1.25}>
               <SummaryRow label="Subtotal">Rs. {orderReceipt.subtotal?.toFixed(2)}</SummaryRow>
               <SummaryRow label="Delivery Charge">{formatDeliveryCharge(orderReceipt.deliveryCharge)}</SummaryRow>
-              {orderReceipt.couponDiscount > 0 && <SummaryRow label="Coupon savings" highlight>− Rs. {orderReceipt.couponDiscount.toFixed(2)}</SummaryRow>}
+              {orderReceipt.couponCode && <SummaryRow label="Promo code">{orderReceipt.couponCode}{orderReceipt.couponPercentage != null ? ` (${orderReceipt.couponPercentage}%)` : ''}</SummaryRow>}
+              {orderReceipt.couponDiscount > 0 && <SummaryRow label="Promo savings" highlight>− Rs. {orderReceipt.couponDiscount.toFixed(2)}</SummaryRow>}
               <Divider />
               <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 1, fontWeight: 600, color: ROSE }}>
                 <span>Total</span><span>Rs. {orderReceipt.totalAmount?.toFixed(2)}</span>
@@ -670,12 +647,7 @@ function CheckoutContent({ open, onClose, product: suppliedProduct, initialQty =
 
                 <Box sx={{ my: 2.5, pt: 2.5, borderTop: `1px solid ${BORDER}` }}>
                   <Typography sx={{ fontSize: '.75rem', color: '#726661', mb: 1.5, display: 'flex', alignItems: 'center', gap: .75 }}><LocalOffer sx={{ fontSize: 15 }} /> Have a discount code?</Typography>
-                  <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start' }}>
-                    <TextField size="small" fullWidth label="Coupon code" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} error={Boolean(couponError)} sx={{ minWidth: 0 }} />
-                    <Button variant="outlined" onClick={handleApplyCoupon} sx={{ color: ROSE, borderColor: BORDER, minHeight: 40, px: 1.5 }}>Apply</Button>
-                  </Stack>
-                  {couponError && <Typography role="alert" variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>{couponError}</Typography>}
-                  {appliedCoupon && <Alert severity="success" sx={{ mt: 1.5, py: .25, borderRadius: 2, fontSize: '.72rem' }} onClose={() => setAppliedCoupon('')}><strong>{appliedCoupon}</strong> applied. You saved Rs. {couponDiscount.toFixed(2)}.</Alert>}
+                  <PromoCodeField promotion={promotion} disabled={loading} />
                 </Box>
                 <Box sx={{ p: 2, bgcolor: '#FCF8F5', borderRadius: 2, display: 'flex', flexDirection: 'column', gap: .5 }}>
                   <Typography sx={{ fontSize: '.75rem', color: '#726661' }}>Estimated total due</Typography>

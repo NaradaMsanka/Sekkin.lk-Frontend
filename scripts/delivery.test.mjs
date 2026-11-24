@@ -13,17 +13,17 @@ test('multiple products and quantities still use a single charge', () => {
   assert.equal(estimateOrderTotals(1000 * 2 + 1500 * 2).total, 5400);
   assert.equal(estimateOrderTotals(1000 * 10).deliveryCharge, 400);
 });
-test('existing coupons apply only to merchandise', () => {
-  for (const code of ['SAVE500', 'GLOW10', 'WELCOME10', ' save500 ']) {
-    assert.equal(estimateOrderTotals(5000, code).total, 4900);
-    assert.equal(estimateOrderTotals(5000, code).deliveryCharge, 400);
-  }
-  assert.equal(estimateOrderTotals(2499, 'SAVE500').total, 2899);
-  assert.equal(estimateOrderTotals(5000, 'UNKNOWN').total, 5400);
-  assert.equal(estimateOrderTotals(.05, 'GLOW10').total, 400.04);
+test('verified promotional savings never reduce delivery or make merchandise negative', () => {
+  assert.equal(estimateOrderTotals(5000, 500).total, 4900);
+  assert.equal(estimateOrderTotals(5000, 500).deliveryCharge, 400);
+  assert.equal(estimateOrderTotals(2499, 249.9).total, 2649.1);
+  assert.equal(estimateOrderTotals(5000, 0).total, 5400);
+  assert.equal(estimateOrderTotals(.05, .01).total, 400.04);
+  assert.equal(estimateOrderTotals(1000, 2000).total, 400);
+  assert.throws(() => estimateOrderTotals(5000, 'UNVERIFIED_CODE'));
 });
 test('empty cart has no payable order or delivery fee', () => {
-  assert.deepEqual(estimateOrderTotals(0, '', false), { subtotal: 0, couponDiscount: 0, deliveryCharge: 0, total: 0 });
+  assert.deepEqual(estimateOrderTotals(0, 0, false), { subtotal: 0, couponDiscount: 0, deliveryCharge: 0, total: 0 });
 });
 test('invalid estimates are rejected', () => {
   for (const amount of [-1, NaN, Infinity]) assert.throws(() => estimateOrderTotals(amount));

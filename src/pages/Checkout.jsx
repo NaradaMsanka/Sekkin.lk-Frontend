@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Alert, Box, Button, CircularProgress, Container, Divider,
-  IconButton, InputAdornment, Skeleton, Stack, TextField, Typography,
+  Skeleton, Stack, TextField, Typography,
 } from '@mui/material';
-import { ArrowBack, ArrowForward, CheckCircleOutlined, Close, LocalOfferOutlined, LocationOnOutlined, ShoppingCartOutlined } from '@mui/icons-material';
+import { ArrowBack, ArrowForward, CheckCircleOutlined, LocalOfferOutlined, LocationOnOutlined, ShoppingCartOutlined } from '@mui/icons-material';
 import ProductMedia from '../components/storefront/ProductMedia';
 import api from '../services/api';
 import PolicyLinks from '../components/PolicyLinks';
@@ -12,15 +12,12 @@ import DeliveryPricingNotice from '../components/DeliveryPricingNotice';
 import { estimateOrderTotals, formatDeliveryCharge } from '../content/delivery';
 import { orderRequests, validateOrderReceipt } from '../services/orderRequest';
 import { getSessionToken } from '../services/checkoutAuth';
+import usePromotion from '../services/usePromotion';
+import PromoCodeField from '../components/PromoCodeField';
 
 const panel = { border: '1px solid #E6DBD3', borderRadius: '20px', bgcolor: '#FFFDFC', minWidth: 0 };
 const formatter = new Intl.NumberFormat('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const money = value => value != null && Number.isFinite(Number(value)) ? `Rs. ${formatter.format(Number(value))}` : '—';
-const offers = [
-  { code: 'GLOW10', description: '10% off your subtotal' },
-  { code: 'WELCOME10', description: '10% off your subtotal' },
-  { code: 'SAVE500', description: 'Rs. 500 off orders of Rs. 2,500 or more' },
-];
 const errorMessage = (error, fallback) => {
   const data = error.response?.data;
   return typeof data === 'string' ? data : typeof data?.message === 'string' ? data.message : fallback;
@@ -40,7 +37,6 @@ export default function Checkout() {
   const navigate = useNavigate();
   const [address, setAddress] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [coupon, setCoupon] = useState('');
   const [cart, setCart] = useState(null);
   const [cartLoading, setCartLoading] = useState(true);
   const [slowLoading, setSlowLoading] = useState(false);
@@ -84,19 +80,17 @@ export default function Checkout() {
   const items = cart?.items || [];
   const itemCount = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const subtotal = Number(cart?.totalPrice || 0);
-  const code = coupon.trim().toUpperCase();
-  // Display estimates using the existing coupon rules. OrderService confirms the actual total.
-  const { couponDiscount: discount, deliveryCharge, total: estimatedTotal } = estimateOrderTotals(subtotal, code, items.length > 0);
-  const offer = offers.find(item => item.code === code);
-  const couponHelp = !code ? 'Choose an offer below or enter your own code.'
-    : code === 'SAVE500' && subtotal < 2500 ? 'SAVE500 requires a subtotal of Rs. 2,500 or more.'
-      : offer ? `${offer.description}. Your discount is shown in the estimate.` : 'This code will be checked when you place your order.';
+  const promotion = usePromotion(items.map(item => ({ productId: item.product.id, quantity: item.quantity,
+    unitPrice: Number(item.price) / Number(item.quantity) })), { from: '/checkout', loginRequired: true }, () => setPriceChanged(true));
+  const code = promotion.quote?.couponCode || null;
+  const { couponDiscount: discount, deliveryCharge, total: estimatedTotal } = promotion.quote || estimateOrderTotals(subtotal, 0, items.length > 0);
 
   const handleCheckout = async event => {
     event.preventDefault();
     if (orderPending.current || cartLoading || priceChanged || !items.length || !address.trim() || !customerPhone.trim()) return;
     const token = getSessionToken();
     if (!token) { navigate('/login', { replace: true, state: { from: '/checkout', loginRequired: true } }); return; }
+    promotion.cancelCheck();
     orderPending.current = true; setSubmitting(true); setOrderError(''); setUncertainOrder(false);
     let requestSent = false;
     try {
@@ -121,6 +115,7 @@ export default function Checkout() {
       window.dispatchEvent(new CustomEvent('sekkin:cart-updated', { detail: { items: [] } }));
     } catch (err) {
       if (err.response?.status === 401) { localStorage.removeItem('token'); navigate('/login', { replace: true, state: { from: '/checkout', loginRequired: true } }); return; }
+      if (err.response?.status === 400 && promotion.quote) promotion.changeCode(promotion.code);
       const uncertain = requestSent && (!err.response || err.response.status >= 500);
       setUncertainOrder(uncertain);
       setPriceChanged(err.response?.status === 409);
@@ -134,7 +129,7 @@ export default function Checkout() {
       <Typography sx={{ color: '#9A7457', fontSize: '.65rem', textTransform: 'uppercase', letterSpacing: '.15em', mb: 1 }}>Thank you for choosing Sekkin.lk</Typography>
       <Typography component="h1" sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: '2rem', sm: '2.5rem' }, mb: 2 }}>Order request received</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.9, mb: 3 }}>We’ve received your request #{placedOrder.orderId ?? placedOrder.id}. Staff must verify the details and confirm acceptance before dispatch. This acknowledgement is not acceptance or proof of payment. You can follow its progress in My orders.</Typography>
-      {placedOrder.totalAmount != null && <Box sx={{ borderBlock: '1px solid #E6DBD3', py: 2, mb: 3 }}><Typography variant="body2" color="text.secondary">Delivery Charge: {formatDeliveryCharge(placedOrder.deliveryCharge)}</Typography><Typography variant="caption" color="text.secondary">Order total</Typography><Typography sx={{ color: 'primary.main', fontWeight: 600, fontSize: '1.5rem', mt: .5 }}>{money(placedOrder.totalAmount)}</Typography></Box>}
+      {placedOrder.totalAmount != null && <Box sx={{ borderBlock: '1px solid #E6DBD3', py: 2, mb: 3 }}><Typography variant="body2" color="text.secondary">Delivery Charge: {formatDeliveryCharge(placedOrder.deliveryCharge)}</Typography>{placedOrder.couponCode && <Typography variant="body2" color="success.main">Promo: {placedOrder.couponCode}{placedOrder.couponPercentage != null ? ` (${placedOrder.couponPercentage}%)` : ''} · saved {money(placedOrder.couponDiscount)}</Typography>}<Typography variant="caption" color="text.secondary">Order total</Typography><Typography sx={{ color: 'primary.main', fontWeight: 600, fontSize: '1.5rem', mt: .5 }}>{money(placedOrder.totalAmount)}</Typography></Box>}
       <Button component={Link} to="/orders" variant="contained" fullWidth endIcon={<ArrowForward />}>View my orders</Button>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>Taking you to your orders shortly…</Typography>
     </Box>
@@ -160,11 +155,8 @@ export default function Checkout() {
             <TextField id="checkout-phone" label="Delivery phone number" type="tel" fullWidth required autoComplete="tel" value={customerPhone} onChange={event => setCustomerPhone(event.target.value)} disabled={submitting} slotProps={{ htmlInput: { maxLength: 40 } }} helperText="A reachable number for order confirmation and delivery." sx={{ mb: 2.5 }} />
             <TextField id="checkout-address" label="Full delivery address" fullWidth required multiline minRows={4} maxRows={8} autoComplete="street-address" value={address} onChange={event => setAddress(event.target.value)} disabled={submitting} placeholder="House number, street, city, province and postal code" helperText="Include your complete address so we can find you easily." />
           </CheckoutSection>
-          <CheckoutSection id="checkout-coupon-heading" icon={<LocalOfferOutlined sx={{ fontSize: 21 }} />} title="02. Have a coupon?" description="A little saving for your daily favourites. This step is optional.">
-            <TextField id="checkout-coupon" label="Coupon code" fullWidth value={coupon} onChange={event => setCoupon(event.target.value.toUpperCase())} disabled={submitting} autoComplete="off" helperText={couponHelp} slotProps={{ input: { endAdornment: coupon ? <InputAdornment position="end"><IconButton aria-label="Clear coupon code" edge="end" disabled={submitting} onClick={() => setCoupon('')}><Close sx={{ fontSize: 18 }} /></IconButton></InputAdornment> : null }, htmlInput: { spellCheck: false } }} sx={{ mb: 2.5 }} />
-            <Box role="group" aria-label="Available coupon offers" sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' }, gap: 1 }}>
-              {offers.map(item => <Button key={item.code} aria-label={`Use ${item.code}`} aria-pressed={code === item.code} disabled={submitting} onClick={() => setCoupon(item.code)} variant="outlined" sx={{ display: 'block', textAlign: 'left', p: 1.5, color: code === item.code ? 'primary.main' : 'text.primary', borderColor: code === item.code ? 'primary.main' : '#E6DBD3', bgcolor: code === item.code ? '#F8EDEF' : 'white', height: '100%', '&:hover': { borderColor: 'primary.main', bgcolor: '#F8EDEF' } }}><Typography component="span" sx={{ display: 'block', fontSize: '.75rem', fontWeight: 600, mb: .5 }}>{item.code}</Typography><Typography component="span" sx={{ display: 'block', fontSize: '.66rem', lineHeight: 1.7, color: 'text.secondary', fontWeight: 400 }}>{item.description}</Typography></Button>)}
-            </Box>
+          <CheckoutSection id="checkout-coupon-heading" icon={<LocalOfferOutlined sx={{ fontSize: 21 }} />} title="02. Have a promo code?" description="Offers apply only to eligible products. Delivery charges stay unchanged.">
+            <PromoCodeField promotion={promotion} disabled={submitting} />
           </CheckoutSection>
         </Stack>
 
